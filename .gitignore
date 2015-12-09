@@ -1,0 +1,11 @@
+.project
+.settings
+.classpath
+.factorypath
+.apt_generated
+*.md.html
+target
+.metadata/
+.recommenders/
+.idea/
+*.iml
