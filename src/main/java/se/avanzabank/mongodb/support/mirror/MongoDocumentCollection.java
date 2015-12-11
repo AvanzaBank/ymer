@@ -20,8 +20,10 @@ import java.util.Optional;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+
+import se.avanzabank.mongodb.util.Require;
+
 import org.springframework.data.mongodb.core.query.Query;
-import se.avanzabank.core.util.assertions.Require;
 
 /**
  *

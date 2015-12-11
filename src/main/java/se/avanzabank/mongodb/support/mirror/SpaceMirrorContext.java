@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.mongodb.BasicDBObject;
 
-import se.avanzabank.core.util.assertions.Require;
+import se.avanzabank.mongodb.util.Require;
 /**
  * Holds the runtime context for a mongo mirror. <p>
  *

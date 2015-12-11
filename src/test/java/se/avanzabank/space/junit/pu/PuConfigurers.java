@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Avanza Bank AB
+ * Copyright 2014 Avanza Bank AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.avanzabank.core.util.assertions;
+package se.avanzabank.space.junit.pu;
 
-import java.util.Objects;
+public class PuConfigurers {
 
-public class Require {
-	
-	// TODO Remove (inline)
-
-	public static <T> T notNull(T instance) {
-		return Objects.requireNonNull(instance);
-	}
-
-	public static void that(boolean condition) {
-		if (!condition) {
-			throw new IllegalArgumentException();
-		}
+	public static PartitionedPuConfigurer partitionedPu(String puXmlPath) {
+		return new PartitionedPuConfigurer(puXmlPath);
 	}
 
 }

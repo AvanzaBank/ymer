@@ -33,8 +33,8 @@ import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.mongodb.BasicDBObject;
 
-import se.avanzabank.core.util.assertions.Require;
 import se.avanzabank.mongodb.support.DocumentWriteExceptionHandler;
+import se.avanzabank.mongodb.util.Require;
 
 /**
  * 

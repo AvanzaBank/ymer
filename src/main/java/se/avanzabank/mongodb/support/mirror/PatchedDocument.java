@@ -15,9 +15,9 @@
  */
 package se.avanzabank.mongodb.support.mirror;
 
-import se.avanzabank.core.util.assertions.Require;
-
 import com.mongodb.BasicDBObject;
+
+import se.avanzabank.mongodb.util.Require;
 /**
  * Data structure to hold a patched document. <p>
  * 

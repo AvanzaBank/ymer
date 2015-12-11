@@ -1,0 +1,49 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:os-core="http://www.openspaces.org/schema/core"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.openspaces.org/schema/core http://www.openspaces.org/schema/core/openspaces-core.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.1.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<context:annotation-config/>
+	<os-core:space id="testSpace" url="/./mirrortest-space" mirror="true" external-data-source="mongoDataSource">
+		<os-core:properties>
+			<props>
+				<prop key="cluster-config.mirror-service.url">jini://*/*/mirrortest-space-mirror</prop>
+				<prop key="space-config.engine.cache_policy">1</prop>
+				<prop key="space-config.external-data-source.usage">read-only</prop>
+				<prop key="cluster-config.cache-loader.external-data-source">true</prop>
+				<prop key="cluster-config.cache-loader.central-data-source">true</prop>
+				<prop key="cluster-config.mirror-service.interval-opers">1</prop><!-- Replicate each event right away to speed up tests -->
+			</props>
+		</os-core:properties>
+	</os-core:space>
+	<os-core:giga-space id="gigaSpace" space="testSpace"/>
+	
+<!-- 	<aza:jndi-lookup id="testEnvProps" name="testEnvProps" /> -->
+<!-- 	<context:property-placeholder properties-ref="testEnvProps" /> -->
+	
+	<bean id="factory" class="se.avanzabank.mongodb.support.mirror.TestSpaceMirrorFactory" />
+	
+	<bean id="mongoDataSource" factory-bean="factory" factory-method="create">
+		<constructor-arg ref="mongoDbFactory"/>
+	</bean>
+
+	<mongo:db-factory id="mongoDbFactory" dbname="${databasename}" mongo-ref="mongo" />
+<!-- 	<bean id="mongo" class="com.mongodb.Mongo"> -->
+<!-- 		<constructor-arg> -->
+<!-- 			<bean class="com.mongodb.MongoURI"> -->
+<!-- 				<constructor-arg value="${mongouri}" /> -->
+<!-- 			</bean> -->
+<!-- 		</constructor-arg> -->
+<!-- 		<property name="writeConcern"> -->
+<!-- 			<util:constant static-field="com.mongodb.WriteConcern.SAFE" /> -->
+<!-- 		</property> -->
+<!-- 	</bean> -->
+
+</beans>

@@ -27,7 +27,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-import se.avanzabank.core.util.assertions.Require;
+import se.avanzabank.mongodb.util.Require;
 
 /**
  * Builds a mongo {@link Query} object from any object, but maybe preferably from a GigaSpace template :-)

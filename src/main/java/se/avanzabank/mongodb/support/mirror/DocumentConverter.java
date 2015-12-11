@@ -20,8 +20,8 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBObject;
 
-import se.avanzabank.core.util.assertions.Require;
 import se.avanzabank.mongodb.support.MongoQueryFactory;
+import se.avanzabank.mongodb.util.Require;
 /**
  * Strategy for converting a mongo document into a domain object (ie the object
  * that at some times was mirrored). <p>

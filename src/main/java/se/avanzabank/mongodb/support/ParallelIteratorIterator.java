@@ -29,8 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import com.gigaspaces.datasource.DataIterator;
 
-import se.avanzabank.core.util.assertions.NamedThreadFactory;
-import se.avanzabank.core.util.assertions.Require;
+import se.avanzabank.mongodb.util.NamedThreadFactory;
+import se.avanzabank.mongodb.util.Require;
 
 /**
  * Used for merging multiple iterators into one iterator with a common bounded queue. The backed iterators are read in

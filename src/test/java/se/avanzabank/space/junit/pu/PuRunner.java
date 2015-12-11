@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Avanza Bank AB
+ * Copyright 2014 Avanza Bank AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.avanzabank.core.util.assertions;
+package se.avanzabank.space.junit.pu;
 
-/**
- * @author Roger Forsberg
- *
- */
-public interface LifecycleAware {
+import org.openspaces.core.GigaSpace;
 
-	void destroy() throws Exception;
-	
+public interface PuRunner {
+
+	void run() throws Exception;
+
+	void shutdown() throws Exception;
+
+	String getLookupGroupName();
+
+	GigaSpace getClusteredGigaSpace();
+
+	boolean autostart();
+
 }

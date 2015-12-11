@@ -23,9 +23,9 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.mongodb.ReadPreference;
 
-import se.avanzabank.core.util.assertions.LifecycleAware;
-import se.avanzabank.core.util.assertions.LifecycleContainer;
-import se.avanzabank.core.util.assertions.Require;
+import se.avanzabank.mongodb.util.LifecycleAware;
+import se.avanzabank.mongodb.util.LifecycleContainer;
+import se.avanzabank.mongodb.util.Require;
 /**
  * Factory for building a ManagedDataSourceAndBulkDataPersister. <p>
  * 

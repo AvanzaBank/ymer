@@ -22,7 +22,7 @@ import org.openspaces.core.cluster.ClusterInfoAware;
 import com.gigaspaces.datasource.BulkDataPersister;
 import com.gigaspaces.datasource.ManagedDataSource;
 
-import se.avanzabank.core.util.assertions.LifecycleAware;
+import se.avanzabank.mongodb.util.LifecycleAware;
 /**
  * Mixin interface. <p>
  *

@@ -1,0 +1,170 @@
+package se.avanzabank.mongodb.support.mirror;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static se.avanzabank.space.junit.mongo.MongoProbes.containsObject;
+
+import java.lang.management.ManagementFactory;
+import java.util.Random;
+import java.util.Set;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
+import org.openspaces.core.GigaSpace;
+import org.springframework.data.mongodb.core.MongoOperations;
+
+import com.gigaspaces.client.WriteModifiers;
+
+import se.avanzabank.core.test.util.async.Poller;
+import se.avanzabank.core.test.util.async.Probe;
+import se.avanzabank.space.junit.pu.PuConfigurers;
+import se.avanzabank.space.junit.pu.RunningPu;
+
+public class VersionedMongoDbExternalDataSourceMirrorIntegrationTest {
+	
+	private MongoOperations mongo;
+	private GigaSpace gigaSpace;
+	private static String lookupGroupName = "group-" + new Random().nextInt();
+	private static MirrorEnvironmentRunner mirrorEnviroment = new MirrorEnvironmentRunner(TestSpaceMirrorFactory.getMirroredDocuments());
+
+	private static RunningPu pu = PuConfigurers.partitionedPu("classpath:/mongo-mirror-integration-test-pu.xml")
+									   .numberOfBackups(1)
+									   .numberOfPrimaries(1)
+									   .groupName(lookupGroupName)
+									   .configure();
+
+	private static RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/mongo-mirror-integration-test-mirror-pu.xml")
+											 .groupName(lookupGroupName)
+											 .configure();
+
+	@ClassRule
+	public static TestRule spaces = RuleChain.outerRule(mirrorEnviroment).around(pu).around(mirrorPu);
+
+	@Before
+	public void setUp() {
+		BasicConfigurator.configure();
+		Logger.getRootLogger().setLevel(Level.INFO);
+		mongo = mirrorEnviroment.getMongoTemplate();
+		gigaSpace = pu.getClusteredGigaSpace();
+	}
+
+	@After
+	public void cleanup() {
+		mirrorEnviroment.dropAllMongoCollections();
+		gigaSpace.clear(null);
+	}
+
+	@Test
+	public void  mirrorsInsertOfTestSpaceObjects() throws Exception {
+		TestSpaceObject o1 = new TestSpaceObject();
+		o1.setId("id_23");
+		o1.setMessage("mirror_test");
+
+		gigaSpace.write(o1, WriteModifiers.WRITE_ONLY);
+		assertEquals(1, gigaSpace.count(new TestSpaceObject()));
+
+		assertEventually(containsObject(mongo, equalTo(o1), TestSpaceObject.class));
+	}
+
+	@Test
+	public void mirrorsUpdatesOfTestSpaceObjects() throws Exception {
+		TestSpaceObject inserted = new TestSpaceObject();
+		inserted.setId("id_23");
+		inserted.setMessage("inserted_mirror_test");
+		gigaSpace.write(inserted, WriteModifiers.WRITE_ONLY);
+
+		assertEventually(containsObject(mongo, equalTo(inserted), TestSpaceObject.class));
+
+		TestSpaceObject updated = new TestSpaceObject();
+		updated.setId("id_23");
+		updated.setMessage("updated_mirror_test");
+		gigaSpace.write(updated, WriteModifiers.UPDATE_ONLY);
+
+		assertEventually(containsObject(mongo, equalTo(updated), TestSpaceObject.class));
+	}
+
+	@Test
+	public void mirrorsDeletesOfTestSpaceObjects() throws Exception {
+		TestSpaceObject inserted = new TestSpaceObject();
+		inserted.setId("id_23");
+		inserted.setMessage("inserted_mirror_test");
+		gigaSpace.write(inserted, WriteModifiers.WRITE_ONLY);
+
+		assertEventually(containsObject(mongo, equalTo(inserted), TestSpaceObject.class));
+
+		gigaSpace.takeById(TestSpaceObject.class, "id_23");
+
+		assertEventually(countOf(TestSpaceObject.class, Matchers.equalTo(0)));
+	}
+
+	@Test
+	public void mbeanInvoke() throws Exception {
+		MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+		ObjectName nameTemplate = ObjectName
+				.getInstance("se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler,instance=*");
+		Set<ObjectName> names = server.queryNames(nameTemplate, null);
+		assertThat(names.size(), is(greaterThan(0)));
+		server.invoke(names.toArray(new ObjectName[1])[0], "useCatchesAllHandler", null, null);
+	}
+
+	@Test
+	public void findByTemplate() throws Exception {
+		ManagedDataSourceAndBulkDataPersister persister = pu.getPrimaryInstanceApplicationContext(1).getBean(ManagedDataSourceAndBulkDataPersister.class);
+
+		gigaSpace.write(new TestSpaceObject("id1", "m1"));
+		gigaSpace.write(new TestSpaceObject("id2", "m2"));
+		gigaSpace.write(new TestSpaceObject("id3", "m1"));
+
+		assertEventually(countOf(TestSpaceObject.class, Matchers.equalTo(3)));
+
+		assertEquals(2, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m1")).size());
+		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m2")).size());
+		assertEquals(0, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m3")).size());
+		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", null)).size());
+		assertEquals(0, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", "m2")).size());
+		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", "m1")).size());
+	}
+
+	private Probe countOf(final Class<?> mirroredType, final Matcher<Integer> countMatcher) {
+		return new Probe() {
+			int count;
+
+			@Override
+			public void sample() {
+				count = mongo.findAll(mirroredType).size();
+			}
+
+			@Override
+			public boolean isSatisfied() {
+				return countMatcher.matches(count);
+			}
+
+			@Override
+			public void describeFailureTo(Description description) {
+				description.appendText("Count of " + mirroredType.getName());
+				countMatcher.describeTo(description);
+			}
+		};
+	}
+
+	public static void assertEventually(Probe probe) throws InterruptedException {
+		new Poller(7000L, 50L).check(probe);
+	}
+
+}

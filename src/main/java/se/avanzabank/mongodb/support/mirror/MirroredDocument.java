@@ -22,11 +22,11 @@ import java.util.Set;
 
 import org.springframework.data.mongodb.MongoCollectionUtils;
 
-import se.avanzabank.core.util.assertions.Require;
-
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
+
+import se.avanzabank.mongodb.util.Require;
 /**
  * Holds information about one mirrored space object type.
  *

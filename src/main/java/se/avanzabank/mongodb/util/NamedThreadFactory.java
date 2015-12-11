@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.avanzabank.core.util.assertions;
+package se.avanzabank.mongodb.util;
 
 import static java.util.Objects.requireNonNull;
 

@@ -15,7 +15,7 @@
  */
 package se.avanzabank.mongodb.support.mirror;
 
-import se.avanzabank.core.util.assertions.Require;
+import se.avanzabank.mongodb.util.Require;
 
 /**
  * Strategy for filtering out objects during initial load. <p>

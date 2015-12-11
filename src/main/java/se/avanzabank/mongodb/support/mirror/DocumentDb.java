@@ -19,7 +19,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.ReadPreference;
 
-import se.avanzabank.core.util.assertions.Require;
+import se.avanzabank.mongodb.util.Require;
 /**
  * 
  * @author Elias Lindholm (elilin)

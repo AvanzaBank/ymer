@@ -20,9 +20,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import se.avanzabank.core.util.assertions.Require;
-
 import com.mongodb.BasicDBObject;
+
+import se.avanzabank.mongodb.util.Require;
 /**
  * Each element loaded by the underlying iterator will be patched when fetched using next method. <p>
  * 

@@ -23,7 +23,7 @@ import java.util.List;
 
 import com.gigaspaces.datasource.DataIterator;
 
-import se.avanzabank.core.util.assertions.Require;
+import se.avanzabank.mongodb.util.Require;
 
 /**
  * Used for merging multiple iterators into one iterator, cleverly stolen from SO by

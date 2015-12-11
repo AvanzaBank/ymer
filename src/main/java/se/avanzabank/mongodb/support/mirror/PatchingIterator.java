@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-import se.avanzabank.core.util.assertions.NamedThreadFactory;
+import se.avanzabank.mongodb.util.NamedThreadFactory;
 
 /**
  * Implementation note: Multithreaded patching to increase throughput.
