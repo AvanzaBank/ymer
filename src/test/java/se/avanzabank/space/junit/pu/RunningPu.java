@@ -17,6 +17,7 @@ package se.avanzabank.space.junit.pu;
 
 import org.junit.rules.TestRule;
 import org.openspaces.core.GigaSpace;
+import org.springframework.beans.factory.BeanFactory;
 
 public interface RunningPu extends TestRule, AutoCloseable  {
 	
@@ -29,5 +30,7 @@ public interface RunningPu extends TestRule, AutoCloseable  {
 	void start() throws Exception;
 	
 	void stop() throws Exception;
+
+	BeanFactory getPrimaryInstanceApplicationContext(int partition);
 	
 }

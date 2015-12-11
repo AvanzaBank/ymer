@@ -21,6 +21,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.openspaces.core.GigaSpace;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.context.ApplicationContext;
 
 public class AsyncPuRunner implements PuRunner {
 
@@ -34,26 +36,20 @@ public class AsyncPuRunner implements PuRunner {
 	@Override
 	public void run() throws Exception {
 		worker = Executors.newSingleThreadExecutor();
-		worker.execute(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					puRunner.run();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+		worker.execute(() -> {
+			try {
+				puRunner.run();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		});
 	}
 
 	@Override
 	public void shutdown() throws Exception {
-		Future<Void> shutdownComplete = worker.submit(new Callable<Void>() {
-			@Override
-			public Void call() throws Exception {
-				puRunner.shutdown();
-				return null;
-			}
+		Future<Void> shutdownComplete = worker.submit(() -> {
+			puRunner.shutdown();
+			return null;
 		});
 		worker.shutdown();
 		shutdownComplete.get();
@@ -71,12 +67,7 @@ public class AsyncPuRunner implements PuRunner {
 
 	@Override
 	public GigaSpace getClusteredGigaSpace() {
-		return get(new Callable<GigaSpace>() {
-			@Override
-			public GigaSpace call() throws Exception {
-				return puRunner.getClusteredGigaSpace();
-			}
-		});
+		return get(() -> puRunner.getClusteredGigaSpace());
 	}
 	
 	private <T> T get(Callable<T> callable) {
@@ -85,6 +76,11 @@ public class AsyncPuRunner implements PuRunner {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public ApplicationContext getPrimaryInstanceApplicationContext(int partition) {
+		return get(() -> puRunner.getPrimaryInstanceApplicationContext(partition));
 	}
 
 }

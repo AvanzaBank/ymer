@@ -16,6 +16,7 @@
 package se.avanzabank.space.junit.pu;
 
 import org.openspaces.core.GigaSpace;
+import org.springframework.context.ApplicationContext;
 
 public interface PuRunner {
 
@@ -28,5 +29,7 @@ public interface PuRunner {
 	GigaSpace getClusteredGigaSpace();
 
 	boolean autostart();
+
+	ApplicationContext getPrimaryInstanceApplicationContext(int partition);
 
 }

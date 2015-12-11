@@ -18,6 +18,7 @@ package se.avanzabank.space.junit.pu;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.openspaces.core.GigaSpace;
+import org.springframework.beans.factory.BeanFactory;
 
 public class RunningPuImpl implements RunningPu {
 
@@ -113,6 +114,11 @@ public class RunningPuImpl implements RunningPu {
 	@Override
 	public GigaSpace getClusteredGigaSpace() {
 		return this.runner.getClusteredGigaSpace();
+	}
+	
+	@Override
+	public BeanFactory getPrimaryInstanceApplicationContext(int partition) {
+		return this.runner.getPrimaryInstanceApplicationContext(partition);
 	}
 
 }

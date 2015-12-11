@@ -132,25 +132,23 @@ public class VersionedMongoDbExternalDataSourceMirrorIntegrationTest {
 		server.invoke(names.toArray(new ObjectName[1])[0], "useCatchesAllHandler", null, null);
 	}
 
-	// TODO: Fix this test
-	
-//	@Test
-//	public void findByTemplate() throws Exception {
-//		ManagedDataSourceAndBulkDataPersister persister = pu.getPrimaryInstanceApplicationContext(1).getBean(ManagedDataSourceAndBulkDataPersister.class);
-//
-//		gigaSpace.write(new TestSpaceObject("id1", "m1"));
-//		gigaSpace.write(new TestSpaceObject("id2", "m2"));
-//		gigaSpace.write(new TestSpaceObject("id3", "m1"));
-//
-//		assertEventually(countOf(TestSpaceObject.class, Matchers.equalTo(3)));
-//
-//		assertEquals(2, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m1")).size());
-//		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m2")).size());
-//		assertEquals(0, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m3")).size());
-//		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", null)).size());
-//		assertEquals(0, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", "m2")).size());
-//		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", "m1")).size());
-//	}
+	@Test
+	public void findByTemplate() throws Exception {
+		ManagedDataSourceAndBulkDataPersister persister = pu.getPrimaryInstanceApplicationContext(1).getBean(ManagedDataSourceAndBulkDataPersister.class);
+
+		gigaSpace.write(new TestSpaceObject("id1", "m1"));
+		gigaSpace.write(new TestSpaceObject("id2", "m2"));
+		gigaSpace.write(new TestSpaceObject("id3", "m1"));
+
+		assertEventually(countOf(TestSpaceObject.class, Matchers.equalTo(3)));
+
+		assertEquals(2, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m1")).size());
+		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m2")).size());
+		assertEquals(0, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m3")).size());
+		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", null)).size());
+		assertEquals(0, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", "m2")).size());
+		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", "m1")).size());
+	}
 
 	private Probe countOf(final Class<?> mirroredType, final Matcher<Integer> countMatcher) {
 		return new Probe() {

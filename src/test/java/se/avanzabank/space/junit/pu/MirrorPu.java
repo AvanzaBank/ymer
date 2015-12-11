@@ -72,6 +72,11 @@ public class MirrorPu implements PuRunner {
 	public GigaSpace getClusteredGigaSpace() {
 		return GigaSpace.class.cast(container.getApplicationContext().getBean(this.gigaSpaceBeanName)).getClustered();
 	}
+	
+	@Override
+	public ApplicationContext getPrimaryInstanceApplicationContext(int partition) {
+		return container.getApplicationContext();
+	}
 
 
 }
