@@ -26,7 +26,7 @@ public final class PartitionedPuConfigurer {
 	String puXmlPath;
 	int numberOfPrimaries = 1;
 	int numberOfBackups = 0;
-	boolean startAsync = true;
+	boolean startAsync = false;
 	Properties contextProperties = new Properties();
 	Map<String, Properties> beanProperies = new HashMap<>();
 	String lookupGroupName = JVMGlobalLus.getLookupGroupName();

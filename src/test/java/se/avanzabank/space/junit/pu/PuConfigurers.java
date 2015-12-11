@@ -21,4 +21,8 @@ public class PuConfigurers {
 		return new PartitionedPuConfigurer(puXmlPath);
 	}
 
+	public static MirrorPuConfigurer mirrorPu(String puXmlPath) {
+		return new MirrorPuConfigurer(puXmlPath);
+	}
+
 }
