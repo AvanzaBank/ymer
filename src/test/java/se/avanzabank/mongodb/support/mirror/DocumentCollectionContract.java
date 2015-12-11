@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015 Avanza Bank AB
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  *
  */
@@ -43,7 +58,7 @@ public abstract class DocumentCollectionContract {
 		assertEquals(d1, allDocs.next());
 		assertFalse(allDocs.hasNext());
 	}
-
+	
 	@Test
 	public void insertExistingDocumentDoesNothing() throws Exception {
 		BasicDBObject d1 = new BasicDBObject();
@@ -54,11 +69,15 @@ public abstract class DocumentCollectionContract {
 
 		BasicDBObject copy = (BasicDBObject) d1.copy();
 		copy.put("count", 22); // copy has another count
-		documentCollection.insert(copy);
-
+		try {
+			documentCollection.insert(copy);
+			fail("Expected exeption of type: " + DuplicateDocumentKeyException.class.getName());
+		} catch (DuplicateDocumentKeyException e) {
+			// Expected 
+		}
 		// Still only one element in the collection
 		assertEquals(1, sizeOf(documentCollection.findAll(Optional.<SpaceObjectFilter<?>>empty())));
-
+		
 		// the original version did not change on insert
 		assertEquals(d1, documentCollection.findAll(Optional.<SpaceObjectFilter<?>>empty()).iterator().next());
 	}

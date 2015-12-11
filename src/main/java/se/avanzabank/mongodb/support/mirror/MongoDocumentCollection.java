@@ -17,13 +17,14 @@ package se.avanzabank.mongodb.support.mirror;
 
 import java.util.Optional;
 
+import org.springframework.data.mongodb.core.query.Query;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.DuplicateKeyException;
 
 import se.avanzabank.mongodb.util.Require;
-
-import org.springframework.data.mongodb.core.query.Query;
 
 /**
  *
@@ -75,7 +76,11 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public void insert(BasicDBObject dbObject) {
-        dbCollection.insert(dbObject);
+        try {
+			dbCollection.insert(dbObject);
+		} catch (DuplicateKeyException e) {
+			throw new DuplicateDocumentKeyException(e.getMessage());
+		}
 	}
 
 	@Override
