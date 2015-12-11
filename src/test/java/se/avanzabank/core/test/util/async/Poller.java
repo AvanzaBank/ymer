@@ -60,9 +60,6 @@ import org.hamcrest.StringDescription;
  * 
  * This class is based on a design found in Growing Object Oriented Software Guided by test.
  * See chapter about testing asynchronous code for a discussion about when to use this class. <p>
- * 
- * @author Elias Lindholm
- *
  */
 public class Poller {
 	

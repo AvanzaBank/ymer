@@ -23,9 +23,6 @@ import org.hamcrest.Description;
  * 
  * See Poller for usage.<p>
  * 
- * 
- * @author Elias Lindholm
- *
  */
 public interface Probe {
 	
