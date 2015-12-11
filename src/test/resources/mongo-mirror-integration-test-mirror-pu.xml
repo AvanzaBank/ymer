@@ -14,7 +14,7 @@
 <!-- 	<aza:jndi-lookup id="testEnvProps" name="testEnvProps" /> -->
 <!-- 	<context:property-placeholder properties-ref="testEnvProps" ignore-unresolvable="true" /> -->
 
-	<bean id="factory" class="se.avanzabank.mongodb.support.mirror.TestSpaceMirrorFactory" />
+	<bean id="factory" class="com.avanza.gs.mongo.mirror.TestSpaceMirrorFactory" />
 	
 	<bean id="mongoDataSource" factory-bean="factory" factory-method="create">
 		<constructor-arg ref="mongoDbFactory"/>
