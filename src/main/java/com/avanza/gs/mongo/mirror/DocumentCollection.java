@@ -17,10 +17,11 @@ package com.avanza.gs.mongo.mirror;
 
 import java.util.Optional;
 
+import org.springframework.data.mongodb.core.query.Query;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import org.springframework.data.mongodb.core.query.Query;
 /**
  * Abstraction over {@link DBCollection}. <p>
  *

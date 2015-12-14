@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.avanza.gs.mongo.DocumentWriteExceptionHandler;
-import com.avanza.gs.mongo.util.Require;
 import com.gigaspaces.datasource.BulkItem;
 import com.gigaspaces.datasource.DataSourceException;
 import com.gigaspaces.sync.DataSyncOperation;
