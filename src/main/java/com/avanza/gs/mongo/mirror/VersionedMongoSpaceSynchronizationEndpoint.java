@@ -19,7 +19,6 @@ import javax.annotation.PostConstruct;
 
 import org.openspaces.core.cluster.ClusterInfo;
 import org.openspaces.core.cluster.ClusterInfoAware;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
@@ -28,7 +27,6 @@ final class VersionedMongoSpaceSynchronizationEndpoint extends SpaceSynchronizat
 	
 	private final VersionedMongoDBExternalDataSource target;
 	
-	@Autowired
 	public VersionedMongoSpaceSynchronizationEndpoint(VersionedMongoDBExternalDataSource target) {
 		this.target = target;
 	}

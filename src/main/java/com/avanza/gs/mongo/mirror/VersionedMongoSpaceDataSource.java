@@ -17,9 +17,11 @@ package com.avanza.gs.mongo.mirror;
 
 import java.util.Collection;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import org.openspaces.core.cluster.ClusterInfo;
 import org.openspaces.core.cluster.ClusterInfoAware;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.gigaspaces.datasource.DataIterator;
 import com.gigaspaces.datasource.SpaceDataSource;
@@ -28,7 +30,6 @@ final class VersionedMongoSpaceDataSource extends SpaceDataSource implements Clu
 
 	private final VersionedMongoDBExternalDataSource ds;
 	
-	@Autowired
 	public VersionedMongoSpaceDataSource(VersionedMongoDBExternalDataSource ds) {
 		this.ds = ds;
 	}
@@ -53,6 +54,14 @@ final class VersionedMongoSpaceDataSource extends SpaceDataSource implements Clu
 		return ds.loadObjects(spaceType, template);
 	}
 	
+	@PreDestroy
+	public void destroy() {
+		ds.deregisterExceptionHandlerMBean();
+	}
 	
+	@PostConstruct
+	public void registerExceptionHandlerMBean() {
+		ds.registerExceptionHandlerMBean();
+	}
 	
 }

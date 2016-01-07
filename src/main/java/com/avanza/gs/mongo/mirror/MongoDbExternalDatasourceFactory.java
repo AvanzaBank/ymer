@@ -18,13 +18,13 @@ package com.avanza.gs.mongo.mirror;
 import javax.annotation.PreDestroy;
 
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.avanza.gs.mongo.util.LifecycleAware;
 import com.avanza.gs.mongo.util.LifecycleContainer;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
+import com.mongodb.DB;
 import com.mongodb.ReadPreference;
 /**
  * Factory for building a ManagedDataSourceAndBulkDataPersister. <p>
@@ -42,22 +42,18 @@ public final class MongoDbExternalDatasourceFactory implements LifecycleAware {
 	private ReadPreference readPreference = ReadPreference.primary();
 	private VersionedMongoDBExternalDataSource versionedMongoDBExternalDataSource;
 
-	public MongoDbExternalDatasourceFactory(MirroredDocuments mirroredDocuments, MongoDbFactory mongoDbFactory, MongoConverter mongoConverter) {
-		DocumentDb mongoDb = DocumentDb.mongoDb(mongoDbFactory.getDb(), readPreference);
+	public MongoDbExternalDatasourceFactory(MirroredDocuments mirroredDocuments, DB db, MongoConverter mongoConverter) {
+		DocumentDb mongoDb = DocumentDb.mongoDb(db, readPreference);
 		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredDocuments,
 				DocumentConverter.mongoConverter(mongoConverter), mongoDb, exceptionListener);
 		versionedMongoDBExternalDataSource = new VersionedMongoDBExternalDataSource(mirrorContext);
-		lifecycleContainer.add(versionedMongoDBExternalDataSource);
+//		lifecycleContainer.add(versionedMongoDBExternalDataSource);
 		// Set the event publisher to null to avoid deadlocks when loading data in parallel
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
 	}
 
-	public ManagedDataSourceAndBulkDataPersister create() {
-		return versionedMongoDBExternalDataSource;
-	}
-	
 	public SpaceDataSource createSpaceDataSource() {
 		return new VersionedMongoSpaceDataSource(versionedMongoDBExternalDataSource);
 	}

@@ -19,9 +19,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
-
-import javax.annotation.PostConstruct;
 
 import org.openspaces.core.cluster.ClusterInfo;
 import org.slf4j.Logger;
@@ -34,15 +31,13 @@ import com.avanza.gs.mongo.ToggleableDocumentWriteExceptionHandler;
 import com.avanza.gs.mongo.mbean.MBeanRegistrationUtil;
 import com.avanza.gs.mongo.mbean.MBeanRegistrator;
 import com.avanza.gs.mongo.mbean.PlatformMBeanServerMBeanRegistrator;
-import com.gigaspaces.datasource.BulkItem;
 import com.gigaspaces.datasource.DataIterator;
-import com.gigaspaces.datasource.DataSourceException;
 import com.gigaspaces.sync.OperationsBatchData;
 /**
  * @author Elias Lindholm (elilin)
  *
  */
-final class VersionedMongoDBExternalDataSource implements ManagedDataSourceAndBulkDataPersister {
+final class VersionedMongoDBExternalDataSource {
 
 	private static final Logger logger = LoggerFactory.getLogger(VersionedMongoDBExternalDataSource.class);
 
@@ -62,19 +57,13 @@ final class VersionedMongoDBExternalDataSource implements ManagedDataSourceAndBu
 		this.mbeanRegistrator = new PlatformMBeanServerMBeanRegistrator();
 	}
 
-	@Override
-	public void executeBulk(List<BulkItem> buldItems) throws DataSourceException {
-		mirroredDocumentWriter.executeBulk(buldItems);
-	}
-	
 	public void executeBulk(OperationsBatchData batch) {
 		mirroredDocumentWriter.executeBulk(batch);
 	}
 
 
 	@SuppressWarnings("unchecked")
-	@Override
-	public DataIterator<Object> initialLoad() {
+	DataIterator<Object> initialLoad() {
 		// TODO: Reimplement inital-load to avoid loading and holding all spaceobjects in memory before writing them to space.
 		List<Iterator<Object>> mongoData = new LinkedList<>();
 		for (MirroredDocument<?> mirroredDocument : spaceMirror.getMirroredDocuments()) {
@@ -90,11 +79,7 @@ final class VersionedMongoDBExternalDataSource implements ManagedDataSourceAndBu
 		return new IteratorAdapter(ParallelIteratorIterator.create(mongoData));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public <T extends ReloadableSpaceObject> T reloadObject(Class<T> spaceType, Object documentId) {
+	<T extends ReloadableSpaceObject> T reloadObject(Class<T> spaceType, Object documentId) {
 		MirroredDocument<T> mirroredDocument = spaceMirror.getMirroredDocument(spaceType);
 		MirroredDocumentLoader<T> documentLoader = spaceMirror.createDocumentLoader(mirroredDocument, getPartitionId(), getPartitionCount());
 		documentLoader.loadById(documentId);
@@ -102,8 +87,7 @@ final class VersionedMongoDBExternalDataSource implements ManagedDataSourceAndBu
 		return result.isEmpty() ? null : result.get(0);
 	}
 
-	@Override
-	public <T> Collection<T> loadObjects(Class<T> spaceType, T template) {
+	<T> Collection<T> loadObjects(Class<T> spaceType, T template) {
 		MirroredDocument<T> mirroredDocument = spaceMirror.getMirroredDocument(spaceType);
 		MirroredDocumentLoader<T> documentLoader = spaceMirror.createDocumentLoader(mirroredDocument, getPartitionId(), getPartitionCount());
 		documentLoader.loadByQuery(template);
@@ -143,14 +127,16 @@ final class VersionedMongoDBExternalDataSource implements ManagedDataSourceAndBu
 		return clusterInfo.getInstanceId();
 	}
 
-	@Override
 	public void setClusterInfo(ClusterInfo clusterInfo) {
 		this.clusterInfo = clusterInfo;
 	}
 
-	@PostConstruct
-	public void registerExceptionHandlerMBean() {
+	void registerExceptionHandlerMBean() {
 		MBeanRegistrationUtil.registerExceptionHandlerMBean(mbeanRegistrator, exceptionHandler);
+	}
+	
+	public void deregisterExceptionHandlerMBean() {
+		mbeanRegistrator.unregisterMBean(mbeanName);
 	}
 
 	private static class IteratorAdapter implements DataIterator<Object> {
@@ -182,18 +168,4 @@ final class VersionedMongoDBExternalDataSource implements ManagedDataSourceAndBu
 
 	}
 
-
-	@Override
-	public void init(Properties props) throws DataSourceException {
-	}
-
-
-	@Override
-	public void shutdown() throws DataSourceException {
-	}
-
-	@Override
-	public void destroy() throws Exception {
-		mbeanRegistrator.unregisterMBean(mbeanName);
-	}
 }

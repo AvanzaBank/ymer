@@ -17,8 +17,6 @@ package com.avanza.gs.mongo.mirror;
 
 import java.util.Collections;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -32,7 +30,6 @@ import com.mongodb.Mongo;
 
 public class TestSpaceMirrorFactory {
 	
-	private MongoDbExternalDatasourceFactory factory;
 	private String databaseName;
 	private Mongo mongo;
 	
@@ -52,19 +49,19 @@ public class TestSpaceMirrorFactory {
 		this.mongo = mongo;
 	}
 	
-	@PostConstruct
-	public void init() {
+	public SpaceDataSource createSpaceDataSource() {
 		SimpleMongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongo, databaseName);
 		MappingMongoConverter mongoConverter = new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
 		MirroredDocuments mirroredDocuments = getMirroredDocuments();
-		factory = new MongoDbExternalDatasourceFactory(mirroredDocuments, mongoDbFactory, mongoConverter);
-	}
-	
-	public SpaceDataSource createSpaceDataSource() {
+		MongoDbExternalDatasourceFactory factory = new MongoDbExternalDatasourceFactory(mirroredDocuments, mongo.getDB(databaseName), mongoConverter);
 		return factory.createSpaceDataSource();
 	}
 
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
+		SimpleMongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongo, databaseName);
+		MappingMongoConverter mongoConverter = new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
+		MirroredDocuments mirroredDocuments = getMirroredDocuments();
+		MongoDbExternalDatasourceFactory factory = new MongoDbExternalDatasourceFactory(mirroredDocuments, mongo.getDB(databaseName), mongoConverter);
 		return factory.createSpaceSynchronizationEndpoint();
 	}
 	
