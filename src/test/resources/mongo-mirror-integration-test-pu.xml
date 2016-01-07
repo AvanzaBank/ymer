@@ -11,7 +11,7 @@
 		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
 	<context:annotation-config/>
-	<os-core:space id="testSpace" url="/./mirrortest-space" mirror="true" external-data-source="mongoDataSource">
+	<os-core:space id="testSpace" url="/./mirrortest-space" mirror="true" space-data-source="spaceDataSource">
 		<os-core:properties>
 			<props>
 				<prop key="cluster-config.mirror-service.url">jini://*/*/mirrortest-space-mirror</prop>
@@ -25,25 +25,10 @@
 	</os-core:space>
 	<os-core:giga-space id="gigaSpace" space="testSpace"/>
 	
-<!-- 	<aza:jndi-lookup id="testEnvProps" name="testEnvProps" /> -->
-<!-- 	<context:property-placeholder properties-ref="testEnvProps" /> -->
-	
-	<bean id="factory" class="com.avanza.gs.mongo.mirror.TestSpaceMirrorFactory" />
-	
-	<bean id="mongoDataSource" factory-bean="factory" factory-method="create">
-		<constructor-arg ref="mongoDbFactory"/>
+	<bean id="mirrorFactory" class="com.avanza.gs.mongo.mirror.TestSpaceMirrorFactory">
+		<property name="databaseName" value="${databasename}"/>
 	</bean>
-
-	<mongo:db-factory id="mongoDbFactory" dbname="${databasename}" mongo-ref="mongo" />
-<!-- 	<bean id="mongo" class="com.mongodb.Mongo"> -->
-<!-- 		<constructor-arg> -->
-<!-- 			<bean class="com.mongodb.MongoURI"> -->
-<!-- 				<constructor-arg value="${mongouri}" /> -->
-<!-- 			</bean> -->
-<!-- 		</constructor-arg> -->
-<!-- 		<property name="writeConcern"> -->
-<!-- 			<util:constant static-field="com.mongodb.WriteConcern.SAFE" /> -->
-<!-- 		</property> -->
-<!-- 	</bean> -->
-
+	
+	<bean id="spaceDataSource" factory-bean="mirrorFactory" factory-method="createSpaceDataSource"/>
+	
 </beans>

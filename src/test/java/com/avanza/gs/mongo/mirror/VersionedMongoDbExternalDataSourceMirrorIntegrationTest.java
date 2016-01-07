@@ -140,7 +140,7 @@ public class VersionedMongoDbExternalDataSourceMirrorIntegrationTest {
 	public void mbeanInvoke() throws Exception {
 		MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 		ObjectName nameTemplate = ObjectName
-				.getInstance("se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler,instance=*");
+				.getInstance("se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler");
 		Set<ObjectName> names = server.queryNames(nameTemplate, null);
 		assertThat(names.size(), is(greaterThan(0)));
 		server.invoke(names.toArray(new ObjectName[1])[0], "useCatchesAllHandler", null, null);
@@ -148,7 +148,7 @@ public class VersionedMongoDbExternalDataSourceMirrorIntegrationTest {
 
 	@Test
 	public void findByTemplate() throws Exception {
-		ManagedDataSourceAndBulkDataPersister persister = pu.getPrimaryInstanceApplicationContext(1).getBean(ManagedDataSourceAndBulkDataPersister.class);
+		SpaceObjectLoader persister = pu.getPrimaryInstanceApplicationContext(1).getBean(SpaceObjectLoader.class);
 
 		gigaSpace.write(new TestSpaceObject("id1", "m1"));
 		gigaSpace.write(new TestSpaceObject("id2", "m2"));

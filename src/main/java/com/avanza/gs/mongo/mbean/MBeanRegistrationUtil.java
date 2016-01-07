@@ -15,9 +15,6 @@
  */
 package com.avanza.gs.mongo.mbean;
 
-import java.util.Random;
-
-import org.openspaces.core.cluster.ClusterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,26 +24,18 @@ import org.slf4j.LoggerFactory;
  */
 public class MBeanRegistrationUtil {
 	
-	private static final Random random = new Random();
-
 	private static final Logger log = LoggerFactory.getLogger(MBeanRegistrationUtil.class);
 	
-	public static void registerExceptionHandlerMBean(ClusterInfo clusterInfo, MBeanRegistrator registrator, Object exceptionHandler) {
+	public static void registerExceptionHandlerMBean(MBeanRegistrator registrator, Object exceptionHandler) {
 		try {
-			registerMBean(clusterInfo, registrator, exceptionHandler);
+			registerMBean(registrator, exceptionHandler);
 		} catch (Exception e) {
 			log.warn("Exception handler MBean registration failed", e);
 		}
 	}
 
-	private static void registerMBean(ClusterInfo clusterInfo, MBeanRegistrator registrator, Object exceptionHandler) {
+	private static void registerMBean(MBeanRegistrator registrator, Object exceptionHandler) {
 		String name = "se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler";
-		if (clusterInfo != null && clusterInfo.getName() != null) {
-			name += ",instance=" + clusterInfo.getName() + clusterInfo.getRunningNumber();
-		} else {
-			// In case we cannot get the cluster info, use a random name to ensure a unique bean name 
-			name += ",instance=unknown_" + random.nextLong();
-		}
 		registrator.registerMBean(exceptionHandler, name);
 	}
 }

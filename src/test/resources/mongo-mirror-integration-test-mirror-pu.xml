@@ -11,34 +11,16 @@
 		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
 	<context:annotation-config />
-<!-- 	<aza:jndi-lookup id="testEnvProps" name="testEnvProps" /> -->
-<!-- 	<context:property-placeholder properties-ref="testEnvProps" ignore-unresolvable="true" /> -->
 
-	<bean id="factory" class="com.avanza.gs.mongo.mirror.TestSpaceMirrorFactory" />
-	
-	<bean id="mongoDataSource" factory-bean="factory" factory-method="create">
-		<constructor-arg ref="mongoDbFactory"/>
+	<bean id="mirrorFactory" class="com.avanza.gs.mongo.mirror.TestSpaceMirrorFactory">
+		<property name="databaseName" value="${databasename}"/>
 	</bean>
+	<bean id="spaceSyncEndpoint" factory-bean="mirrorFactory" factory-method="createSpaceSynchronizationEndpoint"/>
 
 	<mongo:db-factory id="mongoDbFactory" dbname="${databasename}" mongo-ref="mongo" />
-<!-- 	<bean id="mongo" class="com.mongodb.Mongo"> -->
-<!-- 		<constructor-arg> -->
-<!-- 			<bean class="com.mongodb.MongoURI"> -->
-<!-- 				<constructor-arg value="${mongouri}" /> -->
-<!-- 			</bean> -->
-<!-- 		</constructor-arg> -->
-<!-- 		<property name="writeConcern"> -->
-<!-- 			<util:constant static-field="com.mongodb.WriteConcern.SAFE" /> -->
-<!-- 		</property> -->
-<!-- 	</bean> -->
 
-	<os-core:mirror id="mirrorGigaSpace" url="/./mirrortest-space-mirror" external-data-source="mongoDataSource">
-		<os-core:properties>
-			<props>
-				<prop key="space-config.mirror-service.cluster.name">mirrortest-space</prop>
-				<prop key="space-config.mirror-service.cluster.partitions">1</prop>
-				<prop key="space-config.mirror-service.cluster.backups-per-partition">1</prop>
-			</props>
-		</os-core:properties>
+	<os-core:mirror id="mirrorGigaSpace" url="/./mirrortest-space-mirror" space-sync-endpoint="spaceSyncEndpoint">
+		<os-core:source-space name="mirrortest-space" partitions="1" backups="1"/>
 	</os-core:mirror>
+	
 </beans>

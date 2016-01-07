@@ -18,7 +18,7 @@ package com.avanza.gs.mongo.mirror;
 import com.gigaspaces.annotation.pojo.SpaceVersion;
 
 /**
- * Denotes that this space object is capable of being reloaded by a {@link SpaceObjectReloader}. <p>
+ * Denotes that this space object is capable of being reloaded by a {@link SpaceObjectLoader}. <p>
  * 
  * In order to be reloadable the space object must hold some meta-data about how it was last loaded from
  * the secondary storage. This is achieved by letting the getter methods in this interface return the last

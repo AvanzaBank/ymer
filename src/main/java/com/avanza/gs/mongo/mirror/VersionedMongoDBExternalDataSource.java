@@ -74,7 +74,7 @@ final class VersionedMongoDBExternalDataSource implements ManagedDataSourceAndBu
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public DataIterator<Object> initialLoad() throws DataSourceException {
+	public DataIterator<Object> initialLoad() {
 		// TODO: Reimplement inital-load to avoid loading and holding all spaceobjects in memory before writing them to space.
 		List<Iterator<Object>> mongoData = new LinkedList<>();
 		for (MirroredDocument<?> mirroredDocument : spaceMirror.getMirroredDocuments()) {
@@ -150,7 +150,7 @@ final class VersionedMongoDBExternalDataSource implements ManagedDataSourceAndBu
 
 	@PostConstruct
 	public void registerExceptionHandlerMBean() {
-		MBeanRegistrationUtil.registerExceptionHandlerMBean(clusterInfo, mbeanRegistrator, exceptionHandler);
+		MBeanRegistrationUtil.registerExceptionHandlerMBean(mbeanRegistrator, exceptionHandler);
 	}
 
 	private static class IteratorAdapter implements DataIterator<Object> {

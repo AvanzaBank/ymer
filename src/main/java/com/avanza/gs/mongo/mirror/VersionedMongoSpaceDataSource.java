@@ -15,27 +15,42 @@
  */
 package com.avanza.gs.mongo.mirror;
 
+import java.util.Collection;
+
+import org.openspaces.core.cluster.ClusterInfo;
+import org.openspaces.core.cluster.ClusterInfoAware;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.gigaspaces.datasource.DataIterator;
-import com.gigaspaces.datasource.DataSourceException;
 import com.gigaspaces.datasource.SpaceDataSource;
 
-public class MongoSpaceDataSource extends SpaceDataSource {
+final class VersionedMongoSpaceDataSource extends SpaceDataSource implements ClusterInfoAware, SpaceObjectLoader {
 
 	private final VersionedMongoDBExternalDataSource ds;
 	
-	
-	public MongoSpaceDataSource(VersionedMongoDBExternalDataSource ds) {
+	@Autowired
+	public VersionedMongoSpaceDataSource(VersionedMongoDBExternalDataSource ds) {
 		this.ds = ds;
 	}
-
 	
 	@Override
 	public DataIterator<Object> initialDataLoad() {
-		try {
-			return ds.initialLoad();
-		} catch (DataSourceException e) {
-			throw new RuntimeException(e);
-		}
+		return ds.initialLoad();
+	}
+
+	@Override
+	public void setClusterInfo(ClusterInfo clusterInfo) {
+		ds.setClusterInfo(clusterInfo);
+	}
+
+	@Override
+	public <T extends ReloadableSpaceObject> T reloadObject(Class<T> spaceType, Object documentId) {
+		return ds.reloadObject(spaceType, documentId);
+	}
+
+	@Override
+	public <T> Collection<T> loadObjects(Class<T> spaceType, T template) {
+		return ds.loadObjects(spaceType, template);
 	}
 	
 	

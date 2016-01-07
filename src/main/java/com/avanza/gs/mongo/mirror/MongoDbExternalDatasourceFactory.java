@@ -23,7 +23,8 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.avanza.gs.mongo.util.LifecycleAware;
 import com.avanza.gs.mongo.util.LifecycleContainer;
-import com.avanza.gs.mongo.util.Require;
+import com.gigaspaces.datasource.SpaceDataSource;
+import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.ReadPreference;
 /**
  * Factory for building a ManagedDataSourceAndBulkDataPersister. <p>
@@ -33,20 +34,20 @@ import com.mongodb.ReadPreference;
  */
 public final class MongoDbExternalDatasourceFactory implements LifecycleAware {
 	
-	private final MongoDbFactory mongoDbFactory;
-	private final MongoConverter mongoConverter;
-	private final MirroredDocuments mirroredDocuments;
 	private MirrorExceptionListener exceptionListener = new MirrorExceptionListener() {
 		@Override
 		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {}
 	};
 	private final LifecycleContainer lifecycleContainer = new LifecycleContainer();
 	private ReadPreference readPreference = ReadPreference.primary();
+	private VersionedMongoDBExternalDataSource versionedMongoDBExternalDataSource;
 
 	public MongoDbExternalDatasourceFactory(MirroredDocuments mirroredDocuments, MongoDbFactory mongoDbFactory, MongoConverter mongoConverter) {
-		this.mirroredDocuments = Require.notNull(mirroredDocuments);
-		this.mongoDbFactory = Require.notNull(mongoDbFactory);
-		this.mongoConverter = Require.notNull(mongoConverter);
+		DocumentDb mongoDb = DocumentDb.mongoDb(mongoDbFactory.getDb(), readPreference);
+		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredDocuments,
+				DocumentConverter.mongoConverter(mongoConverter), mongoDb, exceptionListener);
+		versionedMongoDBExternalDataSource = new VersionedMongoDBExternalDataSource(mirrorContext);
+		lifecycleContainer.add(versionedMongoDBExternalDataSource);
 		// Set the event publisher to null to avoid deadlocks when loading data in parallel
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
@@ -54,12 +55,16 @@ public final class MongoDbExternalDatasourceFactory implements LifecycleAware {
 	}
 
 	public ManagedDataSourceAndBulkDataPersister create() {
-		DocumentDb mongoDb = DocumentDb.mongoDb(mongoDbFactory.getDb(), readPreference);
-		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredDocuments,
-				DocumentConverter.mongoConverter(mongoConverter), mongoDb, exceptionListener);
-		VersionedMongoDBExternalDataSource versionedMongoDBExternalDataSource = new VersionedMongoDBExternalDataSource(mirrorContext);
-		lifecycleContainer.add(versionedMongoDBExternalDataSource);
 		return versionedMongoDBExternalDataSource;
+	}
+	
+	public SpaceDataSource createSpaceDataSource() {
+		return new VersionedMongoSpaceDataSource(versionedMongoDBExternalDataSource);
+	}
+	
+
+	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
+		return new VersionedMongoSpaceSynchronizationEndpoint(versionedMongoDBExternalDataSource);
 	}
 	
 	/**
@@ -75,5 +80,10 @@ public final class MongoDbExternalDatasourceFactory implements LifecycleAware {
 	public void destroy() {
 		lifecycleContainer.destroyAll();
 	}
+	
+	public void registerExceptionHandlerMBean() {
+		this.versionedMongoDBExternalDataSource.registerExceptionHandlerMBean();
+	}
+
 
 }

@@ -15,6 +15,8 @@
  */
 package com.avanza.gs.mongo.mirror;
 
+import java.util.Collection;
+
 /**
  * Manages 'on demand' reload of a mirrored object from its secondare (persistent) storage, typically
  * a Mongo database.<p>
@@ -23,7 +25,7 @@ package com.avanza.gs.mongo.mirror;
  *
  * @author joasah Joakim Sahlström
  */
-public interface SpaceObjectReloader {
+public interface SpaceObjectLoader {
 
 	/**
 	 * Triggers reload of a given space object from the secondary storage. <p>
@@ -33,5 +35,7 @@ public interface SpaceObjectReloader {
 	 * @return
 	 */
 	<T extends ReloadableSpaceObject> T reloadObject(Class<T> spaceType, Object documentId);
+	
+	<T> Collection<T> loadObjects(Class<T> spaceType, T template);
 
 }

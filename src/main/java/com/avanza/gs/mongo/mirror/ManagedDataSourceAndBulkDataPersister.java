@@ -15,8 +15,6 @@
  */
 package com.avanza.gs.mongo.mirror;
 
-import java.util.Collection;
-
 import org.openspaces.core.cluster.ClusterInfoAware;
 
 import com.avanza.gs.mongo.util.LifecycleAware;
@@ -28,6 +26,5 @@ import com.gigaspaces.datasource.ManagedDataSource;
  * @author Elias Lindholm (elilin)
  *
  */
-public interface ManagedDataSourceAndBulkDataPersister extends ManagedDataSource<Object>, BulkDataPersister, ClusterInfoAware, SpaceObjectReloader, LifecycleAware {
-	<T> Collection<T> loadObjects(Class<T> spaceType, T template);
+public interface ManagedDataSourceAndBulkDataPersister extends ManagedDataSource<Object>, BulkDataPersister, ClusterInfoAware, SpaceObjectLoader, LifecycleAware {
 }
