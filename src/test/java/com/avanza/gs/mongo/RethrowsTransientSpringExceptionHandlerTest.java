@@ -23,14 +23,14 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
 
-import com.avanza.gs.mongo.mirror.DocumentWriteTransientException;
+import com.avanza.gs.mongo.mirror.TransientDocumentWriteException;
 
 
 public class RethrowsTransientSpringExceptionHandlerTest {
 
 	private DocumentWriteExceptionHandler handler = new RethrowsTransientSpringExceptionHandler();
 
-	@Test(expected = DocumentWriteTransientException.class)
+	@Test(expected = TransientDocumentWriteException.class)
 	public void throwsOnTransientException() throws Exception {
 		handler.handleException(new DataAccessResourceFailureException(""), "");
 	}
@@ -51,7 +51,7 @@ public class RethrowsTransientSpringExceptionHandlerTest {
 			try {
 				handler.handleException(new RuntimeException(message), "");
 				fail("Exception should not be thrown for exception with message " + message);
-			} catch (DocumentWriteTransientException e) {
+			} catch (TransientDocumentWriteException e) {
 			}
 		}
 	}

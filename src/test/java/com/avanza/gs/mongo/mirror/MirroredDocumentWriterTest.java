@@ -194,13 +194,13 @@ public class MirroredDocumentWriterTest {
 		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
 	}
 
-	@Test(expected=DocumentWriteTransientException.class)
+	@Test(expected=TransientDocumentWriteException.class)
 	public void exceptionFromExceptionHandlerIsPropagated() throws Exception {
 		documentDb = throwsOnUpdateDocumentDb();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredDocuments, documentConverter, documentDb, mirrorExceptionSpy);
 		mirroredDocumentWriter = new MirroredDocumentWriter(mirror, new FakeDocumentWriteExceptionHandler(
-				new DocumentWriteTransientException(new Exception())));
+				new TransientDocumentWriteException(new Exception())));
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, BulkItem.UPDATE);

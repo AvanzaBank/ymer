@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.avanza.gs.mongo.mirror.DocumentWriteTransientException;
+import com.avanza.gs.mongo.mirror.TransientDocumentWriteException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoException.Network;
 
@@ -34,7 +34,7 @@ public class RethrowsTransientDocumentWriteExceptionHandlerTest {
 
 	private DocumentWriteExceptionHandler handler = new RethrowsTransientDocumentWriteExceptionHandler();
 
-	@Test(expected = DocumentWriteTransientException.class)
+	@Test(expected = TransientDocumentWriteException.class)
 	public void throwsOnTransientException() throws Exception {
 		handler.handleException(newMongoNetworkException(), "");
 	}
@@ -55,7 +55,7 @@ public class RethrowsTransientDocumentWriteExceptionHandlerTest {
 			try {
 				handler.handleException(new RuntimeException(message), "");
 				fail("Exception should not be thrown for exception with message " + message);
-			} catch (DocumentWriteTransientException e) {
+			} catch (TransientDocumentWriteException e) {
 			}
 		}
 	}

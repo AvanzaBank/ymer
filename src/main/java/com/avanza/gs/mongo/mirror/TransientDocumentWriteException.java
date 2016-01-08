@@ -21,15 +21,11 @@ package com.avanza.gs.mongo.mirror;
  * 
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
  */
-public class DocumentWriteTransientException extends RuntimeException {
+public class TransientDocumentWriteException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	public DocumentWriteTransientException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	public DocumentWriteTransientException(Throwable cause) {
+	public TransientDocumentWriteException(Throwable cause) {
 		super(cause);
 	}
 }

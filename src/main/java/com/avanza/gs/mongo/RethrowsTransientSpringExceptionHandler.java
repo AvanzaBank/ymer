@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
 
-import com.avanza.gs.mongo.mirror.DocumentWriteTransientException;
+import com.avanza.gs.mongo.mirror.TransientDocumentWriteException;
 
 /**
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
@@ -43,7 +43,7 @@ public class RethrowsTransientSpringExceptionHandler implements DocumentWriteExc
 	public void handleException(Exception exception, String operationDescription) {
 		if (isTransient(exception)){
 			logRecoverableError(exception, operationDescription);
-			throw new DocumentWriteTransientException(exception);
+			throw new TransientDocumentWriteException(exception);
 		} else {
 			logIrrecoverableError(exception, operationDescription);
 		}
@@ -77,7 +77,7 @@ public class RethrowsTransientSpringExceptionHandler implements DocumentWriteExc
 						+ " - This command will be ignored but the rest" +
 						" of the commands in this bulk will be attempted." +
 						" This can lead to data inconsistency in the mongo database." +
-						" Must be investigated ASAP. If this error was preceeded by a DocumentWriteTransientException "
+						" Must be investigated ASAP. If this error was preceeded by a TransientDocumentWriteException "
 						+ "the cause might be that we reattempt already performed operations, which might be fine.",
 				e);
 	}
