@@ -26,13 +26,13 @@ import com.avanza.gs.mongo.mbean.PlatformMBeanServerMBeanRegistrator;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
-final class VersionedMongoSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
+final class MongoSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
 	
 	private final MirroredDocumentWriter mirroredDocumentWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
 	private final MBeanRegistrator mbeanRegistrator;
 
-	public VersionedMongoSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
+	public MongoSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());

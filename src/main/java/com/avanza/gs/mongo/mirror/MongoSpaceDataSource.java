@@ -37,16 +37,16 @@ import com.avanza.gs.mongo.mbean.PlatformMBeanServerMBeanRegistrator;
 import com.gigaspaces.datasource.DataIterator;
 import com.gigaspaces.datasource.SpaceDataSource;
 
-final class VersionedMongoSpaceDataSource extends SpaceDataSource implements ClusterInfoAware, SpaceObjectLoader {
+final class MongoSpaceDataSource extends SpaceDataSource implements ClusterInfoAware, SpaceObjectLoader {
 
-	private static final Logger logger = LoggerFactory.getLogger(VersionedMongoSpaceDataSource.class);
+	private static final Logger logger = LoggerFactory.getLogger(MongoSpaceDataSource.class);
 	
 	private final SpaceMirrorContext spaceMirrorContext;
 	private ClusterInfo clusterInfo;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
 	private final MBeanRegistrator mbeanRegistrator;
 
-	public VersionedMongoSpaceDataSource(SpaceMirrorContext spaceMirror) {
+	public MongoSpaceDataSource(SpaceMirrorContext spaceMirror) {
 		this.spaceMirrorContext = spaceMirror;
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),

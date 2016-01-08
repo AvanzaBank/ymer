@@ -46,12 +46,12 @@ public final class MongoDbExternalDatasourceFactory {
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
-		return new VersionedMongoSpaceDataSource(mirrorContext);
+		return new MongoSpaceDataSource(mirrorContext);
 	}
 	
 
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
-		return new VersionedMongoSpaceSynchronizationEndpoint(mirrorContext);
+		return new MongoSpaceSynchronizationEndpoint(mirrorContext);
 	}
 	
 	/**
