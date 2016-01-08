@@ -39,7 +39,7 @@ import com.gigaspaces.datasource.SpaceDataSource;
 
 final class VersionedMongoSpaceDataSource extends SpaceDataSource implements ClusterInfoAware, SpaceObjectLoader {
 
-	private static final Logger logger = LoggerFactory.getLogger(VersionedMongoDBExternalDataSource.class);
+	private static final Logger logger = LoggerFactory.getLogger(VersionedMongoSpaceDataSource.class);
 	
 	private final SpaceMirrorContext spaceMirrorContext;
 	private ClusterInfo clusterInfo;
@@ -72,7 +72,7 @@ final class VersionedMongoSpaceDataSource extends SpaceDataSource implements Clu
 		return new IteratorAdapter(ParallelIteratorIterator.create(mongoData));
 	}
 	
-	private <T> Iterable<T> loadInitialLoadData(MirroredDocument<T> document) {
+	<T> Iterable<T> loadInitialLoadData(MirroredDocument<T> document) {
 		logger.info("Loading all documents for type: {}", document.getMirroredType().getName());
 		MirroredDocumentLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(document, getPartitionId(), getPartitionCount());
 		if (document.writeBackPatchedDocuments()) {
