@@ -17,7 +17,6 @@ package com.avanza.gs.mongo.mirror;
 
 import org.junit.Test;
 
-import com.avanza.gs.mongo.FakeDocumentWriteExceptionHandler;
 import com.avanza.gs.mongo.mirror.ToggleableDocumentWriteExceptionHandler;
 
 public class ToggleableDocumentWriteExceptionHandlerTest {

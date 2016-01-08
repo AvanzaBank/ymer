@@ -26,7 +26,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.avanza.gs.mongo.FakeDocumentWriteExceptionHandler;
 import com.avanza.gs.mongo.mirror.VersionedMongoDbExternalDataSourceInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.gigaspaces.document.SpaceDocument;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
