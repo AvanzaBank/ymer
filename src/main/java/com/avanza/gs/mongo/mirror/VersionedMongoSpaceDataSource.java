@@ -41,13 +41,13 @@ final class VersionedMongoSpaceDataSource extends SpaceDataSource implements Clu
 
 	private static final Logger logger = LoggerFactory.getLogger(VersionedMongoDBExternalDataSource.class);
 	
-	private final SpaceMirrorContext spaceMirror;
+	private final SpaceMirrorContext spaceMirrorContext;
 	private ClusterInfo clusterInfo;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
 	private final MBeanRegistrator mbeanRegistrator;
 
 	public VersionedMongoSpaceDataSource(SpaceMirrorContext spaceMirror) {
-		this.spaceMirror = spaceMirror;
+		this.spaceMirrorContext = spaceMirror;
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());
@@ -59,7 +59,7 @@ final class VersionedMongoSpaceDataSource extends SpaceDataSource implements Clu
 	public DataIterator<Object> initialDataLoad() {
 		// TODO: Reimplement inital-load to avoid loading and holding all spaceobjects in memory before writing them to space.
 		List<Iterator<Object>> mongoData = new LinkedList<>();
-		for (MirroredDocument<?> mirroredDocument : spaceMirror.getMirroredDocuments()) {
+		for (MirroredDocument<?> mirroredDocument : spaceMirrorContext.getMirroredDocuments()) {
 			if (mirroredDocument.excludeFromInitialLoad()) {
 				continue;
 			}
@@ -74,7 +74,7 @@ final class VersionedMongoSpaceDataSource extends SpaceDataSource implements Clu
 	
 	private <T> Iterable<T> loadInitialLoadData(MirroredDocument<T> document) {
 		logger.info("Loading all documents for type: {}", document.getMirroredType().getName());
-		MirroredDocumentLoader<T> documentLoader = spaceMirror.createDocumentLoader(document, getPartitionId(), getPartitionCount());
+		MirroredDocumentLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(document, getPartitionId(), getPartitionCount());
 		if (document.writeBackPatchedDocuments()) {
 			documentLoader.loadAllObjects();
 			return writeBack(document, documentLoader);
@@ -84,7 +84,7 @@ final class VersionedMongoSpaceDataSource extends SpaceDataSource implements Clu
 	}
 	
 	private <T> List<T> writeBack(MirroredDocument<T> document, MirroredDocumentLoader<T> documentLoader) {
-		writePatchedDocumentsToStore(spaceMirror.getDocumentCollection(document), document, documentLoader.getPendingPatchedDocuments());
+		writePatchedDocumentsToStore(spaceMirrorContext.getDocumentCollection(document), document, documentLoader.getPendingPatchedDocuments());
 		List<T> loadedSpaceObjects = documentLoader.getLoadedSpaceObjects();
 		logger.info("Done loading documents for " + document.getMirroredType().getName() + ". Read object count: " + loadedSpaceObjects.size());
 		return loadedSpaceObjects;
@@ -104,8 +104,8 @@ final class VersionedMongoSpaceDataSource extends SpaceDataSource implements Clu
 
 	@Override
 	public <T extends ReloadableSpaceObject> T reloadObject(Class<T> spaceType, Object documentId) {
-		MirroredDocument<T> mirroredDocument = spaceMirror.getMirroredDocument(spaceType);
-		MirroredDocumentLoader<T> documentLoader = spaceMirror.createDocumentLoader(mirroredDocument, getPartitionId(), getPartitionCount());
+		MirroredDocument<T> mirroredDocument = spaceMirrorContext.getMirroredDocument(spaceType);
+		MirroredDocumentLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredDocument, getPartitionId(), getPartitionCount());
 		documentLoader.loadById(documentId);
 		List<T> result = writeBack(mirroredDocument, documentLoader);
 		return result.isEmpty() ? null : result.get(0);
@@ -121,8 +121,8 @@ final class VersionedMongoSpaceDataSource extends SpaceDataSource implements Clu
 	
 	@Override
 	public <T> Collection<T> loadObjects(Class<T> spaceType, T template) {
-		MirroredDocument<T> mirroredDocument = spaceMirror.getMirroredDocument(spaceType);
-		MirroredDocumentLoader<T> documentLoader = spaceMirror.createDocumentLoader(mirroredDocument, getPartitionId(), getPartitionCount());
+		MirroredDocument<T> mirroredDocument = spaceMirrorContext.getMirroredDocument(spaceType);
+		MirroredDocumentLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredDocument, getPartitionId(), getPartitionCount());
 		documentLoader.loadByQuery(template);
 		return writeBack(mirroredDocument, documentLoader);
 	}
