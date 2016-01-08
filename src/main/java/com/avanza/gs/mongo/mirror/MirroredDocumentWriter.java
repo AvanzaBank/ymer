@@ -27,8 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.avanza.gs.mongo.DocumentWriteExceptionHandler;
-import com.gigaspaces.datasource.BulkItem;
-import com.gigaspaces.datasource.DataSourceException;
 import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
@@ -80,7 +78,7 @@ final class MirroredDocumentWriter {
 		}
 		insertAll(pendingWrites);
 	}
-
+	
 	private Collection<DataSyncOperation> filterSpaceObjects(DataSyncOperation[] batchDataItems) {
 		ArrayList<DataSyncOperation> result = new ArrayList<>(batchDataItems.length);
 		for (DataSyncOperation bulkItem : batchDataItems) {
@@ -99,58 +97,6 @@ final class MirroredDocumentWriter {
 	private boolean isReloaded(DataSyncOperation bulkItem) {
 		Object item = bulkItem.getDataAsObject();
 		return (bulkItem.getDataSyncOperationType() == DataSyncOperationType.WRITE || bulkItem.getDataSyncOperationType() == DataSyncOperationType.UPDATE)
-				&& item instanceof ReloadableSpaceObject
-				&& ReloadableSpaceObjectUtil.isReloaded((ReloadableSpaceObject) item);
-	}
-
-	public void executeBulk(List<BulkItem> bulkItems) throws DataSourceException {
-		List<Object> pendingWrites = new ArrayList<Object>();
-		for (BulkItem bulkItem : filterSpaceObjects(bulkItems)) {
-			if (!mirror.isMirroredType(bulkItem.getItem().getClass())) {
-				logger.debug("Ignored {}, not a mirrored class", bulkItem.getItem().getClass().getName());
-				continue;
-			}
-			switch (bulkItem.getOperation()) {
-			case BulkItem.WRITE:
-				pendingWrites.add(bulkItem.getItem());
-				break;
-			case BulkItem.UPDATE:
-			case BulkItem.PARTIAL_UPDATE:
-				insertAll(pendingWrites);
-				pendingWrites = new ArrayList<>();
-				update(bulkItem.getItem());
-				break;
-			case BulkItem.REMOVE:
-				insertAll(pendingWrites);
-				pendingWrites = new ArrayList<>();
-				remove(bulkItem.getItem());
-				break;
-			default:
-				throw new UnsupportedOperationException("Bulkoperation " + bulkItem.getOperation()
-						+ " is not supported");
-			}
-		}
-		insertAll(pendingWrites);
-	}
-
-	private List<BulkItem> filterSpaceObjects(List<BulkItem> bulkItems) {
-		ArrayList<BulkItem> result = new ArrayList<>(bulkItems.size());
-		for (BulkItem bulkItem : bulkItems) {
-			if (isReloaded(bulkItem)) {
-				continue;
-			}
-			if (bulkItem.getOperation() == BulkItem.REMOVE
-				&& mirror.keepPersistent(bulkItem.getItem().getClass())) {
-				continue;
-			}
-			result.add(bulkItem);
-		}
-		return result;
-	}
-
-	private boolean isReloaded(BulkItem bulkItem) {
-		Object item = bulkItem.getItem();
-		return (bulkItem.getOperation() == BulkItem.WRITE || bulkItem.getOperation() == BulkItem.UPDATE)
 				&& item instanceof ReloadableSpaceObject
 				&& ReloadableSpaceObjectUtil.isReloaded((ReloadableSpaceObject) item);
 	}

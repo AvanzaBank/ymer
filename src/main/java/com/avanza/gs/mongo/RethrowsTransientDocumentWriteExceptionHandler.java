@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.avanza.gs.mongo.mirror.TransientDocumentWriteException;
-import com.mongodb.MongoException;
+import com.mongodb.MongoSocketException;
 
 /**
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
@@ -35,7 +35,7 @@ public class RethrowsTransientDocumentWriteExceptionHandler implements DocumentW
 	private Logger log = LoggerFactory.getLogger(RethrowsTransientDocumentWriteExceptionHandler.class);
 
 	public RethrowsTransientDocumentWriteExceptionHandler() {
-		this.transientErrorClasses = Arrays.<Class<? extends Exception>>asList(MongoException.Network.class);
+		this.transientErrorClasses = Arrays.<Class<? extends Exception>>asList(MongoSocketException.class);
 		this.transientErrorMessages = Arrays.asList("No replica set members available for query with", "not master");
 	}
 

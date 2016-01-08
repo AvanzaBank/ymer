@@ -18,10 +18,8 @@ package com.avanza.gs.mongo.mirror;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.junit.Before;
@@ -30,10 +28,12 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.gs.mongo.FakeDocumentWriteExceptionHandler;
 import com.avanza.gs.mongo.mirror.VersionedMongoDbExternalDataSourceInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
-import com.gigaspaces.datasource.BulkItem;
 import com.gigaspaces.document.SpaceDocument;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
+import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.DataSyncOperationType;
+import com.gigaspaces.sync.OperationsBatchData;
+import com.gigaspaces.sync.SynchronizationSourceDetails;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -67,9 +67,9 @@ public class MirroredDocumentWriterTest {
 	@Test
 	public void writesAreInsertedInDb() throws Exception {
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
-		FakeBulkItem bulkItem = new FakeBulkItem(item1, BulkItem.WRITE);
+		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.WRITE);
 
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 
 
 		BasicDBObject expected = documentConverter.convertToDBObject(item1);
@@ -85,9 +85,9 @@ public class MirroredDocumentWriterTest {
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		TestSpaceObject item2 = new TestSpaceObject("2", "hello");
 		TestSpaceObject item3 = new TestSpaceObject("3", "hello");
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(new FakeBulkItem(item1, BulkItem.WRITE),
-																   new FakeBulkItem(item2, BulkItem.WRITE),
-																   new FakeBulkItem(item3, BulkItem.WRITE)));
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(new FakeBulkItem(item1, DataSyncOperationType.WRITE),
+																   new FakeBulkItem(item2, DataSyncOperationType.WRITE),
+																   new FakeBulkItem(item3, DataSyncOperationType.WRITE)));
 
 		List<DBObject> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredDocument.getCollectionName()).findAll(Optional.<SpaceObjectFilter<?>>empty()));
 		assertEquals(3, persisted.size());
@@ -98,8 +98,8 @@ public class MirroredDocumentWriterTest {
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		documentDb.getCollection(mirroredDocument.getCollectionName()).insert(documentConverter.convertToDBObject(item1));
 		item1.setMessage("updated");
-		FakeBulkItem bulkItem = new FakeBulkItem(item1, BulkItem.PARTIAL_UPDATE);
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.PARTIAL_UPDATE);
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 
 		BasicDBObject expected = documentConverter.convertToDBObject(item1);
 		mirroredDocument.setDocumentVersion(expected, mirroredDocument.getCurrentVersion());
@@ -115,8 +115,8 @@ public class MirroredDocumentWriterTest {
 		documentDb.getCollection(mirroredDocument.getCollectionName()).insert(documentConverter.convertToDBObject(item1));
 		item1.setMessage("updated");
 
-		FakeBulkItem bulkItem = new FakeBulkItem(item1, BulkItem.UPDATE);
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 
 		BasicDBObject expected = documentConverter.convertToDBObject(item1);
 		mirroredDocument.setDocumentVersion(expected, mirroredDocument.getCurrentVersion());
@@ -133,8 +133,8 @@ public class MirroredDocumentWriterTest {
 		documentDb.getCollection(mirroredDocument.getCollectionName()).insert(dbObject);
 
 		TestSpaceObject bulkItemOBject = new TestSpaceObject("1", null);
-		FakeBulkItem bulkItem = new FakeBulkItem(bulkItemOBject, BulkItem.REMOVE);
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		FakeBulkItem bulkItem = new FakeBulkItem(bulkItemOBject, DataSyncOperationType.REMOVE);
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 
 		List<DBObject> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredDocument.getCollectionName()).findAll(Optional.<SpaceObjectFilter<?>>empty()));
 		assertEquals(0, persisted.size());
@@ -147,8 +147,8 @@ public class MirroredDocumentWriterTest {
 
 		item1.setMessage("hello2");
 
-		FakeBulkItem bulkItem = new FakeBulkItem(item1, BulkItem.REMOVE);
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.REMOVE);
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 
 		List<DBObject> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredDocument.getCollectionName()).findAll(Optional.<SpaceObjectFilter<?>>empty()));
 		assertEquals(0, persisted.size());
@@ -159,8 +159,8 @@ public class MirroredDocumentWriterTest {
 		TestSpaceOtherObject item1 = new TestSpaceOtherObject("1", "hello");
 		documentDb.getCollection(mirroredDocument.getCollectionName()).insert(documentConverter.convertToDBObject(item1));
 
-		FakeBulkItem bulkItem = new FakeBulkItem(item1, BulkItem.REMOVE);
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.REMOVE);
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 		BasicDBObject expected = documentConverter.convertToDBObject(item1);
 
 		List<DBObject> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredDocument.getCollectionName()).findAll(Optional.<SpaceObjectFilter<?>>empty()));
@@ -172,8 +172,8 @@ public class MirroredDocumentWriterTest {
 	public void ignoresNonMirroredTypes() throws Exception {
 		class NonMirroredType {
 		}
-		FakeBulkItem bulkItem = new FakeBulkItem(new NonMirroredType(), BulkItem.WRITE);
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		FakeBulkItem bulkItem = new FakeBulkItem(new NonMirroredType(), DataSyncOperationType.WRITE);
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 
 		List<DBObject> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredDocument.getCollectionName()).findAll(Optional.<SpaceObjectFilter<?>>empty()));
 		assertEquals(0, persisted.size());
@@ -187,8 +187,8 @@ public class MirroredDocumentWriterTest {
 		mirroredDocumentWriter = new MirroredDocumentWriter(mirror, new FakeDocumentWriteExceptionHandler());
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
-		FakeBulkItem bulkItem = new FakeBulkItem(item1, BulkItem.UPDATE);
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 
 		assertNotNull(mirrorExceptionSpy.lastException);
 		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
@@ -203,8 +203,8 @@ public class MirroredDocumentWriterTest {
 				new TransientDocumentWriteException(new Exception())));
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
-		FakeBulkItem bulkItem = new FakeBulkItem(item1, BulkItem.UPDATE);
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 	}
 
 	@Test
@@ -235,8 +235,8 @@ public class MirroredDocumentWriterTest {
 		mirroredDocumentWriter = new MirroredDocumentWriter(mirror, new FakeDocumentWriteExceptionHandler());
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
-		FakeBulkItem bulkItem = new FakeBulkItem(item1, BulkItem.UPDATE);
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem));
+		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem));
 
 		assertNotNull(mirrorExceptionSpy.lastException);
 		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
@@ -247,11 +247,11 @@ public class MirroredDocumentWriterTest {
 		TestReloadableSpaceObject spaceObject = new TestReloadableSpaceObject(1, 1, false, 1, 1);
 		TestReloadableSpaceObject spaceObject2 = new TestReloadableSpaceObject(2, 1, false, 2, 1);
 		TestReloadableSpaceObject spaceObject3 = new TestReloadableSpaceObject(3, 1, false, 3, 2);
-		FakeBulkItem bulkItem = new FakeBulkItem(spaceObject, BulkItem.WRITE);
-		FakeBulkItem bulkItem2 = new FakeBulkItem(spaceObject2, BulkItem.WRITE);
-		FakeBulkItem bulkItem3 = new FakeBulkItem(spaceObject3, BulkItem.WRITE);
+		FakeBulkItem bulkItem = new FakeBulkItem(spaceObject, DataSyncOperationType.WRITE);
+		FakeBulkItem bulkItem2 = new FakeBulkItem(spaceObject2, DataSyncOperationType.WRITE);
+		FakeBulkItem bulkItem3 = new FakeBulkItem(spaceObject3, DataSyncOperationType.WRITE);
 
-		mirroredDocumentWriter.executeBulk(Arrays.<BulkItem>asList(bulkItem, bulkItem2, bulkItem3));
+		mirroredDocumentWriter.executeBulk(FakeBatchData.create(bulkItem, bulkItem2, bulkItem3));
 
 
 		BasicDBObject expected = documentConverter.convertToDBObject(spaceObject);
@@ -275,71 +275,56 @@ public class MirroredDocumentWriterTest {
 	static class MirrorExceptionSpy implements MirrorExceptionListener {
 
 		private Exception lastException;
-		private Object[] lastFailedObjects;
-		private MirrorOperation lastFailedOperation;
 
 		@Override
 		public void onMirrorException(Exception e, MirrorOperation operation, Object[] failedObjects) {
 			this.lastException = e;
-			this.lastFailedObjects = failedObjects;
-			this.lastFailedOperation = operation;
 		}
 
 	}
+	
+	private static class FakeBatchData implements OperationsBatchData {
 
-	public static class FakeBulkItem implements BulkItem {
+		private DataSyncOperation[] batchDataItems;
+		
+		private FakeBatchData(FakeBulkItem[] items) {
+			batchDataItems = items;
+		}
+
+		public static FakeBatchData create(FakeBulkItem... items) {
+			return new FakeBatchData(items);
+		}
+
+		@Override
+		public DataSyncOperation[] getBatchDataItems() {
+			return this.batchDataItems;
+		}
+
+		@Override
+		public SynchronizationSourceDetails getSourceDetails() {
+			throw new UnsupportedOperationException("Not implemented by FakeBatchData (yet)");
+		}
+		
+	}
+
+	public static class FakeBulkItem implements DataSyncOperation {
 
 		private final Object item;
-		private final short operation;
+		private final DataSyncOperationType operation;
 
-		public FakeBulkItem(Object item, short operation) {
+		public FakeBulkItem(Object item, DataSyncOperationType operation) {
 			this.item = item;
 			this.operation = operation;
 		}
 
 		@Override
-		public String getIdPropertyName() {
-			return null;
-		}
-
-		@Override
-		public Object getIdPropertyValue() {
-			return null;
-		}
-
-		@Override
-		public Object getItem() {
-			return item;
-		}
-
-		@Override
-		public Map<String, Object> getItemValues() {
-			return null;
-		}
-
-		@Override
-		public short getOperation() {
-			return operation;
-		}
-
-		@Override
-		public String getTypeName() {
-			return null;
-		}
-
-		@Override
-		public SpaceDocument getDataAsDocument() {
-			return null;
-		}
-
-		@Override
 		public Object getDataAsObject() {
-			return null;
+			return this.item;
 		}
 
 		@Override
 		public DataSyncOperationType getDataSyncOperationType() {
-			return null;
+			return operation;
 		}
 
 		@Override
@@ -375,6 +360,11 @@ public class MirroredDocumentWriterTest {
 		@Override
 		public boolean supportsGetTypeDescriptor() {
 			return false;
+		}
+
+		@Override
+		public SpaceDocument getDataAsDocument() {
+			return null;
 		}
 	}
 
