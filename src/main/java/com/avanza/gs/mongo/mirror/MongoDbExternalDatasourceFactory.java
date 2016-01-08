@@ -27,8 +27,6 @@ import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.DB;
 import com.mongodb.ReadPreference;
 /**
- * Factory for building a ManagedDataSourceAndBulkDataPersister. <p>
- * 
  * @author Elias Lindholm (elilin)
  *
  */
@@ -41,10 +39,11 @@ public final class MongoDbExternalDatasourceFactory implements LifecycleAware {
 	private final LifecycleContainer lifecycleContainer = new LifecycleContainer();
 	private ReadPreference readPreference = ReadPreference.primary();
 	private VersionedMongoDBExternalDataSource versionedMongoDBExternalDataSource;
+	private SpaceMirrorContext mirrorContext;
 
 	public MongoDbExternalDatasourceFactory(MirroredDocuments mirroredDocuments, DB db, MongoConverter mongoConverter) {
 		DocumentDb mongoDb = DocumentDb.mongoDb(db, readPreference);
-		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredDocuments,
+		mirrorContext = new SpaceMirrorContext(mirroredDocuments,
 				DocumentConverter.mongoConverter(mongoConverter), mongoDb, exceptionListener);
 		versionedMongoDBExternalDataSource = new VersionedMongoDBExternalDataSource(mirrorContext);
 //		lifecycleContainer.add(versionedMongoDBExternalDataSource);
@@ -55,7 +54,7 @@ public final class MongoDbExternalDatasourceFactory implements LifecycleAware {
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
-		return new VersionedMongoSpaceDataSource(versionedMongoDBExternalDataSource);
+		return new VersionedMongoSpaceDataSource(mirrorContext);
 	}
 	
 
