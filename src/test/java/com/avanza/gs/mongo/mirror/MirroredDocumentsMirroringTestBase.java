@@ -50,6 +50,7 @@ import com.mongodb.DB;
 @RunWith(Parameterized.class)
 public abstract class MirroredDocumentsMirroringTestBase {
 
+	@SuppressWarnings("rawtypes")
 	private MirrorTest testCase;
 	private MongoDbFactory dummyMongoDbFactory;
 
@@ -68,6 +69,7 @@ public abstract class MirroredDocumentsMirroringTestBase {
 		};
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void serializationTest() throws Exception {
 		Object spaceObject = testCase.spaceObject;
