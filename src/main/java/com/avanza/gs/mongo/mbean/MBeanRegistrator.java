@@ -22,6 +22,4 @@ public interface MBeanRegistrator {
 
 	void registerMBean(Object mbean, String name);
 
-	void unregisterMBean(String name);
-
 }

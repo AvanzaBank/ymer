@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.gs.mongo;
+package com.avanza.gs.mongo.util;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.avanza.gs.mongo.util.NamedThreadFactory;
 import com.gigaspaces.datasource.DataIterator;
 
 /**

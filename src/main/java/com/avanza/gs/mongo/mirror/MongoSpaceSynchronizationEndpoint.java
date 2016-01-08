@@ -17,9 +17,6 @@ package com.avanza.gs.mongo.mirror;
 
 import javax.annotation.PostConstruct;
 
-import com.avanza.gs.mongo.CatchesAllDocumentWriteExceptionHandler;
-import com.avanza.gs.mongo.RethrowsTransientDocumentWriteExceptionHandler;
-import com.avanza.gs.mongo.ToggleableDocumentWriteExceptionHandler;
 import com.avanza.gs.mongo.mbean.MBeanRegistrationUtil;
 import com.avanza.gs.mongo.mbean.MBeanRegistrator;
 import com.avanza.gs.mongo.mbean.PlatformMBeanServerMBeanRegistrator;

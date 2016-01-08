@@ -39,13 +39,4 @@ public class PlatformMBeanServerMBeanRegistrator implements MBeanRegistrator {
 		}
 	}
 	
-	@Override
-	public void unregisterMBean(String name) {
-		log.info("Unregistering mbean with name {}", name);
-		try {
-			ManagementFactory.getPlatformMBeanServer().unregisterMBean(ObjectName.getInstance(name));
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
 }

@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.gs.mongo;
+package com.avanza.gs.mongo.mirror;
 
-public interface DocumentWriteExceptionHandler {
-
-	void handleException(Exception exception, String operationDescription);
-
+public interface ToggleableDocumentWriteExceptionHandlerMBean {
+	void useCatchesAllHandler();
+	void useDefaultHandler();
 }

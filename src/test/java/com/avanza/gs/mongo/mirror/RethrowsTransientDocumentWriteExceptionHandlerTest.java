@@ -13,26 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.gs.mongo;
+package com.avanza.gs.mongo.mirror;
 
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.springframework.dao.DataAccessResourceFailureException;
 
+import com.avanza.gs.mongo.mirror.DocumentWriteExceptionHandler;
+import com.avanza.gs.mongo.mirror.RethrowsTransientDocumentWriteExceptionHandler;
 import com.avanza.gs.mongo.mirror.TransientDocumentWriteException;
+import com.mongodb.MongoException;
+import com.mongodb.MongoSocketException;
 
+/**
+ * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
+ */
+public class RethrowsTransientDocumentWriteExceptionHandlerTest {
 
-public class RethrowsTransientSpringExceptionHandlerTest {
-
-	private DocumentWriteExceptionHandler handler = new RethrowsTransientSpringExceptionHandler();
+	private DocumentWriteExceptionHandler handler = new RethrowsTransientDocumentWriteExceptionHandler();
 
 	@Test(expected = TransientDocumentWriteException.class)
 	public void throwsOnTransientException() throws Exception {
-		handler.handleException(new DataAccessResourceFailureException(""), "");
+		handler.handleException(newMongoNetworkException(), "");
 	}
 
 	@Test
@@ -54,6 +60,11 @@ public class RethrowsTransientSpringExceptionHandlerTest {
 			} catch (TransientDocumentWriteException e) {
 			}
 		}
+	}
+
+	@SuppressWarnings("deprecation")
+	private MongoSocketException newMongoNetworkException() {
+		return new MongoException.Network(new IOException());
 	}
 
 }

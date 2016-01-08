@@ -20,7 +20,6 @@ import java.util.Objects;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.avanza.gs.mongo.MongoQueryFactory;
 import com.mongodb.BasicDBObject;
 /**
  * Strategy for converting a mongo document into a domain object (ie the object

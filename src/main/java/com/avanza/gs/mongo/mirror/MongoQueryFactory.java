@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.gs.mongo;
+package com.avanza.gs.mongo.mirror;
 
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;

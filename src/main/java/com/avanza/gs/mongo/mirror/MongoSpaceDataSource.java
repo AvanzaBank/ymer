@@ -27,13 +27,10 @@ import org.openspaces.core.cluster.ClusterInfoAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.avanza.gs.mongo.CatchesAllDocumentWriteExceptionHandler;
-import com.avanza.gs.mongo.ParallelIteratorIterator;
-import com.avanza.gs.mongo.RethrowsTransientDocumentWriteExceptionHandler;
-import com.avanza.gs.mongo.ToggleableDocumentWriteExceptionHandler;
 import com.avanza.gs.mongo.mbean.MBeanRegistrationUtil;
 import com.avanza.gs.mongo.mbean.MBeanRegistrator;
 import com.avanza.gs.mongo.mbean.PlatformMBeanServerMBeanRegistrator;
+import com.avanza.gs.mongo.util.ParallelIteratorIterator;
 import com.gigaspaces.datasource.DataIterator;
 import com.gigaspaces.datasource.SpaceDataSource;
 

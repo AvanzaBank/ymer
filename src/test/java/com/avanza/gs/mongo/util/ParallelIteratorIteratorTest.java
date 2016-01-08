@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.gs.mongo;
+package com.avanza.gs.mongo.util;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
+
+import com.avanza.gs.mongo.util.ParallelIteratorIterator;
 
 public class ParallelIteratorIteratorTest {
 

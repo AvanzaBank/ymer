@@ -15,6 +15,8 @@
  */
 package com.avanza.gs.mongo;
 
+import com.avanza.gs.mongo.mirror.DocumentWriteExceptionHandler;
+
 public class FakeDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler {
 
 	private final RuntimeException exceptionToThrow;

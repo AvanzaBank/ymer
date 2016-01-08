@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.gs.mongo;
+package com.avanza.gs.mongo.mirror;
 
 import static org.junit.Assert.fail;
 
@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import com.avanza.gs.mongo.mirror.CatchesAllDocumentWriteExceptionHandler;
 import com.mongodb.MongoException;
 import com.mongodb.MongoSocketException;
 

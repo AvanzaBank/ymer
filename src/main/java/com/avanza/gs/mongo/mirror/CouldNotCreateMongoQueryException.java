@@ -13,9 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.gs.mongo;
+package com.avanza.gs.mongo.mirror;
 
-public interface ToggleableDocumentWriteExceptionHandlerMBean {
-	void useCatchesAllHandler();
-	void useDefaultHandler();
+/**
+ * Thrown when {@link MongoQueryFactory} is unable to create a mongo query
+ * @author joasah Joakim Sahlström
+ */
+public class CouldNotCreateMongoQueryException extends RuntimeException {
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * @param e source error
+	 */
+	public CouldNotCreateMongoQueryException(Exception e) {
+		super(e);
+	}
 }
