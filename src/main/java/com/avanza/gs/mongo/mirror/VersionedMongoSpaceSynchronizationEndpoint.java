@@ -17,33 +17,37 @@ package com.avanza.gs.mongo.mirror;
 
 import javax.annotation.PostConstruct;
 
-import org.openspaces.core.cluster.ClusterInfo;
-import org.openspaces.core.cluster.ClusterInfoAware;
-
+import com.avanza.gs.mongo.CatchesAllDocumentWriteExceptionHandler;
+import com.avanza.gs.mongo.RethrowsTransientDocumentWriteExceptionHandler;
+import com.avanza.gs.mongo.ToggleableDocumentWriteExceptionHandler;
+import com.avanza.gs.mongo.mbean.MBeanRegistrationUtil;
+import com.avanza.gs.mongo.mbean.MBeanRegistrator;
+import com.avanza.gs.mongo.mbean.PlatformMBeanServerMBeanRegistrator;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
-final class VersionedMongoSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint implements ClusterInfoAware {
+final class VersionedMongoSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
 	
-	private final VersionedMongoDBExternalDataSource target;
-	
-	public VersionedMongoSpaceSynchronizationEndpoint(VersionedMongoDBExternalDataSource target) {
-		this.target = target;
+	private final MirroredDocumentWriter mirroredDocumentWriter;
+	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
+	private final MBeanRegistrator mbeanRegistrator;
+
+	public VersionedMongoSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
+		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
+				new RethrowsTransientDocumentWriteExceptionHandler(),
+				new CatchesAllDocumentWriteExceptionHandler());
+		this.mirroredDocumentWriter = new MirroredDocumentWriter(spaceMirror, exceptionHandler);
+		this.mbeanRegistrator = new PlatformMBeanServerMBeanRegistrator();
 	}
 
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
-		target.executeBulk(batchData);
+		mirroredDocumentWriter.executeBulk(batchData);
 	}
 	
 	@PostConstruct
 	public void registerExceptionHandlerMBean() {
-		target.registerExceptionHandlerMBean();
-	}
-
-	@Override
-	public void setClusterInfo(ClusterInfo clusterInfo) {
-		target.setClusterInfo(clusterInfo);
+		MBeanRegistrationUtil.registerExceptionHandlerMBean(mbeanRegistrator, exceptionHandler);
 	}
 	
 }

@@ -59,7 +59,7 @@ public final class MongoDbExternalDatasourceFactory implements LifecycleAware {
 	
 
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
-		return new VersionedMongoSpaceSynchronizationEndpoint(versionedMongoDBExternalDataSource);
+		return new VersionedMongoSpaceSynchronizationEndpoint(mirrorContext);
 	}
 	
 	/**
