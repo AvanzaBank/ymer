@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import java.lang.management.ManagementFactory;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.management.MBeanServer;
@@ -54,27 +53,19 @@ public class VersionedMongoDbExternalDataSourceMirrorIntegrationTest {
 	
 	private MongoOperations mongo;
 	private GigaSpace gigaSpace;
-//	private static String lookupGroupName = "group-" + new Random().nextInt();
 	private static MirrorEnvironmentRunner mirrorEnviroment = new MirrorEnvironmentRunner(TestSpaceMirrorFactory.getMirroredDocuments());
 
 	private static RunningPu pu = PuConfigurers.partitionedPu("classpath:/mongo-mirror-integration-test-pu.xml")
 									   .numberOfBackups(1)
 									   .numberOfPrimaries(1)
-									   .contextProperties(new Properties() {{
-										   setProperty("databasename", mirrorEnviroment.getDatabaseName());
-									   }})
+									   .contextProperty("databasename", mirrorEnviroment.getDatabaseName())
 									   .parentContext(mirrorEnviroment.getMongoClientContext())
-//									   .groupName(lookupGroupName)
 									   .configure();
 
-//	private static RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/mongo-mirror-integration-test-mirror-pu.xml")
 	private static RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/mongo-mirror-integration-test-mirror-pu.xml")
-//											 .groupName(lookupGroupName)
-											   .contextProperties(new Properties() {{
-												   setProperty("databasename", mirrorEnviroment.getDatabaseName());
-											   }})
-											   .parentContext(mirrorEnviroment.getMongoClientContext())
-											 .configure();
+											   	     .contextProperty("databasename", mirrorEnviroment.getDatabaseName())
+											   	     .parentContext(mirrorEnviroment.getMongoClientContext())
+											   	     .configure();
 
 	@ClassRule
 	public static TestRule spaces = RuleChain.outerRule(mirrorEnviroment).around(pu).around(mirrorPu);

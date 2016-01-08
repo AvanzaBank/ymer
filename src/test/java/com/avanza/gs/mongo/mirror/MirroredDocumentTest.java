@@ -46,6 +46,7 @@ public class MirroredDocumentTest {
 	@Test(expected=IllegalArgumentException.class)
 	public void cannotMirrorTypesWithNoRoutingMethod() throws Exception {
 		class InvalidSpaceObject {
+			@SuppressWarnings("unused")
 			public Integer fooMethod() {
 				return null; // Never used
 			}
@@ -213,7 +214,7 @@ public class MirroredDocumentTest {
 		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, patch1, patch2);
 		BasicDBObject dbObject = new BasicDBObject();
 
-		BasicDBObject patched = document.patch(dbObject);
+		document.patch(dbObject);
 		assertTrue(patch1.applied);
 		assertTrue(patch2.applied);
 	}

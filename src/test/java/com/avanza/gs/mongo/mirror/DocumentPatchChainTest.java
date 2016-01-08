@@ -15,8 +15,8 @@
  */
 package com.avanza.gs.mongo.mirror;
 
-import static junit.framework.Assert.assertSame;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 
 import java.util.Arrays;
 import java.util.Iterator;

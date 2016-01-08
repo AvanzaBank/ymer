@@ -236,10 +236,6 @@ public class MirroredDocumentLoaderTest {
 			this.patched = patched;
 		}
 
-		public boolean isPatched() {
-			return patched;
-		}
-
 		@SpaceId
 		public int getId() {
 			return id;

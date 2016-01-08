@@ -104,16 +104,7 @@ public class VersionedMongoDBExternalDataSourceTest {
 		private int id;
 		private int spaceRouting;
 
-		public FakeSpaceObject(int id, int spaceRouting) {
-			this.id = id;
-			this.spaceRouting = spaceRouting;
-		}
-
 		public FakeSpaceObject() {
-		}
-
-		public int getId() {
-			return id;
 		}
 
 		public void setId(int id) {
@@ -162,6 +153,7 @@ public class VersionedMongoDBExternalDataSourceTest {
 
 	private static class FakeDocumentConverter implements DocumentConverter.Provider {
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T convert(Class<T> toType, BasicDBObject document) {
 			FakeSpaceObject spaceObject = new FakeSpaceObject();

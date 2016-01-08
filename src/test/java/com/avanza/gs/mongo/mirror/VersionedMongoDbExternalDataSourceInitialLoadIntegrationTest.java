@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 import org.junit.After;
 import org.junit.ClassRule;
@@ -48,11 +47,7 @@ public class VersionedMongoDbExternalDataSourceInitialLoadIntegrationTest {
 									   .numberOfPrimaries(1)
 									   .startAsync(false)
 									   .parentContext(mirrorEnv.getMongoClientContext())
-									   .contextProperties(new Properties() {{
-										   setProperty("databasename", mirrorEnv.getDatabaseName());
-//										   setProperty("mongouri", mirrorEnv.getMongoUri());
-									   }})
-//									   .("testSpaceGigaSpace")
+									   .contextProperty("databasename", mirrorEnv.getDatabaseName())
 									   .configure();
 	@After
 	public void cleanup() throws Exception {

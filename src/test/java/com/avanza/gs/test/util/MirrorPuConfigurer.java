@@ -22,7 +22,7 @@ import org.springframework.context.ApplicationContext;
 public class MirrorPuConfigurer {
 	
 	final String puXmlPath;
-	Properties properties;
+	Properties properties = new Properties();
 	ApplicationContext parentContext;
 	String lookupGroupName = JVMGlobalLus.getLookupGroupName();
 
@@ -30,8 +30,8 @@ public class MirrorPuConfigurer {
 		this.puXmlPath = puXmlPath;
 	}
 
-	public MirrorPuConfigurer contextProperties(Properties properties) {
-		this.properties = properties;
+	public MirrorPuConfigurer contextProperty(String propertyName, String propertyValue) {
+		this.properties.setProperty(propertyName, propertyValue);
 		return this;
 	}
 
