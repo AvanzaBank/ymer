@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import com.avanza.gs.mongo.mirror.TransientDocumentWriteException;
 import com.mongodb.MongoException;
-import com.mongodb.MongoException.Network;
+import com.mongodb.MongoSocketException;
 
 /**
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
@@ -60,7 +60,8 @@ public class RethrowsTransientDocumentWriteExceptionHandlerTest {
 		}
 	}
 
-	private Network newMongoNetworkException() {
+	@SuppressWarnings("deprecation")
+	private MongoSocketException newMongoNetworkException() {
 		return new MongoException.Network(new IOException());
 	}
 

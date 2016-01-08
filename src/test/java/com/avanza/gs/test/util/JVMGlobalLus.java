@@ -33,6 +33,7 @@ public final class JVMGlobalLus {
 	 */
 
 	private static final String LOOKUP_GROUP_NAME = UUID.randomUUID().toString();
+	@SuppressWarnings("unused")
 	private static final IJSpace DUMMY_SPACE;
 	
 	static {

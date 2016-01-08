@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 import com.mongodb.MongoException;
-import com.mongodb.MongoException.Network;
+import com.mongodb.MongoSocketException;
 
 public class CatchesAllDocumentWriteExceptionHandlerTest {
 	private DocumentWriteExceptionHandler handler = new CatchesAllDocumentWriteExceptionHandler();
@@ -45,7 +45,8 @@ public class CatchesAllDocumentWriteExceptionHandlerTest {
 		}
 	}
 
-	private Network newMongoNetworkException() {
+	@SuppressWarnings("deprecation")
+	private MongoSocketException newMongoNetworkException() {
 		return new MongoException.Network(new IOException());
 	}
 }
