@@ -15,7 +15,8 @@
  */
 package com.avanza.gs.mongo.mirror;
 
-import com.avanza.gs.mongo.util.Require;
+import java.util.Objects;
+
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.ReadPreference;
@@ -55,7 +56,7 @@ final class DocumentDb {
 		
 		MongoDocumentDb(DB mongoDb, ReadPreference readPreference) {
 			this.readPreference = readPreference;
-			this.mongoDb = Require.notNull(mongoDb);
+			this.mongoDb = Objects.requireNonNull(mongoDb);
 		}
 
 		@Override

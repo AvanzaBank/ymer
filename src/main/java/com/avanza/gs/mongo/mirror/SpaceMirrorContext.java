@@ -17,9 +17,9 @@ package com.avanza.gs.mongo.mirror;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.avanza.gs.mongo.util.Require;
 import com.mongodb.BasicDBObject;
 /**
  * Holds the runtime context for a mongo mirror. <p>
@@ -46,10 +46,10 @@ final class SpaceMirrorContext {
 	}
 
 	SpaceMirrorContext(MirroredDocuments mirroredDocuments, DocumentConverter documentConverter, DocumentDb documentDb, MirrorExceptionListener mirrorExceptionListener) {
-		this.documentDb = Require.notNull(documentDb);
-		this.mirrorExceptionListener = Require.notNull(mirrorExceptionListener);
-		this.mirroredDocuments = Require.notNull(mirroredDocuments);
-		this.documentConverter = Require.notNull(documentConverter);
+		this.documentDb = Objects.requireNonNull(documentDb);
+		this.mirrorExceptionListener = Objects.requireNonNull(mirrorExceptionListener);
+		this.mirroredDocuments = Objects.requireNonNull(mirroredDocuments);
+		this.documentConverter = Objects.requireNonNull(documentConverter);
 		for (MirroredDocument<?> mirroredDocument : mirroredDocuments.getMirroredDocuments()) {
 			DocumentCollection documentCollection = documentDb.getCollection(mirroredDocument.getCollectionName());
 			this.documentCollectionByMirroredType.put(mirroredDocument.getMirroredType(), documentCollection);

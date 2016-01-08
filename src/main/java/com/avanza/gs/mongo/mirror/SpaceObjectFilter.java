@@ -15,7 +15,7 @@
  */
 package com.avanza.gs.mongo.mirror;
 
-import com.avanza.gs.mongo.util.Require;
+import java.util.Objects;
 
 /**
  * Strategy for filtering out objects during initial load. <p>
@@ -31,7 +31,7 @@ final class SpaceObjectFilter<T> {
 	private final Impl<T> impl;
 
 	private SpaceObjectFilter(Impl<T> impl) {
-		this.impl = Require.notNull(impl);
+		this.impl = Objects.requireNonNull(impl);
 	}
 
 	static <T> SpaceObjectFilter<T> partitionFilter(MirroredDocument<T> document, int partitionId, int partitionCount) {

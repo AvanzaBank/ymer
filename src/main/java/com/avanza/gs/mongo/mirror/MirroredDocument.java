@@ -18,11 +18,11 @@ package com.avanza.gs.mongo.mirror;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.data.mongodb.MongoCollectionUtils;
 
-import com.avanza.gs.mongo.util.Require;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
@@ -83,8 +83,7 @@ public final class MirroredDocument<T> {
     }
 
 	private MirroredDocument(DocumentPatchChain<T> patchChain, Set<Flag> flags, String collectionName) {
-        Require.notNull(patchChain);
-		this.patchChain = patchChain;
+		this.patchChain = Objects.requireNonNull(patchChain);
 		this.routingKeyExtractor = findRoutingKeyMethod(patchChain.getMirroredType());
 		this.excludeFromInitialLoad = flags.contains(Flag.ExcludeFromInitialLoad);
         this.writeBackPatchedDocuments = !flags.contains(Flag.DoNotWriteBackPatchedDocuments);

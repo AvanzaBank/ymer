@@ -15,7 +15,8 @@
  */
 package com.avanza.gs.mongo.mirror;
 
-import com.avanza.gs.mongo.util.Require;
+import java.util.Objects;
+
 import com.mongodb.BasicDBObject;
 /**
  * Data structure to hold a patched document. <p>
@@ -29,8 +30,8 @@ final class PatchedDocument {
 
 	public PatchedDocument(BasicDBObject oldVersion,
 						   BasicDBObject newVersion) {
-		this.oldVersion = Require.notNull(oldVersion);
-		this.newVersion = Require.notNull(newVersion);
+		this.oldVersion = Objects.requireNonNull(oldVersion);
+		this.newVersion = Objects.requireNonNull(newVersion);
 	}
 	
 	/**

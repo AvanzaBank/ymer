@@ -19,6 +19,7 @@ import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -26,8 +27,6 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-
-import com.avanza.gs.mongo.util.Require;
 
 /**
  * Builds a mongo {@link Query} object from any object, but maybe preferably from a GigaSpace template :-)
@@ -45,8 +44,7 @@ public class MongoQueryFactory {
 	 * @param mongoConverter {@link MongoConverter} extracted from the mongo datasource used in gigaspaces
 	 */
 	public MongoQueryFactory(MongoConverter mongoConverter) {
-		Require.notNull(mongoConverter);
-		this.mongoConverter = mongoConverter;
+		this.mongoConverter = Objects.requireNonNull(mongoConverter);
 		this.mongoMappingContext = (MongoMappingContext) mongoConverter.getMappingContext();
 	}
 

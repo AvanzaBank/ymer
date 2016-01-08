@@ -15,11 +15,12 @@
  */
 package com.avanza.gs.mongo.mirror;
 
+import java.util.Objects;
+
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.gs.mongo.MongoQueryFactory;
-import com.avanza.gs.mongo.util.Require;
 import com.mongodb.BasicDBObject;
 /**
  * Strategy for converting a mongo document into a domain object (ie the object
@@ -118,7 +119,7 @@ final class DocumentConverter {
 		private final MongoConverter mongoConverter;
 
 		public MongoConverterDocumentConverter(MongoConverter mongoConverter) {
-			Require.notNull(mongoConverter);
+			Objects.requireNonNull(mongoConverter);
 			this.mongoConverter = mongoConverter;
 		}
 

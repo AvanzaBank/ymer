@@ -18,6 +18,7 @@ package com.avanza.gs.mongo;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -28,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.avanza.gs.mongo.util.NamedThreadFactory;
-import com.avanza.gs.mongo.util.Require;
 import com.gigaspaces.datasource.DataIterator;
 
 /**
@@ -63,7 +63,6 @@ public class ParallelIteratorIterator<T> implements DataIterator<T> {
 	}
 
 	public ParallelIteratorIterator(Collection<Iterator<T>> iterators) {
-		Require.notNull(iterators);
 		latch = new CountDownLatch(iterators.size());
 		iterators.stream().forEach(iter -> pool.submit(() -> drain(iter)));
 	}

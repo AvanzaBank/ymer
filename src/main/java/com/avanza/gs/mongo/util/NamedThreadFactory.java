@@ -46,14 +46,6 @@ public class NamedThreadFactory implements ThreadFactory {
 		daemon = true;
 	}
 
-	/**
-	 * Creates a thread with the specified daemon mode.
-	 */
-	public NamedThreadFactory(String namePrefix, boolean daemon) {
-		this(namePrefix);
-		this.daemon = daemon;
-	}
-
 	private ThreadGroup getThreadGroup() {
 		// Done in the same way as java.util.concurrent.Executors.DefaultThreadFactory.
 		SecurityManager s = System.getSecurityManager();

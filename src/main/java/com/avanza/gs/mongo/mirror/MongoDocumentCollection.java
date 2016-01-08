@@ -15,11 +15,11 @@
  */
 package com.avanza.gs.mongo.mirror;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.avanza.gs.mongo.util.Require;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -35,7 +35,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 	private final DBCollection dbCollection;
 
 	public MongoDocumentCollection(DBCollection dbCollection) {
-		this.dbCollection = Require.notNull(dbCollection);
+		this.dbCollection = Objects.requireNonNull(dbCollection);
 	}
 
 	@Override

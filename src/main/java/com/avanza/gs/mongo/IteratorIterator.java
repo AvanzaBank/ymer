@@ -20,8 +20,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
-import com.avanza.gs.mongo.util.Require;
 import com.gigaspaces.datasource.DataIterator;
 
 /**
@@ -44,7 +44,6 @@ public class IteratorIterator<T> implements DataIterator<T> {
 	}
 
 	public IteratorIterator(Collection<Iterator<T>> iterators) {
-		Require.notNull(iterators);
     	this.iterators = new ArrayList<>(iterators);
     	current = 0;
 	}
