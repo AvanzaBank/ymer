@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.StreamSupport;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,12 +64,10 @@ final class MirroredDocumentLoader<T> {
 	void loadAllObjects() {
 		long startTime = System.currentTimeMillis();
 		log.info("Begin loadAllObjects for {}", document.getCollectionName());
-		Iterable<DBObject> allObjects = loadDocuments();
 		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS, new NamedThreadFactory("MirroredDocumentLoaderWorker"));
 		List<Future<Optional<DocumentWrapper<T>>>> futures = 
-				StreamSupport.stream(allObjects.spliterator(), false)
-							 .map(x -> executor.submit(() -> tryLoadAndPatch(x)))
-							 .collect(toList());
+							loadDocuments().map(x -> executor.submit(() -> tryLoadAndPatch(x)))
+							 			   .collect(toList());
 		executor.shutdown();
 		awaitTermination(executor);
 		futures.stream()
@@ -81,7 +79,7 @@ final class MirroredDocumentLoader<T> {
 				loadedObjects.size(), ((System.currentTimeMillis() - startTime) / 1000d));
 	}
 
-	private Iterable<DBObject> loadDocuments() {
+	private Stream<DBObject> loadDocuments() {
 		if (document.loadDocumentsRouted()) {
 			return documentCollection.findAll(spaceObjectFilter);
 		}
@@ -147,10 +145,9 @@ final class MirroredDocumentLoader<T> {
 	}
 
 	void loadByQuery(T template) {
-		Iterable<DBObject> documents = documentCollection.findByQuery(documentConverter.toQuery(template));
-		StreamSupport.stream(documents.spliterator(), false)
-			.map(BasicDBObject.class::cast)
-			.forEach(this::loadAndPatchSingleDocument);
+		documentCollection.findByQuery(documentConverter.toQuery(template))
+						  .map(BasicDBObject.class::cast)
+						  .forEach(this::loadAndPatchSingleDocument);
 	}
 
 	private BasicDBObject findById(Object id) {

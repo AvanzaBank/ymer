@@ -18,6 +18,7 @@ package com.avanza.gs.mongo.mirror;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -34,17 +35,13 @@ class FakeDocumentCollection implements DocumentCollection {
 	private final AtomicInteger idGenerator = new AtomicInteger(0);
 
 	@Override
-	public Iterable<DBObject> findAll(SpaceObjectFilter<?> filter) {
-		return getDocumentCollection();
+	public Stream<DBObject> findAll(SpaceObjectFilter<?> filter) {
+		return collection.stream();
 	}
 	
 	@Override
-	public Iterable<DBObject> findAll() {
-		return getDocumentCollection();
-	}
-
-	private ConcurrentLinkedQueue<DBObject> getDocumentCollection() {
-		return collection;
+	public Stream<DBObject> findAll() {
+		return collection.stream();
 	}
 
 	@Override
@@ -52,22 +49,22 @@ class FakeDocumentCollection implements DocumentCollection {
 		// Note that the Iterator of the list associated with the given collectionName may reflect changes to the
 		// underlying list. This behavior is similar to a database cursor who may returned elements
 		// that are inserted/updated after the cursor is created.
-		getDocumentCollection().remove(oldVersion);
-		getDocumentCollection().add(newVersion);
+		collection.remove(oldVersion);
+		collection.add(newVersion);
 	}
 
 	public void addDocument(String collectionName, BasicDBObject doc) {
-		getDocumentCollection().add(doc);
+		collection.add(doc);
 	}
 
 	@Override
 	public void update(BasicDBObject newVersion) {
-		Iterator<DBObject> it = getDocumentCollection().iterator();
+		Iterator<DBObject> it = collection.iterator();
 		while (it.hasNext()) {
 			DBObject dbObject = it.next();
 			if (dbObject.get("_id").equals(newVersion.get("_id"))) {
 				it.remove();
-				getDocumentCollection().add(newVersion);
+				collection.add(newVersion);
 				return;
 			}
 		}
@@ -77,7 +74,7 @@ class FakeDocumentCollection implements DocumentCollection {
 
 	@Override
 	public void insert(BasicDBObject dbObject) {
-		for (DBObject object : getDocumentCollection()) {
+		for (DBObject object : collection) {
 			if (object.get("_id").equals(dbObject.get("_id"))) {
 				throw new DuplicateDocumentKeyException("_id: " + dbObject.get("_id"));
 			}
@@ -85,7 +82,7 @@ class FakeDocumentCollection implements DocumentCollection {
 		if (dbObject.get("_id") == null) {
 			dbObject.put("_id", "testid_" + idGenerator.incrementAndGet());
 		}
-		getDocumentCollection().add(dbObject);
+		collection.add(dbObject);
 	}
 
 	@Override
@@ -101,7 +98,7 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	private void removeByTemplate(BasicDBObject dbObject) {
-		Iterator<DBObject> it = getDocumentCollection().iterator();
+		Iterator<DBObject> it = collection.iterator();
 		while (it.hasNext()) {
 			DBObject next = it.next();
 			if (next.equals(dbObject)) {
@@ -112,7 +109,7 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	private void removeById(BasicDBObject dbObject) {
-		Iterator<DBObject> it = getDocumentCollection().iterator();
+		Iterator<DBObject> it = collection.iterator();
 		while (it.hasNext()) {
 			DBObject next = it.next();
 			if (next.get("_id").equals(dbObject.get("_id"))) {
@@ -131,7 +128,7 @@ class FakeDocumentCollection implements DocumentCollection {
 
 	@Override
 	public DBObject findById(Object id) {
-		for (DBObject next : getDocumentCollection()) {
+		for (DBObject next : collection) {
 			if (next.get("_id").equals(id)) {
 				return next;
 			}
@@ -140,7 +137,7 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public Iterable<DBObject> findByQuery(Query query) {
+	public Stream<DBObject> findByQuery(Query query) {
 		throw new UnsupportedOperationException();
 	}
 }

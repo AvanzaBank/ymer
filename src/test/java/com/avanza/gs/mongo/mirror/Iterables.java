@@ -18,6 +18,8 @@ package com.avanza.gs.mongo.mirror;
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -29,8 +31,16 @@ final class Iterables {
 	public static <T> List<T> newArrayList(Iterable<T> iterable) {
 		return StreamSupport.stream(iterable.spliterator(), false).collect(toList());
 	}
+	
+	public static <T> List<T> newArrayList(Stream<T> iterable) {
+		return iterable.collect(Collectors.toList());
+	}
 
 	public static int sizeOf(Iterable<?> iterable) {
 		return (int) StreamSupport.stream(iterable.spliterator(), false).count();
+	}
+	
+	public static long sizeOf(Stream<?> stream) {
+		return stream.count();
 	}
 }

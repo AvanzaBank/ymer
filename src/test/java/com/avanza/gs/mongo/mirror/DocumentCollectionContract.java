@@ -240,7 +240,7 @@ public abstract class DocumentCollectionContract {
 		documentCollection.update(updated);
 
 		// Still only one element in the collection
-		assertThat(documentCollection.findAll(), iterableWithSize(1));
+		assertEquals(1, documentCollection.findAll().count());
 
 		// the original version is replace by the update
 		assertEquals(updated, documentCollection.findAll().iterator().next());

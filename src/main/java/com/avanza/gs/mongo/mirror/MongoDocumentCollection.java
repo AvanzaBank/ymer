@@ -16,6 +16,8 @@
 package com.avanza.gs.mongo.mirror;
 
 import java.util.Objects;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -38,17 +40,17 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 	
 	@Override
-	public Iterable<DBObject> findAll(SpaceObjectFilter<?> objectFilter) {
+	public Stream<DBObject> findAll(SpaceObjectFilter<?> objectFilter) {
 		if (MongoPartitionFilter.canCreateFrom(objectFilter)) {
 			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.create(objectFilter);
-			return dbCollection.find(mongoPartitionFilter.toDBObject());
+			return StreamSupport.stream(dbCollection.find(mongoPartitionFilter.toDBObject()).spliterator(), false);
 		} 
 		return findAll();
 	}
 	
 	@Override
-	public Iterable<DBObject> findAll() {
-		return dbCollection.find();
+	public Stream<DBObject> findAll() {
+		return StreamSupport.stream(dbCollection.find().spliterator(), false);
 	}
 
 	@Override
@@ -57,8 +59,8 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public Iterable<DBObject> findByQuery(Query query) {
-		return dbCollection.find(query.getQueryObject());
+	public Stream<DBObject> findByQuery(Query query) {
+		return  StreamSupport.stream(dbCollection.find(query.getQueryObject()).spliterator(), false);
 	}
 
 	@Override

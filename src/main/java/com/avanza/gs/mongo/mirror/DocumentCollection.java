@@ -15,6 +15,8 @@
  */
 package com.avanza.gs.mongo.mirror;
 
+import java.util.stream.Stream;
+
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBObject;
@@ -33,9 +35,9 @@ interface DocumentCollection {
 	/**
 	 * Reads all documents from the underlying mongo collection. <p>
 	 */
-	Iterable<DBObject> findAll();
+	Stream<DBObject> findAll();
 	
-	Iterable<DBObject> findAll(SpaceObjectFilter<?> objectFilter);
+	Stream<DBObject> findAll(SpaceObjectFilter<?> objectFilter);
 
 	/**
 	 * Returns a document with a given id. <p>
@@ -43,7 +45,7 @@ interface DocumentCollection {
 	 */
 	DBObject findById(Object id);
 
-	Iterable<DBObject> findByQuery(Query query);
+	Stream<DBObject> findByQuery(Query query);
 
 	/**
 	 * Replaces a given document in the underlying mongo collection with a new
