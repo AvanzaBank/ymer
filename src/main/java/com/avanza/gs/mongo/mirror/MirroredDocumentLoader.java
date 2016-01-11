@@ -15,23 +15,20 @@
  */
 package com.avanza.gs.mongo.mirror;
 
-import static java.util.stream.Collectors.toList;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.avanza.gs.mongo.util.NamedThreadFactory;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 /**
@@ -64,19 +61,25 @@ final class MirroredDocumentLoader<T> {
 	void loadAllObjects() {
 		long startTime = System.currentTimeMillis();
 		log.info("Begin loadAllObjects for {}", document.getCollectionName());
-		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS, new NamedThreadFactory("MirroredDocumentLoaderWorker"));
-		List<Future<Optional<DocumentWrapper<T>>>> futures = 
-							loadDocuments().map(x -> executor.submit(() -> tryLoadAndPatch(x)))
-							 			   .collect(toList());
-		executor.shutdown();
-		awaitTermination(executor);
-		futures.stream()
-			   .map(this::getFutureResult)
-			   .filter(Optional::isPresent)
-			   .map(Optional::get)
-			   .forEach(this::addToLists);
-		log.info("loadAllObjects for {} finished. {} objects were loaded in {} seconds", document.getCollectionName(),
-				loadedObjects.size(), ((System.currentTimeMillis() - startTime) / 1000d));
+		ForkJoinPool forkJoinPool = new ForkJoinPool(NUM_THREADS);
+		ForkJoinTask<Long> loadTask = forkJoinPool.submit(() -> {
+			return loadDocuments().parallel()
+								   .map(this::tryLoadAndPatch)
+								   .filter(Optional::isPresent)
+								   .map(Optional::get)
+								   .map(this::addToLists)
+								   .count();
+						   
+		});
+		try {
+			loadTask.get(CONVERSION_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+			log.info("loadAllObjects for {} finished. {} objects were loaded in {} seconds", document.getCollectionName(),
+					loadedObjects.size(), ((System.currentTimeMillis() - startTime) / 1000d));
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			throw new RuntimeException(e);
+		} finally {
+			forkJoinPool.shutdown();
+		}
 	}
 
 	private Stream<DBObject> loadDocuments() {
@@ -85,27 +88,11 @@ final class MirroredDocumentLoader<T> {
 		}
 		return documentCollection.findAll();
 	}
-	
 
-	private Optional<DocumentWrapper<T>> getFutureResult(Future<Optional<DocumentWrapper<T>>> future) {
-		try {
-			return future.get();
-		} catch (InterruptedException | ExecutionException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	private void addToLists(DocumentWrapper<T> documentWrapper) {
+	private DocumentWrapper<T> addToLists(DocumentWrapper<T> documentWrapper) {
 		loadedObjects.add(documentWrapper.getDocument());
 		documentWrapper.getPatchedDocument().ifPresent(pendingPatchedDocuments::add);
-	}
-
-	private void awaitTermination(ExecutorService executor) {
-		try {
-			executor.awaitTermination(CONVERSION_TIMEOUT_MINUTES, TimeUnit.MINUTES);
-		} catch (InterruptedException e) {
-			throw new RuntimeException("Interrupted while waiting for conversions", e);
-		}
+		return documentWrapper;
 	}
 	
 	private Optional<DocumentWrapper<T>> tryLoadAndPatch(DBObject object) {
