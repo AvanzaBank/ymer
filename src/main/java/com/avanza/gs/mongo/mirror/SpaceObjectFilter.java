@@ -41,6 +41,10 @@ final class SpaceObjectFilter<T> {
 	static <T> SpaceObjectFilter<T> create(Impl<T> impl) {
 		return new SpaceObjectFilter<T>(impl);
 	}
+	
+	static <T> SpaceObjectFilter<T> acceptAll() {
+		return new SpaceObjectFilter<>(o -> true);
+	}
 
 	boolean accept(T spaceObject) {
 		return this.impl.accept(spaceObject);

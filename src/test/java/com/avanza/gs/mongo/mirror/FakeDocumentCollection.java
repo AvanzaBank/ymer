@@ -16,7 +16,6 @@
 package com.avanza.gs.mongo.mirror;
 
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,7 +34,12 @@ class FakeDocumentCollection implements DocumentCollection {
 	private final AtomicInteger idGenerator = new AtomicInteger(0);
 
 	@Override
-	public Iterable<DBObject> findAll(Optional<SpaceObjectFilter<?>> filter) {
+	public Iterable<DBObject> findAll(SpaceObjectFilter<?> filter) {
+		return getDocumentCollection();
+	}
+	
+	@Override
+	public Iterable<DBObject> findAll() {
 		return getDocumentCollection();
 	}
 

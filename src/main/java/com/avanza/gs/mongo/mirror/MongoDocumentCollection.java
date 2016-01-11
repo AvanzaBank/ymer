@@ -16,7 +16,6 @@
 package com.avanza.gs.mongo.mirror;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -37,15 +36,19 @@ final class MongoDocumentCollection implements DocumentCollection {
 	public MongoDocumentCollection(DBCollection dbCollection) {
 		this.dbCollection = Objects.requireNonNull(dbCollection);
 	}
-
+	
 	@Override
-	public Iterable<DBObject> findAll(Optional<SpaceObjectFilter<?>> objectFilter) {
-		if (objectFilter.isPresent() && MongoPartitionFilter.canCreateFrom(objectFilter.get())) {
-			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.create(objectFilter.get());
+	public Iterable<DBObject> findAll(SpaceObjectFilter<?> objectFilter) {
+		if (MongoPartitionFilter.canCreateFrom(objectFilter)) {
+			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.create(objectFilter);
 			return dbCollection.find(mongoPartitionFilter.toDBObject());
-		} else {
-			return dbCollection.find();
-		}
+		} 
+		return findAll();
+	}
+	
+	@Override
+	public Iterable<DBObject> findAll() {
+		return dbCollection.find();
 	}
 
 	@Override

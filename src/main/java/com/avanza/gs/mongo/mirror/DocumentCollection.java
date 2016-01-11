@@ -15,8 +15,6 @@
  */
 package com.avanza.gs.mongo.mirror;
 
-import java.util.Optional;
-
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBObject;
@@ -29,11 +27,15 @@ import com.mongodb.DBObject;
  *
  */
 interface DocumentCollection {
+	
+	// The methods returning an Iterable should be changed to returning a Stream
 
 	/**
 	 * Reads all documents from the underlying mongo collection. <p>
 	 */
-	Iterable<DBObject> findAll(Optional<SpaceObjectFilter<?>> objectFilter);
+	Iterable<DBObject> findAll();
+	
+	Iterable<DBObject> findAll(SpaceObjectFilter<?> objectFilter);
 
 	/**
 	 * Returns a document with a given id. <p>

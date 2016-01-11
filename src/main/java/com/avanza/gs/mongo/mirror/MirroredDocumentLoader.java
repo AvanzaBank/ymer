@@ -63,17 +63,29 @@ final class MirroredDocumentLoader<T> {
 
 	void loadAllObjects() {
 		long startTime = System.currentTimeMillis();
-		Optional<SpaceObjectFilter<?>> filter = Optional.<SpaceObjectFilter<?>>ofNullable(document.loadDocumentsRouted() ? spaceObjectFilter : null);
 		log.info("Begin loadAllObjects for {}", document.getCollectionName());
-		Iterable<DBObject> allObjects = documentCollection.findAll(filter);
+		Iterable<DBObject> allObjects = loadDocuments();
 		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS, new NamedThreadFactory("MirroredDocumentLoaderWorker"));
-		List<Future<Optional<DocumentWrapper<T>>>> futures = StreamSupport.stream(allObjects.spliterator(), false)
-			.map(x -> executor.submit(() -> tryLoadAndPatch(x))).collect(toList());
+		List<Future<Optional<DocumentWrapper<T>>>> futures = 
+				StreamSupport.stream(allObjects.spliterator(), false)
+							 .map(x -> executor.submit(() -> tryLoadAndPatch(x)))
+							 .collect(toList());
 		executor.shutdown();
 		awaitTermination(executor);
-		futures.stream().map(this::getFutureResult).filter(Optional::isPresent).map(Optional::get).forEach(this::addToLists);
+		futures.stream()
+			   .map(this::getFutureResult)
+			   .filter(Optional::isPresent)
+			   .map(Optional::get)
+			   .forEach(this::addToLists);
 		log.info("loadAllObjects for {} finished. {} objects were loaded in {} seconds", document.getCollectionName(),
 				loadedObjects.size(), ((System.currentTimeMillis() - startTime) / 1000d));
+	}
+
+	private Iterable<DBObject> loadDocuments() {
+		if (document.loadDocumentsRouted()) {
+			return documentCollection.findAll(spaceObjectFilter);
+		}
+		return documentCollection.findAll();
 	}
 	
 
@@ -114,8 +126,7 @@ final class MirroredDocumentLoader<T> {
 
 	Iterable<T> createPatchingIterable() {
 		return () -> {
-			Optional<SpaceObjectFilter<?>> filter = Optional.<SpaceObjectFilter<?>>ofNullable(document.loadDocumentsRouted() ? spaceObjectFilter : null);
-			return new PatchingIterator<>(documentCollection.findAll(filter).iterator(), document, documentConverter, spaceObjectFilter);
+			return new PatchingIterator<>(loadDocuments().iterator(), document, documentConverter, spaceObjectFilter);
 		};
 	}
 
