@@ -15,26 +15,29 @@
  */
 package com.avanza.ymer.mirror;
 
-import javax.annotation.PostConstruct;
+import java.lang.management.ManagementFactory;
 
-import com.avanza.ymer.mbean.MBeanRegistrationUtil;
-import com.avanza.ymer.mbean.MBeanRegistrator;
-import com.avanza.ymer.mbean.PlatformMBeanServerMBeanRegistrator;
+import javax.annotation.PostConstruct;
+import javax.management.ObjectName;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
 final class MongoSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
 	
+	private static final Logger log = LoggerFactory.getLogger(MongoSpaceSynchronizationEndpoint.class);
+	
 	private final MirroredDocumentWriter mirroredDocumentWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
-	private final MBeanRegistrator mbeanRegistrator;
 
 	public MongoSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());
 		this.mirroredDocumentWriter = new MirroredDocumentWriter(spaceMirror, exceptionHandler);
-		this.mbeanRegistrator = new PlatformMBeanServerMBeanRegistrator();
 	}
 
 	@Override
@@ -44,7 +47,13 @@ final class MongoSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoi
 	
 	@PostConstruct
 	public void registerExceptionHandlerMBean() {
-		MBeanRegistrationUtil.registerExceptionHandlerMBean(mbeanRegistrator, exceptionHandler);
+		try {
+			String name = "se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler";
+			log.info("Registering mbean with name {}", name);
+			ManagementFactory.getPlatformMBeanServer().registerMBean(exceptionHandler, ObjectName.getInstance(name));
+		} catch (Exception e) {
+			log.warn("Exception handler MBean registration failed", e);
+		}
 	}
-	
+
 }
