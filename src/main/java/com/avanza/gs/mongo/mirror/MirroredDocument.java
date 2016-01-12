@@ -35,7 +35,7 @@ import com.mongodb.BasicDBObject;
 public final class MirroredDocument<T> {
 
 
-	// TODO: rename to MirroredDocumentDefinition?
+	// TODO: rename to MirroredDocumentDefinition? MirroredSpaceObject?
 
 	public enum Flag {
 		ExcludeFromInitialLoad,

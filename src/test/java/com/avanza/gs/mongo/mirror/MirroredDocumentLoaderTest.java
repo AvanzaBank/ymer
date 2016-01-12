@@ -15,14 +15,16 @@
  */
 package com.avanza.gs.mongo.mirror;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.avanza.gs.mongo.mirror.MirroredDocumentLoader.LoadedDocument;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.mongodb.BasicDBObject;
 
@@ -56,9 +58,10 @@ public class MirroredDocumentLoaderTest {
 			}
 		};
 		MirroredDocumentLoader<FakeSpaceObject> documentLoader = new MirroredDocumentLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredDocument, SpaceObjectFilter.create(filterImpl));
-		documentLoader.loadAllObjects();
 
-		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.getLoadedSpaceObjects();
+		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects().stream()
+																 .map(LoadedDocument::getDocument)
+																 .collect(Collectors.toList());
 		assertEquals(2, loadedSpaceObjects.size());
 		assertEquals(new FakeSpaceObject(22, 2, true), loadedSpaceObjects.get(0));
 		assertEquals(new FakeSpaceObject(33, 2, false), loadedSpaceObjects.get(1));
@@ -89,9 +92,13 @@ public class MirroredDocumentLoaderTest {
 			}
 		};
 		MirroredDocumentLoader<FakeSpaceObject> documentLoader = new MirroredDocumentLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredDocument, SpaceObjectFilter.create(filterImpl));
-		documentLoader.loadAllObjects();
-
-		List<PatchedDocument> patchedDocuments = documentLoader.getPendingPatchedDocuments();
+//		documentLoader.loadAllObjects();
+		List<PatchedDocument> patchedDocuments = documentLoader.loadAllObjects().stream()
+																 .map(LoadedDocument::getPatchedDocument)
+																 .filter(Optional::isPresent)
+																 .map(Optional::get)
+																 .collect(Collectors.toList());
+//		List<PatchedDocument> patchedDocuments = documentLoader.getPendingPatchedDocuments();
 		assertEquals(1, patchedDocuments.size());
 		assertEquals(doc2, patchedDocuments.get(0).getOldVersion());
 		assertEquals(mirroredDocument.patch(doc2), patchedDocuments.get(0).getNewVersion());
@@ -115,12 +122,12 @@ public class MirroredDocumentLoaderTest {
 			}
 		};
 		MirroredDocumentLoader<FakeSpaceObject> documentLoader = new MirroredDocumentLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredDocument, SpaceObjectFilter.create(filterImpl));
-		documentLoader.loadById(doc3.get("_id"));
-
-		List<PatchedDocument> patchedDocuments = documentLoader.getPendingPatchedDocuments();
-		assertEquals("Pactched document count", 1, patchedDocuments.size());
-		assertEquals(doc3, patchedDocuments.get(0).getOldVersion());
-		assertEquals(mirroredDocument.patch(doc3), patchedDocuments.get(0).getNewVersion());
+		Optional<PatchedDocument> patchedDocument = documentLoader.loadById(doc3.get("_id"))
+																  .flatMap(LoadedDocument::getPatchedDocument);
+		
+		assertTrue(patchedDocument.isPresent());
+		assertEquals(doc3, patchedDocument.get().getOldVersion());
+		assertEquals(mirroredDocument.patch(doc3), patchedDocument.get().getNewVersion());
 	}
 
 
@@ -146,7 +153,7 @@ public class MirroredDocumentLoaderTest {
 	}
 
 	@Test
-	public void loadByIdReturnsNullIfNoDocumentFoundWithGivenId() throws Exception {
+	public void loadByIdReturnsEmptyOptionalIfNoDocumentFoundWithGivenId() throws Exception {
 		MirroredDocument<FakeSpaceObject> mirroredDocument = new MirroredDocument<>(FakeSpaceObject.class, new FakeSpaceObjectV1Patch());
 		FakeDocumentCollection fakeDocumentCollection = new FakeDocumentCollection();
 		SpaceObjectFilter.Impl<FakeSpaceObject> filterImpl = new SpaceObjectFilter.Impl<FakeSpaceObject>() {
@@ -156,8 +163,7 @@ public class MirroredDocumentLoaderTest {
 			}
 		};
 		MirroredDocumentLoader<FakeSpaceObject> documentLoader = new MirroredDocumentLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredDocument, SpaceObjectFilter.create(filterImpl));
-		documentLoader.loadById("id_3");
-		assertTrue(documentLoader.getLoadedSpaceObjects().isEmpty());
+		assertFalse(documentLoader.loadById("id_3").isPresent());
 	}
 
 	@Test
@@ -179,10 +185,13 @@ public class MirroredDocumentLoaderTest {
 			}
 		};
 		MirroredDocumentLoader<FakeSpaceObject> documentLoader = new MirroredDocumentLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredDocument, SpaceObjectFilter.create(filterImpl));
-		documentLoader.loadById(doc3.get("_id"));
+		FakeSpaceObject spaceObject = documentLoader.loadById(doc3.get("_id"))
+					  .map(LoadedDocument::getDocument)
+					  .orElseThrow(() -> new AssertionError("Expected a reloaded document"));
+					
 
-		assertEquals(1, documentLoader.getLoadedSpaceObjects().get(0).getVersionID());
-		assertEquals(Integer.valueOf(1), documentLoader.getLoadedSpaceObjects().get(0).getLatestRestoreVersion());
+		assertEquals(1, spaceObject.getVersionID());
+		assertEquals(Integer.valueOf(1), spaceObject.getLatestRestoreVersion());
 	}
 
 	@Test(expected = RuntimeException.class)

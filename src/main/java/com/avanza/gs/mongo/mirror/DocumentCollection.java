@@ -30,8 +30,6 @@ import com.mongodb.DBObject;
  */
 interface DocumentCollection {
 	
-	// The methods returning an Iterable should be changed to returning a Stream
-
 	/**
 	 * Reads all documents from the underlying mongo collection. <p>
 	 */

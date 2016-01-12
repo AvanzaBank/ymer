@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
@@ -32,6 +33,7 @@ import org.openspaces.core.space.EmbeddedSpaceConfigurer;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 
 import com.avanza.gs.mongo.mirror.MirroredDocument.Flag;
+import com.avanza.gs.test.util.JVMGlobalLus;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
@@ -46,7 +48,6 @@ public class MirroredDocumentTest {
 	@Test(expected=IllegalArgumentException.class)
 	public void cannotMirrorTypesWithNoRoutingMethod() throws Exception {
 		class InvalidSpaceObject {
-			@SuppressWarnings("unused")
 			public Integer fooMethod() {
 				return null; // Never used
 			}
@@ -214,7 +215,7 @@ public class MirroredDocumentTest {
 		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, patch1, patch2);
 		BasicDBObject dbObject = new BasicDBObject();
 
-		document.patch(dbObject);
+		BasicDBObject patched = document.patch(dbObject);
 		assertTrue(patch1.applied);
 		assertTrue(patch2.applied);
 	}
@@ -373,7 +374,8 @@ public class MirroredDocumentTest {
 	}
 	
 	private static class EmbeddedSpace {
-		EmbeddedSpaceConfigurer configurer = new EmbeddedSpaceConfigurer(MirroredDocumentTest.class.getSimpleName()).lookupGroups(UUID.randomUUID().toString());
+		private static final AtomicInteger count = new AtomicInteger();
+		EmbeddedSpaceConfigurer configurer = new EmbeddedSpaceConfigurer("MirroredDocumentTest-" + count.incrementAndGet()).lookupGroups(JVMGlobalLus.getLookupGroupName());
 		GigaSpace space = new GigaSpaceConfigurer(configurer.create()).create();
 		public GigaSpace gigaSpace() {
 			return space;

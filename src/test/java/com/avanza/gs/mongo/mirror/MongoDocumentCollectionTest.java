@@ -21,11 +21,13 @@ import static org.junit.Assert.assertTrue;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.gs.mongo.mirror.MirroredDocument.Flag;
+import com.avanza.gs.mongo.mirror.MirroredDocumentLoader.LoadedDocument;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObject;
@@ -92,9 +94,13 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 				FakeMirroredDocumentConverter.create(),
 				mirroredDocument,
 				SpaceObjectFilter.partitionFilter(mirroredDocument, 2, 2));
-		documentLoader.loadAllObjects();
+		
+		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects()
+					  .stream()
+					  .map(LoadedDocument::getDocument)
+					  .collect(Collectors.toList());
+					 
 
-		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.getLoadedSpaceObjects();
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(1, "a")));
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(3, "c")));
 		assertEquals(2, loadedSpaceObjects.size());
@@ -133,9 +139,12 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 				FakeMirroredDocumentConverter.create(),
 				mirroredDocument,
 				SpaceObjectFilter.partitionFilter(mirroredDocument, 1, 2));
-		documentLoader.loadAllObjects();
-
-		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.getLoadedSpaceObjects();
+		
+		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects()
+				  .stream()
+				  .map(LoadedDocument::getDocument)
+				  .collect(Collectors.toList());
+		
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(2, "b")));
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(4, "d")));
 		assertEquals(2, loadedSpaceObjects.size());

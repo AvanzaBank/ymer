@@ -19,6 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.stream.Stream;
+
 import org.junit.Test;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.core.query.Query;
@@ -58,7 +60,7 @@ public class VersionedMongoDBExternalDataSourceTest {
 		documentCollection.insert(doc2);
 		documentCollection.insert(doc3);
 
-		Iterable<FakeSpaceObject> loadInitialLoadData = externalDataSourceForPartition1.loadInitialLoadData(patchedMirroredDocument);
+		Stream<FakeSpaceObject> loadInitialLoadData = externalDataSourceForPartition1.load(patchedMirroredDocument);
 		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
 	}
 
