@@ -18,12 +18,13 @@
  */
 package com.avanza.ymer.mirror;
 
+import static com.avanza.ymer.mirror.Iterables.newArrayList;
+import static com.avanza.ymer.mirror.Iterables.sizeOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static com.avanza.ymer.mirror.Iterables.*;
 
 import java.util.Iterator;
 import java.util.List;

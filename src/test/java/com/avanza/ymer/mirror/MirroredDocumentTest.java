@@ -47,6 +47,7 @@ public class MirroredDocumentTest {
 	@Test(expected=IllegalArgumentException.class)
 	public void cannotMirrorTypesWithNoRoutingMethod() throws Exception {
 		class InvalidSpaceObject {
+			@SuppressWarnings("unused")
 			public Integer fooMethod() {
 				return null; // Never used
 			}
