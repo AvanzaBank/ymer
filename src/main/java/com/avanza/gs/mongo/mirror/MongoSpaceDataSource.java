@@ -24,17 +24,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.PreDestroy;
-
 import org.openspaces.core.cluster.ClusterInfo;
 import org.openspaces.core.cluster.ClusterInfoAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.avanza.gs.mongo.mbean.MBeanRegistrationUtil;
-import com.avanza.gs.mongo.mbean.MBeanRegistrator;
-import com.avanza.gs.mongo.mbean.PlatformMBeanServerMBeanRegistrator;
 import com.avanza.gs.mongo.mirror.MirroredDocumentLoader.LoadedDocument;
+import com.avanza.gs.mongo.util.OptionalUtil;
 import com.gigaspaces.datasource.DataIterator;
 import com.gigaspaces.datasource.SpaceDataSource;
 
@@ -44,15 +40,9 @@ final class MongoSpaceDataSource extends SpaceDataSource implements ClusterInfoA
 	
 	private final SpaceMirrorContext spaceMirrorContext;
 	private ClusterInfo clusterInfo;
-	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
-	private final MBeanRegistrator mbeanRegistrator;
 
 	public MongoSpaceDataSource(SpaceMirrorContext spaceMirror) {
 		this.spaceMirrorContext = spaceMirror;
-		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
-				new RethrowsTransientDocumentWriteExceptionHandler(),
-				new CatchesAllDocumentWriteExceptionHandler());
-		this.mbeanRegistrator = new PlatformMBeanServerMBeanRegistrator();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -88,8 +78,7 @@ final class MongoSpaceDataSource extends SpaceDataSource implements ClusterInfoA
 		}
 		long patchCount = loadedDocuments.stream()
 					   .map(LoadedDocument::getPatchedDocument)
-					   .filter(Optional::isPresent)
-					   .map(Optional::get)
+					   .flatMap(OptionalUtil::asStream)
 					   .map(patchedDocument -> {
 						   DocumentCollection documentCollection = spaceMirrorContext.getDocumentCollection(document);
 						   documentCollection.replace(patchedDocument.getOldVersion(), patchedDocument.getNewVersion());
@@ -133,11 +122,6 @@ final class MongoSpaceDataSource extends SpaceDataSource implements ClusterInfoA
 					  .map(LoadedDocument::getDocument)
 					  .collect(Collectors.toList());
 	}
-	
-//	@PreDestroy
-//	public void destroy() {
-//		MBeanRegistrationUtil.registerExceptionHandlerMBean(mbeanRegistrator, exceptionHandler);
-//	}
 	
 	private static class IteratorAdapter implements DataIterator<Object> {
 

@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.avanza.gs.mongo.util.OptionalUtil;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 /**
@@ -63,8 +64,7 @@ final class MirroredDocumentLoader<T> {
 		ForkJoinTask<List<LoadedDocument<T>>> loadedDocuments = forkJoinPool.submit(() -> {
 			return loadDocuments().parallel()
 								  .map(this::tryPatchAndConvert)
-								  .filter(Optional::isPresent)
-								  .map(Optional::get)
+								  .flatMap(OptionalUtil::asStream)
 								  .collect(Collectors.toList());
 		});
 		try {
@@ -114,8 +114,7 @@ final class MirroredDocumentLoader<T> {
 		return documentCollection.findByQuery(documentConverter.toQuery(template))
 								.map(BasicDBObject.class::cast)
 								.map(this::patchAndConvert)
-								.filter(Optional::isPresent)
-								.map(Optional::get)
+								.flatMap(OptionalUtil::asStream)
 								.collect(Collectors.toList());
 	}
 
