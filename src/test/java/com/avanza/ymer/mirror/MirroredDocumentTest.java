@@ -215,7 +215,7 @@ public class MirroredDocumentTest {
 		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, patch1, patch2);
 		BasicDBObject dbObject = new BasicDBObject();
 
-		BasicDBObject patched = document.patch(dbObject);
+		document.patch(dbObject);
 		assertTrue(patch1.applied);
 		assertTrue(patch2.applied);
 	}
