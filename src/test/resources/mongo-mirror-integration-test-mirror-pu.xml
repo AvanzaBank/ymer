@@ -12,7 +12,7 @@
 
 	<context:annotation-config />
 
-	<bean id="mirrorFactory" class="com.avanza.gs.mongo.mirror.TestSpaceMirrorFactory">
+	<bean id="mirrorFactory" class="com.avanza.ymer.mirror.TestSpaceMirrorFactory">
 		<property name="databaseName" value="${databasename}"/>
 	</bean>
 	<bean id="spaceSyncEndpoint" factory-bean="mirrorFactory" factory-method="createSpaceSynchronizationEndpoint"/>
