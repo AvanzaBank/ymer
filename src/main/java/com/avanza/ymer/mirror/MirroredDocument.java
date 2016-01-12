@@ -29,7 +29,7 @@ import com.mongodb.BasicDBObject;
 /**
  * Holds information about one mirrored space object type.
  *
- * @author Elias Lindholm (elilin)
+ * @author Elias Lindholm, Joakim Sahlstrom
  *
  */
 public final class MirroredDocument<T> {
@@ -38,14 +38,39 @@ public final class MirroredDocument<T> {
 	// TODO: rename to MirroredDocumentDefinition? MirroredSpaceObject?
 
 	public enum Flag {
-		ExcludeFromInitialLoad,
-		DoNotWriteBackPatchedDocuments,
+		/**
+		 * Indicates that a MirroredDocument should not be loaded from the persistent store during InitialLoad. 
+		 * In other words no data for this MirroredDocument will be present if not loaded through other means.<br/>
+		 * <br/>
+		 * Can be used for collections that are loaded via lazy load. See {@link ReloadableSpaceObject}.
+		 */
+		EXCLUDE_FROM_INITIAL_LOAD,
 
 		/**
-		 * Requires documents in mongo to be updated before taking effect. Will take (partial) effect on partially updated collections.
+		 * Objects that has been patched (and thus modified) by Ymer during InitialLoad will not be written back to persistent storage
+		 * during the last stage of InitialLoad (which is the default behavior).<br/>
+		 * <br/>
+		 * If this flag is present persistence-support can utilize several optimizations which reduce system load and memory usage during InitialLoad.
 		 */
-		LoadDocumentsRouted,
-		KeepPersistent
+		DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS,
+
+		/**
+		 * Adds a routing field to documents that are mirrored to the persistent storage. This field allows objects to be selected with the correct
+		 * routing filtering directly in the persistent storage during initial load, drastically reducing the network load since only the correct
+		 * subset of data will be transferred to each partition.<br/>
+		 * <br/>
+		 * Requires documents in the persistent storage to be updated before taking effect. Will take (partial) effect on partially updated collections.<br/>
+		 * <br/>
+		 * <b>WARNING!</b> This flag may not be present if the routing field of a space object is changed as such changes will not be reflected in the
+		 * persistent storage. Make sure to rewrite all space objects before turning the flag back on.
+		 */
+		LOAD_DOCUMENTS_ROUTED,
+
+		/**
+		 * Effectively stops all DELETE operations performed in space from being reflected in the persistent storage. I.e. an object that is deleted
+		 * in GigaSpaces will remain in the persistent storage. Usually used in combination with {@link MirroredDocument.Flag.EXCLUDE_FROM_INITIAL_LOAD}
+		 */
+		KEEP_PERSISTENT
 	}
 	public static final String DOCUMENT_FORMAT_VERSION_PROPERTY = "_formatVersion";
 	public static final String DOCUMENT_ROUTING_KEY = "_routingKey";
@@ -85,10 +110,10 @@ public final class MirroredDocument<T> {
 	private MirroredDocument(DocumentPatchChain<T> patchChain, Set<Flag> flags, String collectionName) {
 		this.patchChain = Objects.requireNonNull(patchChain);
 		this.routingKeyExtractor = findRoutingKeyMethod(patchChain.getMirroredType());
-		this.excludeFromInitialLoad = flags.contains(Flag.ExcludeFromInitialLoad);
-        this.writeBackPatchedDocuments = !flags.contains(Flag.DoNotWriteBackPatchedDocuments);
-        this.loadDocumentsRouted = flags.contains(Flag.LoadDocumentsRouted);
-        this.keepPersistent = flags.contains(Flag.KeepPersistent);
+		this.excludeFromInitialLoad = flags.contains(Flag.EXCLUDE_FROM_INITIAL_LOAD);
+        this.writeBackPatchedDocuments = !flags.contains(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS);
+        this.loadDocumentsRouted = flags.contains(Flag.LOAD_DOCUMENTS_ROUTED);
+        this.keepPersistent = flags.contains(Flag.KEEP_PERSISTENT);
         this.collectionName = collectionName;
 	}
 

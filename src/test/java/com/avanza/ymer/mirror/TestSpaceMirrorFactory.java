@@ -36,7 +36,7 @@ public class TestSpaceMirrorFactory {
 	public static MirroredDocuments getMirroredDocuments() {
 		return new MirroredDocuments(
 			new MirroredDocument<>(TestSpaceObject.class, new TestSpaceObjectV1Patch()),
-			MirroredDocument.createDocument(TestSpaceOtherObject.class, Collections.singleton(Flag.DoNotWriteBackPatchedDocuments), new TestSpaceObjectV1Patch())
+			MirroredDocument.createDocument(TestSpaceOtherObject.class, Collections.singleton(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS), new TestSpaceObjectV1Patch())
 		);
 	}
 	

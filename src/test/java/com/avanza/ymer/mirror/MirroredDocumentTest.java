@@ -296,7 +296,7 @@ public class MirroredDocumentTest {
 
 	@Test
 	public void setsRoutingFieldForRoutedDocumentLoad() throws Exception {
-		MirroredDocument<MirroredType> document = MirroredDocument.createDocument(MirroredType.class, EnumSet.<Flag>of(Flag.LoadDocumentsRouted));
+		MirroredDocument<MirroredType> document = MirroredDocument.createDocument(MirroredType.class, EnumSet.<Flag>of(Flag.LOAD_DOCUMENTS_ROUTED));
 		BasicDBObject dbObject = new BasicDBObject();
 
 		document.setDocumentAttributes(dbObject, new MirroredType(23));
@@ -305,7 +305,7 @@ public class MirroredDocumentTest {
 
 	@Test
 	public void canDetermineRoutingKeyFromStringRoutingValue() throws Exception {
-		MirroredDocument<RoutedType> document = MirroredDocument.createDocument(RoutedType.class, EnumSet.<Flag>of(Flag.LoadDocumentsRouted));
+		MirroredDocument<RoutedType> document = MirroredDocument.createDocument(RoutedType.class, EnumSet.<Flag>of(Flag.LOAD_DOCUMENTS_ROUTED));
 		BasicDBObject dbObject = new BasicDBObject();
 
 		document.setDocumentAttributes(dbObject, new RoutedType(23, "bananskal"));

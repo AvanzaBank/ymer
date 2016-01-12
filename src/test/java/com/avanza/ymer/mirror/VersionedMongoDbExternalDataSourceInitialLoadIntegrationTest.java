@@ -36,7 +36,7 @@ public class VersionedMongoDbExternalDataSourceInitialLoadIntegrationTest {
 	static MirroredDocument<TestSpaceObject> mirroredDocument = new MirroredDocument<>(TestSpaceObject.class, new TestSpaceObjectV1Patch());
 	static MirroredDocument<TestSpaceOtherObject> mirroredOtherDocument = MirroredDocument.createDocument(
 			TestSpaceOtherObject.class, 
-			Collections.<Flag>singleton(Flag.DoNotWriteBackPatchedDocuments), 
+			Collections.<Flag>singleton(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS), 
 			new TestSpaceObjectV1Patch());
 	static MirroredDocuments mirroredDocuments = new MirroredDocuments(mirroredDocument, mirroredOtherDocument);
 	
