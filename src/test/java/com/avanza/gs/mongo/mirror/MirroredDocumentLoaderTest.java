@@ -186,11 +186,8 @@ public class MirroredDocumentLoaderTest {
 		FakeDocumentCollection fakeDocumentCollection = new FakeDocumentCollection();
 		fakeDocumentCollection.insertAll(doc1, doc2, doc3);
 
-		SpaceObjectFilter.Impl<FakeSpaceObject> filterImpl = new SpaceObjectFilter.Impl<FakeSpaceObject>() {
-			@Override
-			public boolean accept(FakeSpaceObject spaceObject) {
-				return spaceObject.getId() == doc2.getInt("_id") || spaceObject.getId() == doc3.getInt("_id");
-			}
+		SpaceObjectFilter.Impl<FakeSpaceObject> filterImpl = spaceObject -> {
+			return spaceObject.getId() == doc2.getInt("_id") || spaceObject.getId() == doc3.getInt("_id");
 		};
 		MirroredDocumentLoader<FakeSpaceObject> documentLoader = new MirroredDocumentLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.createConverterWhichThrowsException(), mirroredDocument, SpaceObjectFilter.create(filterImpl));
 		documentLoader.loadAllObjects();
