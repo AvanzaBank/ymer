@@ -30,8 +30,8 @@ import com.avanza.ymer.DocumentPatch;
 import com.avanza.ymer.MirroredDocument;
 import com.avanza.ymer.MirroredDocuments;
 import com.avanza.ymer.MirroredDocument.Flag;
-import com.avanza.ymer.gs.test.util.PuConfigurers;
-import com.avanza.ymer.gs.test.util.RunningPu;
+import com.avanza.ymer.test.gs.PuConfigurers;
+import com.avanza.ymer.test.gs.RunningPu;
 import com.mongodb.BasicDBObject;
 
 public class YmerInitialLoadIntegrationTest {

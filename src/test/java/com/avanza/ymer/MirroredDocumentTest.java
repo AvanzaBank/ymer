@@ -35,7 +35,7 @@ import com.avanza.ymer.DocumentPatch;
 import com.avanza.ymer.MirroredDocument;
 import com.avanza.ymer.UnknownDocumentVersionException;
 import com.avanza.ymer.MirroredDocument.Flag;
-import com.avanza.ymer.gs.test.util.JVMGlobalLus;
+import com.avanza.ymer.test.gs.JVMGlobalLus;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;

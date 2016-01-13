@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer.gs.test.util;
+package com.avanza.ymer.test.gs;
 
-import org.openspaces.core.GigaSpace;
-import org.springframework.context.ApplicationContext;
+public class PuConfigurers {
 
-public interface PuRunner {
+	public static PartitionedPuConfigurer partitionedPu(String puXmlPath) {
+		return new PartitionedPuConfigurer(puXmlPath);
+	}
 
-	void run() throws Exception;
-
-	void shutdown() throws Exception;
-
-	String getLookupGroupName();
-
-	GigaSpace getClusteredGigaSpace();
-
-	boolean autostart();
-
-	ApplicationContext getPrimaryInstanceApplicationContext(int partition);
+	public static MirrorPuConfigurer mirrorPu(String puXmlPath) {
+		return new MirrorPuConfigurer(puXmlPath);
+	}
 
 }

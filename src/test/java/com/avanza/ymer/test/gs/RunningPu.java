@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer.gs.test.util;
+package com.avanza.ymer.test.gs;
 
 import org.junit.rules.TestRule;
 import org.openspaces.core.GigaSpace;
