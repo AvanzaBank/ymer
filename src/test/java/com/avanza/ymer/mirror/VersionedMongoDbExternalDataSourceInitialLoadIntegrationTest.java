@@ -43,7 +43,7 @@ public class VersionedMongoDbExternalDataSourceInitialLoadIntegrationTest {
 	@ClassRule
 	public static MirrorEnvironmentRunner mirrorEnv = new MirrorEnvironmentRunner(mirroredDocuments);
 	
-	public RunningPu pu = PuConfigurers.partitionedPu("classpath:/mongo-mirror-integration-test-pu.xml")
+	public RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
 									   .numberOfPrimaries(1)
 									   .startAsync(false)
 									   .parentContext(mirrorEnv.getMongoClientContext())

@@ -55,14 +55,14 @@ public class VersionedMongoDbExternalDataSourceMirrorIntegrationTest {
 	private GigaSpace gigaSpace;
 	private static MirrorEnvironmentRunner mirrorEnviroment = new MirrorEnvironmentRunner(TestSpaceMirrorFactory.getMirroredDocuments());
 
-	private static RunningPu pu = PuConfigurers.partitionedPu("classpath:/mongo-mirror-integration-test-pu.xml")
+	private static RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
 									   .numberOfBackups(1)
 									   .numberOfPrimaries(1)
 									   .contextProperty("databasename", mirrorEnviroment.getDatabaseName())
 									   .parentContext(mirrorEnviroment.getMongoClientContext())
 									   .configure();
 
-	private static RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/mongo-mirror-integration-test-mirror-pu.xml")
+	private static RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
 											   	     .contextProperty("databasename", mirrorEnviroment.getDatabaseName())
 											   	     .contextProperty("exportExceptionHandlerMBean", "true")
 											   	     .parentContext(mirrorEnviroment.getMongoClientContext())
