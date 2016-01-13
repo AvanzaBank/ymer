@@ -21,14 +21,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.After;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-import com.avanza.ymer.DocumentPatch;
-import com.avanza.ymer.MirroredDocument;
-import com.avanza.ymer.MirroredDocuments;
 import com.avanza.ymer.MirroredDocument.Flag;
 import com.avanza.ymer.test.gs.PuConfigurers;
 import com.avanza.ymer.test.gs.RunningPu;
@@ -43,8 +39,7 @@ public class YmerInitialLoadIntegrationTest {
 			new TestSpaceObjectV1Patch());
 	static MirroredDocuments mirroredDocuments = new MirroredDocuments(mirroredDocument, mirroredOtherDocument);
 	
-	@ClassRule
-	public static MirrorEnvironmentRunner mirrorEnv = new MirrorEnvironmentRunner(mirroredDocuments);
+	public static MirrorEnvironment mirrorEnv = new MirrorEnvironment(mirroredDocuments);
 	
 	public RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
 									   .numberOfPrimaries(1)

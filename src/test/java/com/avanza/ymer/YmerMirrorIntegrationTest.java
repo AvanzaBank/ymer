@@ -54,7 +54,7 @@ public class YmerMirrorIntegrationTest {
 	
 	private MongoOperations mongo;
 	private GigaSpace gigaSpace;
-	private static MirrorEnvironmentRunner mirrorEnviroment = new MirrorEnvironmentRunner(TestSpaceMirrorFactory.getMirroredDocuments());
+	private static MirrorEnvironment mirrorEnviroment = new MirrorEnvironment(TestSpaceMirrorFactory.getMirroredDocuments());
 
 	private static RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
 									   .numberOfBackups(1)
@@ -70,7 +70,7 @@ public class YmerMirrorIntegrationTest {
 											   	     .configure();
 
 	@ClassRule
-	public static TestRule spaces = RuleChain.outerRule(mirrorEnviroment).around(pu).around(mirrorPu);
+	public static TestRule spaces = RuleChain.outerRule(pu).around(mirrorPu);
 
 	@Before
 	public void setUp() {
