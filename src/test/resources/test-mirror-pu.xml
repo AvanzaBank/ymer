@@ -12,7 +12,7 @@
 
 	<context:annotation-config />
 
-	<bean id="mirrorFactory" class="com.avanza.ymer.mirror.TestSpaceMirrorFactory">
+	<bean id="mirrorFactory" class="com.avanza.ymer.TestSpaceMirrorFactory">
 		<property name="databaseName" value="${databasename}"/>
 		<property name="exportExceptionHandlerMBean" value="${exportExceptionHandlerMBean:false}"></property>
 	</bean>
