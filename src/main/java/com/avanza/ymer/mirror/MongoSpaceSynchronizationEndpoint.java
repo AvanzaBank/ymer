@@ -17,7 +17,6 @@ package com.avanza.ymer.mirror;
 
 import java.lang.management.ManagementFactory;
 
-import javax.annotation.PostConstruct;
 import javax.management.ObjectName;
 
 import org.slf4j.Logger;
@@ -45,8 +44,7 @@ final class MongoSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoi
 		mirroredDocumentWriter.executeBulk(batchData);
 	}
 	
-	@PostConstruct
-	public void registerExceptionHandlerMBean() {
+	void registerExceptionHandlerMBean() {
 		try {
 			String name = "se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler";
 			log.info("Registering mbean with name {}", name);

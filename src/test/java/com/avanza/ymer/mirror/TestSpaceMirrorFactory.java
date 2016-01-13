@@ -32,6 +32,7 @@ public class TestSpaceMirrorFactory {
 	
 	private String databaseName;
 	private Mongo mongo;
+	private boolean exportExceptionHandlerMBean = false;
 	
 	public static MirroredDocuments getMirroredDocuments() {
 		return new MirroredDocuments(
@@ -49,11 +50,16 @@ public class TestSpaceMirrorFactory {
 		this.mongo = mongo;
 	}
 	
+	public void setExportExceptionHandlerMBean(boolean exportExceptionHandlerMBean) {
+		this.exportExceptionHandlerMBean = exportExceptionHandlerMBean;
+	}
+	
 	public SpaceDataSource createSpaceDataSource() {
 		SimpleMongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongo, databaseName);
 		MappingMongoConverter mongoConverter = new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
 		MirroredDocuments mirroredDocuments = getMirroredDocuments();
 		MongoDbExternalDatasourceFactory factory = new MongoDbExternalDatasourceFactory(mirroredDocuments, mongo.getDB(databaseName), mongoConverter);
+		factory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
 		return factory.createSpaceDataSource();
 	}
 
@@ -62,6 +68,7 @@ public class TestSpaceMirrorFactory {
 		MappingMongoConverter mongoConverter = new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
 		MirroredDocuments mirroredDocuments = getMirroredDocuments();
 		MongoDbExternalDatasourceFactory factory = new MongoDbExternalDatasourceFactory(mirroredDocuments, mongo.getDB(databaseName), mongoConverter);
+		factory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
 		return factory.createSpaceSynchronizationEndpoint();
 	}
 	

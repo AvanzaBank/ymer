@@ -34,6 +34,7 @@ public final class MongoDbExternalDatasourceFactory {
 	};
 	private ReadPreference readPreference = ReadPreference.primary();
 	private SpaceMirrorContext mirrorContext;
+	private boolean exportExceptionHandleMBean = true;
 
 	public MongoDbExternalDatasourceFactory(MirroredDocuments mirroredDocuments, DB db, MongoConverter mongoConverter) {
 		DocumentDb documentDb = DocumentDb.mongoDb(db, readPreference);
@@ -49,9 +50,16 @@ public final class MongoDbExternalDatasourceFactory {
 		return new MongoSpaceDataSource(mirrorContext);
 	}
 	
+	public void setExportExceptionHandlerMBean(boolean exportExceptionHandleMBean) {
+		this.exportExceptionHandleMBean = exportExceptionHandleMBean;
+	}
 
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
-		return new MongoSpaceSynchronizationEndpoint(mirrorContext);
+		MongoSpaceSynchronizationEndpoint mongoSpaceSynchronizationEndpoint = new MongoSpaceSynchronizationEndpoint(mirrorContext);
+		if (this.exportExceptionHandleMBean) {
+			mongoSpaceSynchronizationEndpoint.registerExceptionHandlerMBean();
+		}
+		return mongoSpaceSynchronizationEndpoint;
 	}
 	
 	/**

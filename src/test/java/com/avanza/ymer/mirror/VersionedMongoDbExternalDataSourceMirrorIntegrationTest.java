@@ -64,6 +64,7 @@ public class VersionedMongoDbExternalDataSourceMirrorIntegrationTest {
 
 	private static RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/mongo-mirror-integration-test-mirror-pu.xml")
 											   	     .contextProperty("databasename", mirrorEnviroment.getDatabaseName())
+											   	     .contextProperty("exportExceptionHandlerMBean", "true")
 											   	     .parentContext(mirrorEnviroment.getMongoClientContext())
 											   	     .configure();
 

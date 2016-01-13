@@ -40,8 +40,8 @@ public class VersionedMongoDBExternalDataSourceTest {
 		MirroredDocument<FakeSpaceObject> patchedMirroredDocument = new MirroredDocument<>(FakeSpaceObject.class, new FakeSpaceObjectV1Patch());
 		DocumentDb fakeDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredDocuments(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb);
-		MongoSpaceDataSource externalDataSourceForPartition1 = new MongoSpaceDataSource(spaceMirror);
-		externalDataSourceForPartition1.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
+		MongoSpaceDataSource mongoSpaceDataSource = new MongoSpaceDataSource(spaceMirror);
+		mongoSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
 		DocumentCollection documentCollection = fakeDb.getCollection(patchedMirroredDocument.getCollectionName());
 		BasicDBObject doc1 = new BasicDBObject();
@@ -60,7 +60,7 @@ public class VersionedMongoDBExternalDataSourceTest {
 		documentCollection.insert(doc2);
 		documentCollection.insert(doc3);
 
-		Stream<FakeSpaceObject> loadInitialLoadData = externalDataSourceForPartition1.load(patchedMirroredDocument);
+		Stream<FakeSpaceObject> loadInitialLoadData = mongoSpaceDataSource.load(patchedMirroredDocument);
 		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
 	}
 
