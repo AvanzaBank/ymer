@@ -23,7 +23,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.mirror.MirroredDocument.Flag;
-import com.avanza.ymer.mirror.VersionedMongoDbExternalDataSourceInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
+import com.avanza.ymer.mirror.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.Mongo;

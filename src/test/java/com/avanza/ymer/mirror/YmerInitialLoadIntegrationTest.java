@@ -31,7 +31,7 @@ import com.avanza.ymer.gs.test.util.RunningPu;
 import com.avanza.ymer.mirror.MirroredDocument.Flag;
 import com.mongodb.BasicDBObject;
 
-public class VersionedMongoDbExternalDataSourceInitialLoadIntegrationTest {
+public class YmerInitialLoadIntegrationTest {
 	
 	static MirroredDocument<TestSpaceObject> mirroredDocument = new MirroredDocument<>(TestSpaceObject.class, new TestSpaceObjectV1Patch());
 	static MirroredDocument<TestSpaceOtherObject> mirroredOtherDocument = MirroredDocument.createDocument(

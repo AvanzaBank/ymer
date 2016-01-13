@@ -30,7 +30,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 
-public class VersionedMongoDBExternalDataSourceTest {
+public class MongoSpaceDataSourceTest {
 
 	private final Integer partitionId = 1;
 	private final int numberOfInstances = 2;

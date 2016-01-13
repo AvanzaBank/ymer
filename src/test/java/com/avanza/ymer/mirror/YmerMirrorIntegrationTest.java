@@ -49,7 +49,7 @@ import com.avanza.ymer.test.util.Poller;
 import com.avanza.ymer.test.util.Probe;
 import com.gigaspaces.client.WriteModifiers;
 
-public class VersionedMongoDbExternalDataSourceMirrorIntegrationTest {
+public class YmerMirrorIntegrationTest {
 	
 	private MongoOperations mongo;
 	private GigaSpace gigaSpace;

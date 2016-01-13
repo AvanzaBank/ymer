@@ -24,7 +24,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.avanza.ymer.mirror.VersionedMongoDbExternalDataSourceInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
+import com.avanza.ymer.mirror.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
