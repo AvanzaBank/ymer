@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -67,6 +68,10 @@ public abstract class MirroredDocumentsMirroringTestBase {
 			}
 			@Override
 			public DB getDb() throws DataAccessException {
+				return null;
+			}
+			@Override
+			public PersistenceExceptionTranslator getExceptionTranslator() {
 				return null;
 			}
 		};
