@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer.test.gs;
+package com.avanza.gs.test;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;

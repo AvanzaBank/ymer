@@ -32,11 +32,6 @@ public class MirrorEnvironment {
 	public static final String TEST_MIRROR_DB_NAME = "mirror_test_db";
 	
 	private Fongo mongoServer = new Fongo(MirrorEnvironment.class.getSimpleName());
-	private MirroredDocuments mirroredDocuments;
-
-	public MirrorEnvironment(MirroredDocuments mirroredDocuments) {
-		this.mirroredDocuments = mirroredDocuments;
-	}
 	
 	public MongoTemplate getMongoTemplate() {
 		SimpleMongoDbFactory simpleMongoDbFactory = new SimpleMongoDbFactory(mongoServer.getMongo(), TEST_MIRROR_DB_NAME);
@@ -48,9 +43,11 @@ public class MirrorEnvironment {
 	}
 	
 	public void dropAllMongoCollections() {
-		for (MirroredDocument<?> mirroredDocument : mirroredDocuments.getMirroredDocuments()) {
-			getMongoDb().getCollection(mirroredDocument.getCollectionName()).drop();
-		}
+		getMongoDb().getCollectionNames().forEach(this::dropColletion);
+	}
+
+	private void dropColletion(String collectionName) {
+		getMongoDb().getCollection(collectionName).drop();
 	}
 
 	public String getDatabaseName() {
@@ -59,7 +56,7 @@ public class MirrorEnvironment {
 	
 	public ApplicationContext getMongoClientContext() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.getBeanFactory().registerSingleton("mongo", mongoServer.getMongo());
+		context.getBeanFactory().registerSingleton("mongoClient", mongoServer.getMongo());
 		context.refresh();
 		return context;
 	}

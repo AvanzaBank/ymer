@@ -13,36 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer.test.gs;
+package example.domain;
 
-import java.io.IOException;
+import org.springframework.data.annotation.Id;
 
-public class PuApp {
+import com.gigaspaces.annotation.pojo.SpaceId;
 
-	private PartitionedPu partitionedPu;
+public class SpaceFruit {
 
-	private PuApp(String puXmlPath) {
-		partitionedPu = new PartitionedPu(PuConfigurers
-				.partitionedPu(puXmlPath).numberOfPrimaries(1)
-				.numberOfBackups(0));
-	}
-
-	public static PuApp run(String puXmlPath) {
-		try {
-			PuApp puApp = new PuApp(puXmlPath);
-			puApp.start();
-			return puApp;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private void start() throws IOException {
-		this.partitionedPu.run();
+	@Id
+	private String name;
+	
+	public SpaceFruit(String name) {
+		this.name = name;
 	}
 	
-	public void stop() throws IOException {
-		this.partitionedPu.shutdown();
+	public SpaceFruit() {
+	}
+
+	@SpaceId(autoGenerate=false)
+	public String getName() {
+		return name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

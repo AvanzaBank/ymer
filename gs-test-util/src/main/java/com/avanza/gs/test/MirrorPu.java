@@ -13,49 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer.test.gs;
+package com.avanza.gs.test;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import org.openspaces.core.GigaSpace;
-import org.openspaces.core.cluster.ClusterInfo;
 import org.openspaces.core.properties.BeanLevelProperties;
 import org.openspaces.pu.container.integrated.IntegratedProcessingUnitContainer;
 import org.openspaces.pu.container.integrated.IntegratedProcessingUnitContainerProvider;
-import org.openspaces.pu.container.support.CompoundProcessingUnitContainer;
 import org.springframework.context.ApplicationContext;
 
-/**
- * 
- * @author Elias Lindholm (elilin)
- *
- */
-public final class PartitionedPu implements PuRunner {
+public class MirrorPu implements PuRunner {
 
-	private CompoundProcessingUnitContainer container;
+	private IntegratedProcessingUnitContainer container;
 	private String gigaSpaceBeanName = "gigaSpace";
 	private String puXmlPath;
-	private Integer numberOfPrimaries;
-	private Integer numberOfBackups;
 	private Properties contextProperties = new Properties();
-	private Map<String, Properties> beanProperies = new HashMap<>();
 	private String lookupGroupName;
 	private boolean autostart;
 	private ApplicationContext parentContext;
-
-	public PartitionedPu(PartitionedPuConfigurer configurer) {
-		this.puXmlPath = configurer.puXmlPath;
-		this.numberOfBackups = configurer.numberOfBackups;
-		this.numberOfPrimaries = configurer.numberOfPrimaries;
-		this.contextProperties.putAll(configurer.contextProperties);
-		this.beanProperies.putAll(configurer.beanProperies);
-		this.lookupGroupName = configurer.lookupGroupName;
-		this.autostart = configurer.autostart;
-		this.parentContext = configurer.parentContext;
-		this.contextProperties.put("spaceName", UniqueSpaceNameLookup.getSpaceNameWithSequence(configurer.spaceName));
+	
+	public MirrorPu(MirrorPuConfigurer config) {
+		this.puXmlPath = config.puXmlPath;
+		this.contextProperties = config.properties;
+		this.lookupGroupName = config.lookupGroupName;
+		this.autostart = true;
+		this.parentContext = config.parentContext;
 	}
 
 	@Override
@@ -70,31 +54,16 @@ public final class PartitionedPu implements PuRunner {
 	private void startContainers() throws IOException {
 		IntegratedProcessingUnitContainerProvider provider = new IntegratedProcessingUnitContainerProvider();
 		provider.setBeanLevelProperties(createBeanLevelProperties());
-		provider.setClusterInfo(createClusterInfo());
 		provider.addConfigLocation(puXmlPath);
 		if (parentContext != null) {
 			provider.setParentContext(parentContext);
 		}
-		container = (CompoundProcessingUnitContainer) provider.createContainer();
-	}
-
-	private ClusterInfo createClusterInfo() {
-		ClusterInfo clusterInfo = new ClusterInfo();
-		clusterInfo.setSchema("partitioned-sync2backup");
-		clusterInfo.setNumberOfInstances(numberOfPrimaries);
-		clusterInfo.setNumberOfBackups(numberOfBackups);
-		clusterInfo.setInstanceId(null);
-		return clusterInfo;
+		container = (IntegratedProcessingUnitContainer) provider.createContainer();
 	}
 
 	private BeanLevelProperties createBeanLevelProperties() {
 		BeanLevelProperties beanLevelProperties = new BeanLevelProperties();
 		beanLevelProperties.setContextProperties(contextProperties);
-		for (Map.Entry<String, Properties> beanProperties : beanProperies.entrySet()) {
-			beanLevelProperties.setBeanProperties(beanProperties.getKey(), beanProperties.getValue());
-		}
-		// TODO: set lookup-group on space-bean name instead of using system-property in RunningPuImpl
-//		beanLevelProperties.getBeanProperties("space").put("gs.space.url.arg.groups", getLookupGroupName()); 
 		beanLevelProperties.getBeanProperties("space").put("gs.space.url.arg.timeout", "10");
 		return beanLevelProperties;
 	}
@@ -110,18 +79,18 @@ public final class PartitionedPu implements PuRunner {
 	}
 	
 	public boolean autostart() {
-		return this.autostart ;
+		return this.autostart;
 	}
 	
 	@Override
 	public GigaSpace getClusteredGigaSpace() {
-		return GigaSpace.class.cast(getPrimaryInstanceApplicationContext(0).getBean(this.gigaSpaceBeanName)).getClustered();
+		return GigaSpace.class.cast(container.getApplicationContext().getBean(this.gigaSpaceBeanName)).getClustered();
 	}
-
+	
 	@Override
 	public ApplicationContext getPrimaryInstanceApplicationContext(int partition) {
-		IntegratedProcessingUnitContainer container = (IntegratedProcessingUnitContainer) this.container.getProcessingUnitContainers()[partition];
 		return container.getApplicationContext();
 	}
+
 
 }

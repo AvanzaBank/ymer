@@ -59,7 +59,7 @@ final class MirroredDocumentLoader<T> {
 
 	List<LoadedDocument<T>> loadAllObjects() {
 		long startTime = System.currentTimeMillis();
-		log.info("Begin loadAllObjects for {}", document.getCollectionName());
+		log.info("Begin loadAllObjects. targetCollection={}", document.getCollectionName());
 		ForkJoinPool forkJoinPool = new ForkJoinPool(NUM_THREADS);
 		ForkJoinTask<List<LoadedDocument<T>>> loadedDocuments = forkJoinPool.submit(() -> {
 			return loadDocuments().parallel()

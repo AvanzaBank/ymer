@@ -43,9 +43,9 @@ import org.junit.rules.TestRule;
 import org.openspaces.core.GigaSpace;
 import org.springframework.data.mongodb.core.MongoOperations;
 
+import com.avanza.gs.test.PuConfigurers;
+import com.avanza.gs.test.RunningPu;
 import com.avanza.ymer.SpaceObjectLoader;
-import com.avanza.ymer.test.gs.PuConfigurers;
-import com.avanza.ymer.test.gs.RunningPu;
 import com.avanza.ymer.test.util.Poller;
 import com.avanza.ymer.test.util.Probe;
 import com.gigaspaces.client.WriteModifiers;
@@ -54,7 +54,7 @@ public class YmerMirrorIntegrationTest {
 	
 	private MongoOperations mongo;
 	private GigaSpace gigaSpace;
-	private static MirrorEnvironment mirrorEnviroment = new MirrorEnvironment(TestSpaceMirrorFactory.getMirroredDocuments());
+	private static MirrorEnvironment mirrorEnviroment = new MirrorEnvironment();
 
 	private static RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
 									   .numberOfBackups(1)

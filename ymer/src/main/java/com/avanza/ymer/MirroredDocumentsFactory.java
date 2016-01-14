@@ -13,24 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer.test.gs;
+package com.avanza.ymer;
 
-import org.junit.rules.TestRule;
-import org.openspaces.core.GigaSpace;
-import org.springframework.beans.factory.BeanFactory;
+import java.util.stream.Stream;
 
-public interface RunningPu extends TestRule, AutoCloseable  {
-	
-	// TODO: Rename to ManagedPu
-
-	String getLookupGroupName();
-
-	GigaSpace getClusteredGigaSpace();
-
-	void start() throws Exception;
-	
-	void stop() throws Exception;
-
-	BeanFactory getPrimaryInstanceApplicationContext(int partition);
-	
+@FunctionalInterface
+public interface MirroredDocumentsFactory {
+	Stream<MirroredDocument<?>> getDocuments();
 }

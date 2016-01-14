@@ -13,16 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer.test.gs;
+package com.avanza.gs.test;
 
-public class PuConfigurers {
+import org.junit.rules.TestRule;
+import org.openspaces.core.GigaSpace;
+import org.springframework.beans.factory.BeanFactory;
 
-	public static PartitionedPuConfigurer partitionedPu(String puXmlPath) {
-		return new PartitionedPuConfigurer(puXmlPath);
-	}
+public interface RunningPu extends TestRule, AutoCloseable  {
+	
+	// TODO: Rename to ManagedPu
 
-	public static MirrorPuConfigurer mirrorPu(String puXmlPath) {
-		return new MirrorPuConfigurer(puXmlPath);
-	}
+	String getLookupGroupName();
 
+	GigaSpace getClusteredGigaSpace();
+
+	void start() throws Exception;
+	
+	void stop() throws Exception;
+
+	BeanFactory getPrimaryInstanceApplicationContext(int partition);
+	
 }

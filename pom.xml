@@ -8,6 +8,8 @@
 	<modules>
 		<module>ymer</module>
 		<module>ymer-test</module>
+		<module>example</module>
+		<module>gs-test-util</module>
 	</modules>
 	<properties>
 		<!-- -Xdoclint:NONE ignores validation errors in javadoc -->
@@ -63,6 +65,31 @@
 				<artifactId>spring-tx</artifactId>
 				<version>${spring.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-expression</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-beans</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-core</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aop</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
 
 			<!-- TEST -->
 			<dependency>
@@ -84,6 +111,11 @@
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-log4j12</artifactId>
 				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+		  		<groupId>com.github.fakemongo</groupId>
+		  		<artifactId>fongo</artifactId>
+		  		<version>1.6.5</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

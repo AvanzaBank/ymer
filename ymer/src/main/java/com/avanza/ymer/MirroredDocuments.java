@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * Holds information about all documents that are mirrored by a given VersionedMongoDBExternalDataSource. <p>
@@ -27,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Elias Lindholm (elilin)
  *
  */
-public final class MirroredDocuments {
+final class MirroredDocuments {
 
 	private final Map<Class<?>, MirroredDocument<?>> documentByMirroredType = new ConcurrentHashMap<>();
 	
@@ -36,10 +37,14 @@ public final class MirroredDocuments {
 	 * 
 	 * @param mirroredDocuments
 	 */
-	public MirroredDocuments(MirroredDocument<?>... mirroredDocuments) {
-		for (MirroredDocument<?> mirroredDocument : mirroredDocuments) {
+	MirroredDocuments(MirroredDocument<?>... mirroredDocuments) {
+		this(Stream.of(mirroredDocuments));
+	}
+	
+	MirroredDocuments(Stream<MirroredDocument<?>> mirroredDocuments) {
+		mirroredDocuments.forEach(mirroredDocument -> {
 			this.documentByMirroredType.put(mirroredDocument.getMirroredType(), mirroredDocument);
-		}
+		});
 	}
 	
 	/**

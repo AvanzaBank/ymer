@@ -1,39 +1,32 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:os-core="http://www.openspaces.org/schema/core"
-	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
 	xsi:schemaLocation="http://www.openspaces.org/schema/core http://www.openspaces.org/schema/core/openspaces-core.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
-		http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.1.xsd
-		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
 	<context:annotation-config/>
 	<os-core:space id="testSpace" url="/./mirrortest-space" mirror="true" space-data-source="spaceDataSource">
 		<os-core:properties>
 			<props>
 				<prop key="cluster-config.mirror-service.url">jini://*/*/mirrortest-space-mirror</prop>
-				<prop key="space-config.engine.cache_policy">1</prop>
+				<prop key="space-config.engine.cache_policy">1</prop><!-- ALL_IN_CACHE -->
 				<prop key="space-config.external-data-source.usage">read-only</prop>
 				<prop key="cluster-config.cache-loader.external-data-source">true</prop>
 				<prop key="cluster-config.cache-loader.central-data-source">true</prop>
-				<!-- Replicate each event right as fast as possible to speed up tests. However, 
-					it seems that setting this value to low (1) leads cauases intermittent failures 
-					of some test. Reason unknown. -->
-				<prop key="cluster-config.mirror-service.interval-opers">10</prop>
+				<prop key="cluster-config.mirror-service.interval-opers">1</prop><!-- Replicate each event right away to speed up tests -->
 			</props>
 		</os-core:properties>
 	</os-core:space>
 	<os-core:giga-space id="gigaSpace" space="testSpace"/>
 	
-	<bean id="mirroredDocuments" class="com.avanza.ymer.TestSpaceMirrorDocumentsFactory"/>
 	
+	<!-- Configure SpaceDataSource used for initial load -->
+	<bean id="mirroredDocuments" class="example.mirror.ExampleMirroredDocumentsFactory"/>
 	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory">
-		<property name="databaseName" value="${databasename}"/>
+		<property name="databaseName" value="exampleDb"/>
 	</bean>
-	
 	<bean id="spaceDataSource" factory-bean="ymerFactory" factory-method="createSpaceDataSource"/>
 	
 </beans>

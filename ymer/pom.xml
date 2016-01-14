@@ -46,13 +46,18 @@
 		<dependency>
 		  <groupId>com.github.fakemongo</groupId>
 		  <artifactId>fongo</artifactId>
-		  <version>1.6.2</version>
 		  <scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>gs-test-util</artifactId>
+			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

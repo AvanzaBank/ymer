@@ -11,15 +11,17 @@
 		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
 	<context:annotation-config />
-
-	<bean id="mirrorFactory" class="com.avanza.ymer.TestSpaceMirrorFactory">
-		<property name="databaseName" value="${databasename}"/>
-		<property name="exportExceptionHandlerMBean" value="${exportExceptionHandlerMBean:false}"></property>
-	</bean>
-	<bean id="spaceSyncEndpoint" factory-bean="mirrorFactory" factory-method="createSpaceSynchronizationEndpoint"/>
-
 	<os-core:mirror id="mirrorGigaSpace" url="/./mirrortest-space-mirror" space-sync-endpoint="spaceSyncEndpoint">
 		<os-core:source-space name="mirrortest-space" partitions="1" backups="1"/>
 	</os-core:mirror>
+	
+	<bean id="mirroredDocuments" class="com.avanza.ymer.TestSpaceMirrorDocumentsFactory"/>
+
+	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory">
+		<property name="databaseName" value="${databasename}"/>
+		<property name="exportExceptionHandlerMBean" value="${exportExceptionHandlerMBean:false}"></property>
+	</bean>
+	<bean id="spaceSyncEndpoint" factory-bean="ymerFactory" factory-method="createSpaceSynchronizationEndpoint"/>
+
 	
 </beans>
