@@ -5,12 +5,113 @@
 	<artifactId>ymer-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
+	<name>${project.artifactId}</name>
+	<description>${project.artifactId}</description>
 	<modules>
 		<module>ymer</module>
 		<module>ymer-test</module>
 		<module>example</module>
 		<module>gs-test-util</module>
 	</modules>
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Elias Lindholm</name>
+			<email>elias.lindholm@avanza.se</email>
+			<organization>Avanza</organization>
+			<organizationUrl>https://github.com/AvanzaBank</organizationUrl>
+		</developer>
+  	</developers>
+	<scm>
+	  <connection>scm:git:git@github.com:AvanzaBank/ymer.git</connection>
+	  <developerConnection>scm:git:git@github.com:AvanzaBank/ymer.git</developerConnection>
+	  <url>git@github.com:AvanzaBank/ymer.git</url>
+	</scm>
+	<repositories>
+		<repository>
+			<id>gigaspaces</id>
+			<name>GigaSpaces</name>
+			<url>http://maven-repository.openspaces.org/</url>
+		</repository>
+	</repositories>
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<!--  javadoc, source and gpg plugin from above -->
+							<!-- All artifacts deployed to the central repository must be signed -->
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-gpg-plugin</artifactId>
+					<version>1.5</version>
+					<executions>
+						<execution>
+							<id>sign-artifacts</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>sign</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				
+				<!-- This plugin makes sure that a source jar is always built together 
+					with the binary jar -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>attach-sources</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+	
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<configuration>
+						<excludePackageNames>example*:se*</excludePackageNames>
+						<aggregate>true</aggregate>
+						<show>public</show>
+						<nohelp>true</nohelp>
+						<header>Ymer Framework ${project.version}</header>
+						<footer>Ymer Framework ${project.version}</footer>
+						<doctitle>Ymer Framework ${project.version}</doctitle>
+					</configuration>
+					<executions>
+						<execution>
+							<id>attach-javadocs</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<properties>
 		<!-- -Xdoclint:NONE ignores validation errors in javadoc -->
 		<additionalparam>-Xdoclint:none</additionalparam>
@@ -25,14 +126,7 @@
 		<hamcrest.version>1.2.1</hamcrest.version>
 		<mockito.version>1.9.0</mockito.version>
 	</properties>
-	<repositories>
-		<repository>
-			<id>gigaspaces</id>
-			<name>GigaSpaces</name>
-			<url>http://maven-repository.openspaces.org/</url>
-		</repository>
-	</repositories>
-
+	
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -331,14 +425,12 @@
 				</executions>
 			</plugin>
 
-			<!-- TODO: Configuration of the versions plugin, so that only astrix version 
-				numbers are considered -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
 				<configuration>
 					<includes>
-						<include>com.avanza.*</include>
+						<include>com.avanza.ymer*</include>
 					</includes>
 				</configuration>
 			</plugin>
