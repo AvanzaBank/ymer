@@ -20,7 +20,7 @@
 				<prop key="cluster-config.cache-loader.external-data-source">true</prop>
 				<prop key="cluster-config.cache-loader.central-data-source">true</prop>
 				<!-- Replicate each event right as fast as possible to speed up tests. However, 
-					it seems that setting this value to low (1) leads cauases intermittent failures 
+					it seems that setting this value to low (1) leads causes intermittent failures 
 					of some test. Reason unknown. -->
 				<prop key="cluster-config.mirror-service.interval-opers">10</prop>
 			</props>
