@@ -45,7 +45,6 @@ public class YmerInitialLoadIntegrationTest {
 									   .numberOfPrimaries(1)
 									   .startAsync(false)
 									   .parentContext(mirrorEnv.getMongoClientContext())
-									   .contextProperty("databasename", mirrorEnv.getDatabaseName())
 									   .configure();
 	@After
 	public void cleanup() throws Exception {

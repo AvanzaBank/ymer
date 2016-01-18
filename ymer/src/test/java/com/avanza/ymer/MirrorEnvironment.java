@@ -50,13 +50,9 @@ public class MirrorEnvironment {
 		getMongoDb().getCollection(collectionName).drop();
 	}
 
-	public String getDatabaseName() {
-		return TEST_MIRROR_DB_NAME;
-	}
-	
 	public ApplicationContext getMongoClientContext() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.getBeanFactory().registerSingleton("mongoClient", mongoServer.getMongo());
+		context.getBeanFactory().registerSingleton("mongoDbFactory", new SimpleMongoDbFactory(mongoServer.getMongo(), TEST_MIRROR_DB_NAME));
 		context.refresh();
 		return context;
 	}

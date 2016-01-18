@@ -13,45 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package example.mirror;
-
-import java.util.stream.Stream;
+package com.avanza.ymer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-import com.avanza.ymer.MirroredDocument;
-import com.avanza.ymer.MirroredDocumentsFactory;
-import com.avanza.ymer.MongoConverterFactory;
+public class TestSpaceMongoConverterFactory implements MongoConverterFactory {
 
-import example.domain.SpaceFruit;
-
-
-public class ExampleMirroredDocumentsFactory implements MirroredDocumentsFactory, MongoConverterFactory {
-	
 	private MongoDbFactory mongoDbFactory;
 
 	@Autowired
-	public ExampleMirroredDocumentsFactory(MongoDbFactory mongoDbFactory) {
+	public TestSpaceMongoConverterFactory(MongoDbFactory mongoDbFactory) {
 		this.mongoDbFactory = mongoDbFactory;
 	}
 
 	@Override
-	public Stream<MirroredDocument<?>> getDocuments() {
-		return Stream.of(
-			MirroredDocument.createDocument(SpaceFruit.class)
-		);
-	}
-
-	@Override
 	public MongoConverter createMongoConverter() {
-		DbRefResolver dbRef = new DefaultDbRefResolver(mongoDbFactory);
-		return new MappingMongoConverter(dbRef , new MongoMappingContext());
+		return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 	}
 
 }

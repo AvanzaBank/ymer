@@ -24,9 +24,7 @@
 	
 	<!-- Configure SpaceDataSource used for initial load -->
 	<bean id="mirroredDocuments" class="example.mirror.ExampleMirroredDocumentsFactory"/>
-	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory">
-		<property name="databaseName" value="exampleDb"/>
-	</bean>
+	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory"/>
 	<bean id="spaceDataSource" factory-bean="ymerFactory" factory-method="createSpaceDataSource"/>
 	
 </beans>

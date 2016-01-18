@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
@@ -55,7 +56,7 @@ public class InitialLoadTest {
 
 	private ApplicationContext createSingleInstanceAppContext(MongoClient mongo) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.getBeanFactory().registerSingleton("mongoClient", mongo);
+		context.getBeanFactory().registerSingleton("mongoClient", new SimpleMongoDbFactory(mongo, "exampleDb"));
 		context.refresh();
 		return context;
 	}

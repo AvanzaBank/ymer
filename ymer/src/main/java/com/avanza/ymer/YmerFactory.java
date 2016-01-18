@@ -17,14 +17,11 @@ package com.avanza.ymer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
-import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 /**
  * @author Elias Lindholm (elilin)
@@ -39,18 +36,15 @@ public final class YmerFactory {
 	private ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
 	
-	private final MongoClient mongoClient;
 	private final MirroredDocuments mirroredDocuments;
-	private String databaseName;
+	private final MongoConverterFactory mongoConverterFactory;
+	private final MongoDbFactory mongoDbFactory;
 	
 	@Autowired
-	public YmerFactory(MongoClient mongoClient, MirroredDocumentsFactory mirroredDocumentsFactory) {
-		this.mongoClient = mongoClient;
+	public YmerFactory(MongoDbFactory mongodDbFactory, MongoConverterFactory mongoConverterFactory, MirroredDocumentsFactory mirroredDocumentsFactory) {
+		this.mongoDbFactory = mongodDbFactory;
+		this.mongoConverterFactory = mongoConverterFactory;
 		this.mirroredDocuments = new MirroredDocuments(mirroredDocumentsFactory.getDocuments());
-	}
-	
-	public void setDatabaseName(String databaseName) {
-		this.databaseName = databaseName;
 	}
 	
 	public void setExportExceptionHandlerMBean(boolean exportExceptionHandleMBean) {
@@ -79,12 +73,8 @@ public final class YmerFactory {
 	}
 	
 	private SpaceMirrorContext createSpaceMirrorContext() {
-		if (databaseName == null) {
-			throw new IllegalStateException("The databasename property is mandatory. Use YmerFactory.setDatabaseName to configure the target database name");
-		}
-		SimpleMongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoClient, databaseName);
-		MappingMongoConverter mongoConverter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
-		DocumentDb documentDb = DocumentDb.mongoDb(mongoClient.getDB(databaseName), readPreference);
+		MongoConverter mongoConverter = mongoConverterFactory.createMongoConverter();
+		DocumentDb documentDb = DocumentDb.mongoDb(this.mongoDbFactory.getDb(), readPreference);
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(mongoConverter);
 		// Set the event publisher to null to avoid deadlocks when loading data in parallel
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {

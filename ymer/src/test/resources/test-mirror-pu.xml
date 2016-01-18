@@ -16,10 +16,10 @@
 	</os-core:mirror>
 	
 	<bean id="mirroredDocuments" class="com.avanza.ymer.TestSpaceMirrorDocumentsFactory"/>
+	<bean id="mongoConverter" class="com.avanza.ymer.TestSpaceMongoConverterFactory"/>
 
 	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory">
-		<property name="databaseName" value="${databasename}"/>
-		<property name="exportExceptionHandlerMBean" value="${exportExceptionHandlerMBean:false}"></property>
+		<property name="exportExceptionHandlerMBean" value="${exportExceptionHandlerMBean:false}"/>
 	</bean>
 	<bean id="spaceSyncEndpoint" factory-bean="ymerFactory" factory-method="createSpaceSynchronizationEndpoint"/>
 
