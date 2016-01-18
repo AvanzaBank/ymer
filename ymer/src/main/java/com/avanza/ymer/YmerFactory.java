@@ -47,6 +47,16 @@ public final class YmerFactory {
 		this.mirroredDocuments = new MirroredDocuments(mirroredDocumentsFactory.getDocuments());
 	}
 	
+	/**
+	 * Defines whether an ExceptionHandlerMBean should be exported. The ExceptionHandlerMBean allows setting the SpaceSynchronizationEndpoint
+	 * in a state where the bulk of operations is discarded if a failure occurs during synchronization. The default behavior is to keep a filed bulk
+	 * operation first in the queue and wait for a defined interval before running a new attempt to synchronize the bulk. This blocks all 
+	 * subsequent synchronization operations until the bulk succeeds. 
+	 * 
+	 * Default is "true"
+	 * 
+	 * @param exportExceptionHandleMBean
+	 */
 	public void setExportExceptionHandlerMBean(boolean exportExceptionHandleMBean) {
 		this.exportExceptionHandleMBean = exportExceptionHandleMBean;
 	}
