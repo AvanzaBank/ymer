@@ -34,14 +34,14 @@ import com.avanza.ymer.util.OptionalUtil;
 import com.gigaspaces.datasource.DataIterator;
 import com.gigaspaces.datasource.SpaceDataSource;
 
-final class MongoSpaceDataSource extends SpaceDataSource implements ClusterInfoAware, SpaceObjectLoader {
+final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAware, SpaceObjectLoader {
 
-	private static final Logger logger = LoggerFactory.getLogger(MongoSpaceDataSource.class);
+	private static final Logger logger = LoggerFactory.getLogger(YmerSpaceDataSource.class);
 	
 	private final SpaceMirrorContext spaceMirrorContext;
 	private ClusterInfo clusterInfo;
 
-	public MongoSpaceDataSource(SpaceMirrorContext spaceMirror) {
+	public YmerSpaceDataSource(SpaceMirrorContext spaceMirror) {
 		this.spaceMirrorContext = spaceMirror;
 	}
 	

@@ -25,14 +25,14 @@ import org.slf4j.LoggerFactory;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
-final class MongoSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
+final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
 	
-	private static final Logger log = LoggerFactory.getLogger(MongoSpaceSynchronizationEndpoint.class);
+	private static final Logger log = LoggerFactory.getLogger(YmerSpaceSynchronizationEndpoint.class);
 	
 	private final MirroredDocumentWriter mirroredDocumentWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
 
-	public MongoSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
+	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());

@@ -67,15 +67,15 @@ public final class YmerFactory {
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
-		return new MongoSpaceDataSource(createSpaceMirrorContext());
+		return new YmerSpaceDataSource(createSpaceMirrorContext());
 	}
 
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
-		MongoSpaceSynchronizationEndpoint mongoSpaceSynchronizationEndpoint = new MongoSpaceSynchronizationEndpoint(createSpaceMirrorContext());
+		YmerSpaceSynchronizationEndpoint ymerSpaceSynchronizationEndpoint = new YmerSpaceSynchronizationEndpoint(createSpaceMirrorContext());
 		if (this.exportExceptionHandleMBean) {
-			mongoSpaceSynchronizationEndpoint.registerExceptionHandlerMBean();
+			ymerSpaceSynchronizationEndpoint.registerExceptionHandlerMBean();
 		}
-		return mongoSpaceSynchronizationEndpoint;
+		return ymerSpaceSynchronizationEndpoint;
 	}
 	
 	private SpaceMirrorContext createSpaceMirrorContext() {

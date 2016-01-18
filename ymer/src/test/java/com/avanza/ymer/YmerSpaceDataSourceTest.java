@@ -31,14 +31,14 @@ import com.avanza.ymer.DocumentDb;
 import com.avanza.ymer.DocumentPatch;
 import com.avanza.ymer.MirroredDocument;
 import com.avanza.ymer.MirroredDocuments;
-import com.avanza.ymer.MongoSpaceDataSource;
+import com.avanza.ymer.YmerSpaceDataSource;
 import com.avanza.ymer.SpaceMirrorContext;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 
-public class MongoSpaceDataSourceTest {
+public class YmerSpaceDataSourceTest {
 
 	private final Integer partitionId = 1;
 	private final int numberOfInstances = 2;
@@ -48,8 +48,8 @@ public class MongoSpaceDataSourceTest {
 		MirroredDocument<FakeSpaceObject> patchedMirroredDocument = new MirroredDocument<>(FakeSpaceObject.class, new FakeSpaceObjectV1Patch());
 		DocumentDb fakeDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredDocuments(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb);
-		MongoSpaceDataSource mongoSpaceDataSource = new MongoSpaceDataSource(spaceMirror);
-		mongoSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
+		YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
+		ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
 		DocumentCollection documentCollection = fakeDb.getCollection(patchedMirroredDocument.getCollectionName());
 		BasicDBObject doc1 = new BasicDBObject();
@@ -68,7 +68,7 @@ public class MongoSpaceDataSourceTest {
 		documentCollection.insert(doc2);
 		documentCollection.insert(doc3);
 
-		Stream<FakeSpaceObject> loadInitialLoadData = mongoSpaceDataSource.load(patchedMirroredDocument);
+		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.load(patchedMirroredDocument);
 		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
 	}
 
@@ -80,7 +80,7 @@ public class MongoSpaceDataSourceTest {
 				new MirroredDocuments(mirroredDocument),
 				TestSpaceObjectFakeConverter.create(),
 				documentDb);
-		MongoSpaceDataSource externalDataSourceForPartition1 = new MongoSpaceDataSource(spaceMirror);
+		YmerSpaceDataSource externalDataSourceForPartition1 = new YmerSpaceDataSource(spaceMirror);
 		externalDataSourceForPartition1.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
 		DocumentCollection documentCollection = documentDb.getCollection(mirroredDocument.getCollectionName());
