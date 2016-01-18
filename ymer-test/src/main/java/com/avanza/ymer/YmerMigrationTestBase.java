@@ -33,7 +33,7 @@ import com.mongodb.BasicDBObject;
  * 
  * Example usage: 
  * <pre>
- * public class AuthenticationMirrorDocumentsMigrationTest extends MirroredDocumentsMigrationTestBase {
+ * public class AuthenticationMirrorDocumentsMigrationTest extends YmerMigrationTestBase {
  * 
  * 	public AuthenticationMirrorDocumentsMigrationTest(MigrationTest testCase) {
  *		super(testCase);
@@ -69,11 +69,11 @@ import com.mongodb.BasicDBObject;
  *
  */
 @RunWith(Parameterized.class)
-public abstract class MirroredDocumentsMigrationTestBase {
+public abstract class YmerMigrationTestBase {
 
 	private MigrationTest migrationTest;
 
-	public MirroredDocumentsMigrationTestBase(MigrationTest testCase) {
+	public YmerMigrationTestBase(MigrationTest testCase) {
 		this.migrationTest = testCase;
 	}
 	

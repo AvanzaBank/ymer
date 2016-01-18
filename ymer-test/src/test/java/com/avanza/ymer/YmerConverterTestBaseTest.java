@@ -33,10 +33,10 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.MirroredDocument;
 import com.avanza.ymer.MirroredDocuments;
-import com.avanza.ymer.MirroredDocumentsMirroringTestBase.MirrorTest;
+import com.avanza.ymer.YmerConverterTestBase.MirrorTest;
 import com.gigaspaces.annotation.pojo.SpaceId;
 
-public class MirroredDocumentsMirroringTestBaseTest {
+public class YmerConverterTestBaseTest {
 
 	@Test
 	public void testingIfMirroredObjectIsMirrroedPasses() throws Exception {
@@ -166,7 +166,7 @@ public class MirroredDocumentsMirroringTestBaseTest {
 		});
 	}
 
-	class FakeTestSuiteWithEmptyCollection extends MirroredDocumentsMirroringTestBase {
+	class FakeTestSuiteWithEmptyCollection extends YmerConverterTestBase {
 
 		public FakeTestSuiteWithEmptyCollection(MirrorTest<?> testCase) {
 			super(testCase);
@@ -184,7 +184,7 @@ public class MirroredDocumentsMirroringTestBaseTest {
 
 	}
 	
-	class FakeTestSuiteWithEmptyMap extends MirroredDocumentsMirroringTestBase {
+	class FakeTestSuiteWithEmptyMap extends YmerConverterTestBase {
 
 		public FakeTestSuiteWithEmptyMap(MirrorTest<?> testCase) {
 			super(testCase);
@@ -202,7 +202,7 @@ public class MirroredDocumentsMirroringTestBaseTest {
 
 	}
 
-	class FakeTestSuite extends MirroredDocumentsMirroringTestBase {
+	class FakeTestSuite extends YmerConverterTestBase {
 
 		public FakeTestSuite(MirrorTest<?> testCase) {
 			super(testCase);
@@ -220,7 +220,7 @@ public class MirroredDocumentsMirroringTestBaseTest {
 
 	}
 
-	class FakeTestSuiteWithoutId extends MirroredDocumentsMirroringTestBase {
+	class FakeTestSuiteWithoutId extends YmerConverterTestBase {
 
 		public FakeTestSuiteWithoutId(MirrorTest<?> testCase) {
 			super(testCase);

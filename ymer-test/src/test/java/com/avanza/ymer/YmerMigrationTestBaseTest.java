@@ -23,11 +23,11 @@ import org.junit.Test;
 import com.avanza.ymer.DocumentPatch;
 import com.avanza.ymer.MirroredDocument;
 import com.avanza.ymer.MirroredDocuments;
-import com.avanza.ymer.MirroredDocumentsMigrationTestBase.MigrationTest;
+import com.avanza.ymer.YmerMigrationTestBase.MigrationTest;
 import com.mongodb.BasicDBObject;
 
 
-public class MirroredDocumentsMigrationTestBaseTest {
+public class YmerMigrationTestBaseTest {
 	
 	@Test
 	public void migratesTheOldDocumentToTheNextDocumentVersion_OnePatch_PassesIfNextVersionMatchesExpectedVersion() throws Exception {
@@ -130,7 +130,7 @@ public class MirroredDocumentsMigrationTestBaseTest {
 		});
 	}
 
-	class FakeTestSuite extends MirroredDocumentsMigrationTestBase {
+	class FakeTestSuite extends YmerMigrationTestBase {
 
 		private final MirroredDocuments mirroredDocuments;
 

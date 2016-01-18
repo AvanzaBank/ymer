@@ -52,13 +52,13 @@ import com.mongodb.DB;
  *
  */
 @RunWith(Parameterized.class)
-public abstract class MirroredDocumentsMirroringTestBase {
+public abstract class YmerConverterTestBase {
 
 	@SuppressWarnings("rawtypes")
 	private MirrorTest testCase;
 	private MongoDbFactory dummyMongoDbFactory;
 
-	public MirroredDocumentsMirroringTestBase(MirrorTest<?> testCase) {
+	public YmerConverterTestBase(MirrorTest<?> testCase) {
 		this.testCase = testCase;
 		this.dummyMongoDbFactory = new MongoDbFactory() {
 			// The MongoDbFactory is never used during the tests.
