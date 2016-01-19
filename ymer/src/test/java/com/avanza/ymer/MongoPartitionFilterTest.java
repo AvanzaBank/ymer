@@ -24,9 +24,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.avanza.ymer.MirroredDocument;
-import com.avanza.ymer.MongoPartitionFilter;
-import com.avanza.ymer.SpaceObjectFilter;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObjectBuilder;
@@ -37,7 +34,8 @@ import com.mongodb.DBObject;
 
 public class MongoPartitionFilterTest {
 
-	private final MirroredDocument<TestSpaceObject> mirroredDocument = new MirroredDocument<>(TestSpaceObject.class, new TestSpaceObjectV1Patch());
+	private final MirroredDocument<TestSpaceObject> mirroredDocument = 
+		MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
 
 	public final Fongo mongoRule = new Fongo("db");
 

@@ -174,7 +174,8 @@ public class YmerConverterTestBaseTest {
 
 		@Override
 		protected MirroredDocuments getMirroredDocuments() {
-			return new MirroredDocuments(new MirroredDocument<>(TestSpaceObjectWithEmptyCollection.class));
+			DocumentPatch[] patches = {};
+			return new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObjectWithEmptyCollection.class).documentPatches(patches).buildMirroredDocument());
 		}
 
 		@Override
@@ -192,7 +193,8 @@ public class YmerConverterTestBaseTest {
 
 		@Override
 		protected MirroredDocuments getMirroredDocuments() {
-			return new MirroredDocuments(new MirroredDocument<>(TestSpaceObjectWithEmptyMap.class));
+			DocumentPatch[] patches = {};
+			return new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObjectWithEmptyMap.class).documentPatches(patches).buildMirroredDocument());
 		}
 
 		@Override
@@ -210,7 +212,8 @@ public class YmerConverterTestBaseTest {
 
 		@Override
 		protected MirroredDocuments getMirroredDocuments() {
-			return new MirroredDocuments(new MirroredDocument<>(TestSpaceObject.class));
+			DocumentPatch[] patches = {};
+			return new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		}
 
 		@Override
@@ -228,7 +231,8 @@ public class YmerConverterTestBaseTest {
 
 		@Override
 		protected MirroredDocuments getMirroredDocuments() {
-			return new MirroredDocuments(new MirroredDocument<>(TestSpaceObjectWithoutSpringDataIdAnnotation.class));
+			DocumentPatch[] patches = {};
+			return new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObjectWithoutSpringDataIdAnnotation.class).documentPatches(patches).buildMirroredDocument());
 		}
 
 		@Override

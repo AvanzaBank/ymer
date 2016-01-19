@@ -32,11 +32,10 @@ import com.mongodb.BasicDBObject;
 
 public class YmerInitialLoadIntegrationTest {
 	
-	static MirroredDocument<TestSpaceObject> mirroredDocument = new MirroredDocument<>(TestSpaceObject.class, new TestSpaceObjectV1Patch());
-	static MirroredDocument<TestSpaceOtherObject> mirroredOtherDocument = MirroredDocument.createDocument(
-			TestSpaceOtherObject.class, 
-			Collections.<Flag>singleton(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS), 
-			new TestSpaceObjectV1Patch());
+	static MirroredDocument<TestSpaceObject> mirroredDocument = MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
+	static MirroredDocument<TestSpaceOtherObject> mirroredOtherDocument = MirroredDocumentDefinition.create(TestSpaceOtherObject.class)
+																									.flags(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS) 
+																									.documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
 	static MirroredDocuments mirroredDocuments = new MirroredDocuments(mirroredDocument, mirroredOtherDocument);
 	
 	public static MirrorEnvironment mirrorEnv = new MirrorEnvironment();

@@ -55,7 +55,8 @@ public class MirroredDocumentTest {
 				return null; // Never used
 			}
 		}
-		new MirroredDocument<>(InvalidSpaceObject.class);
+		DocumentPatch[] patches = {};
+		MirroredDocumentDefinition.create(InvalidSpaceObject.class).documentPatches(patches).buildMirroredDocument();
 	}
 
 	@Test
@@ -66,7 +67,8 @@ public class MirroredDocumentTest {
 				return 21;
 			}
 		}
-		MirroredDocument<SpaceObject> mirroredDocument = new MirroredDocument<>(SpaceObject.class);
+		DocumentPatch[] patches = {};
+		MirroredDocument<SpaceObject> mirroredDocument = MirroredDocumentDefinition.create(SpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		assertEquals(21, mirroredDocument.getRoutingKey(new SpaceObject()));
 	}
 
@@ -78,7 +80,8 @@ public class MirroredDocumentTest {
 				return "A1^1403854928211^257";
 			}
 		}
-		MirroredDocument<SpaceObject> mirroredDocument = new MirroredDocument<>(SpaceObject.class);
+		DocumentPatch[] patches = {};
+		MirroredDocument<SpaceObject> mirroredDocument = MirroredDocumentDefinition.create(SpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		assertEquals("A1", mirroredDocument.getRoutingKey(new SpaceObject()));
 	}
 
@@ -98,8 +101,9 @@ public class MirroredDocumentTest {
 	public void decidesCorrectRouingKey() throws Exception {
 		EmbeddedSpace embeddedSpace = new EmbeddedSpace();
 		GigaSpace gigaSpace = embeddedSpace.gigaSpace();
+		DocumentPatch[] patches = {};
 
-		MirroredDocument<MySpaceObject> mirroredDocument = new MirroredDocument<>(MySpaceObject.class);
+		MirroredDocument<MySpaceObject> mirroredDocument = MirroredDocumentDefinition.create(MySpaceObject.class).documentPatches(patches).buildMirroredDocument();
 
 		gigaSpace.writeMultiple(new MySpaceObject[] {new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject()});
 		for (MySpaceObject spaceObject : gigaSpace.readMultiple(new MySpaceObject())) {
@@ -122,7 +126,8 @@ public class MirroredDocumentTest {
 				return 19;
 			}
 		}
-		MirroredDocument<SpaceObject> mirroredDocument = new MirroredDocument<>(SpaceObject.class);
+		DocumentPatch[] patches = {};
+		MirroredDocument<SpaceObject> mirroredDocument = MirroredDocumentDefinition.create(SpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		assertEquals(21, mirroredDocument.getRoutingKey(new SpaceObject()));
 	}
 
@@ -132,7 +137,8 @@ public class MirroredDocumentTest {
 		List<FakePatch> appliedPatchesInAppliedOrder = new ArrayList<>();
 		FakePatch patch2 = new FakePatch(2, appliedPatchesInAppliedOrder);
 		FakePatch patch1 = new FakePatch(1, appliedPatchesInAppliedOrder);
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, patch2, patch1);
+		DocumentPatch[] patches = { patch2, patch1 };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 
 		BasicDBObject dbObject = new BasicDBObject();
 		document.patch(dbObject);
@@ -144,19 +150,22 @@ public class MirroredDocumentTest {
 
 	@Test
 	public void currentVersionIsOneMoreThanLatestPathchedVersion() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(1), new FakePatch(2));
+		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		assertEquals(3, document.getCurrentVersion());
 	}
 
 	@Test
 	public void currentVersionIsOnIfeDocumentHasNoPatches() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class);
+		DocumentPatch[] patches = {};
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		assertEquals(1, document.getCurrentVersion());
 	}
 
 	@Test
 	public void documentRequiresPatchingIfVersionToOld() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(1), new FakePatch(2));
+		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 
 		BasicDBObject dbObject = new BasicDBObject();
 		document.setDocumentVersion(dbObject, document.getCurrentVersion() - 1);
@@ -166,7 +175,8 @@ public class MirroredDocumentTest {
 
 	@Test
 	public void documentDoesNotRequirePatchingIfDocumentIsUpToDate() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(1), new FakePatch(2));
+		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 
 		BasicDBObject dbObject = new BasicDBObject();
 		document.setDocumentVersion(dbObject, document.getCurrentVersion());
@@ -176,7 +186,8 @@ public class MirroredDocumentTest {
 
 	@Test(expected = UnknownDocumentVersionException.class)
 	public void cannotPatchDocumentThatAreNewerThanLatestKnownVersion() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(1), new FakePatch(2));
+		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 
 		BasicDBObject dbObject = new BasicDBObject();
 		document.setDocumentVersion(dbObject, document.getCurrentVersion() + 1);
@@ -185,7 +196,8 @@ public class MirroredDocumentTest {
 
 	@Test(expected = UnknownDocumentVersionException.class)
 	public void cannotPatchDocumentThatAreOlderThanOldestKnownVersion() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(2), new FakePatch(3));
+		DocumentPatch[] patches = { new FakePatch(2), new FakePatch(3) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 
 		BasicDBObject dbObject = new BasicDBObject();
 		document.setDocumentVersion(dbObject, 1);
@@ -195,7 +207,8 @@ public class MirroredDocumentTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void patchingWhenNoPatchesExistsThrowsIllegalArgumentException() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class);
+		DocumentPatch[] patches = {};
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		BasicDBObject dbObject = new BasicDBObject();
 		BasicDBObject patched = document.patch(dbObject);
 		assertEquals(dbObject, patched);
@@ -203,7 +216,8 @@ public class MirroredDocumentTest {
 
 	@Test
 	public void patchedDocumentHasLatestDocFormatVersion() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(1), new FakePatch(2));
+		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 
 		BasicDBObject dbObject = new BasicDBObject();
 		BasicDBObject patched = document.patch(dbObject);
@@ -215,7 +229,8 @@ public class MirroredDocumentTest {
 	public void appliesAllPathechesIfDocumentIsOnVersionOne() throws Exception {
 		FakePatch patch1 = new FakePatch(1);
 		FakePatch patch2 = new FakePatch(2);
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, patch1, patch2);
+		DocumentPatch[] patches = { patch1, patch2 };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		BasicDBObject dbObject = new BasicDBObject();
 
 		document.patch(dbObject);
@@ -227,7 +242,8 @@ public class MirroredDocumentTest {
 	public void onlyAppliesAppropriatePatches() throws Exception {
 		FakePatch patch1 = new FakePatch(1);
 		FakePatch patch2 = new FakePatch(2);
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, patch1, patch2);
+		DocumentPatch[] patches = { patch1, patch2 };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		BasicDBObject dbObject = new BasicDBObject();
 		document.setDocumentVersion(dbObject, 2);
 		document.patch(dbObject);
@@ -237,7 +253,8 @@ public class MirroredDocumentTest {
 
 	@Test(expected = UnknownDocumentVersionException.class)
 	public void throwsUnkownDocumentVersionExceptionIfFormatVersionIsNewerThanCurrentFormatVersion() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(1));
+		DocumentPatch[] patches = { new FakePatch(1) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		BasicDBObject dbObject = new BasicDBObject();
 		document.setDocumentVersion(dbObject, 3);
 
@@ -246,7 +263,8 @@ public class MirroredDocumentTest {
 
 	@Test
 	public void knownVersions() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(2), new FakePatch(3));
+		DocumentPatch[] patches = { new FakePatch(2), new FakePatch(3) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		assertFalse("Versions before oldest known version are not known", document.isKnownVersion(1));
 		assertTrue(document.isKnownVersion(2));
 		assertTrue(document.isKnownVersion(3));
@@ -256,27 +274,33 @@ public class MirroredDocumentTest {
 
 	@Test
 	public void collectionName() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(2), new FakePatch(3));
+		DocumentPatch[] patches = { new FakePatch(2), new FakePatch(3) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		 assertEquals(MongoCollectionUtils.getPreferredCollectionName(document.getMirroredType()), document.getCollectionName());
 	}
 
     @Test
     public void setCollectionName() throws Exception{
         String collectionName = "fakeCollection";
-        MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, collectionName, new FakePatch(2), new FakePatch(3));
+        MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class)
+        																    .collectionName(collectionName)
+        																    .documentPatches(new FakePatch(2), new FakePatch(3))
+        																    .buildMirroredDocument();
         assertEquals(collectionName, document.getCollectionName());
 
     }
 
 	@Test
 	public void oldestVersionIsCurrentVersionIfNoPatchesExists() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class);
+		DocumentPatch[] patches = {};
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		assertEquals(document.getCurrentVersion(), document.getOldestKnownVersion());
 	}
 
 	@Test
 	public void oldestVersionIsOldestPatchedVersionIfPatchesExists() throws Exception {
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, new FakePatch(2), new FakePatch(3));
+		DocumentPatch[] patches = { new FakePatch(2), new FakePatch(3) };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 		assertEquals(2, document.getOldestKnownVersion());
 	}
 
@@ -285,7 +309,8 @@ public class MirroredDocumentTest {
 		FakePatch patch1 = new FakePatch(1);
 		FakePatch patch2 = new FakePatch(2);
 		FakePatch patch3 = new FakePatch(3);
-		MirroredDocument<MirroredType> document = new MirroredDocument<>(MirroredType.class, patch1, patch2, patch3);
+		DocumentPatch[] patches = { patch1, patch2, patch3 };
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument();
 
 		BasicDBObject dbObject = new BasicDBObject();
 		document.setDocumentVersion(dbObject, 2);
@@ -299,7 +324,8 @@ public class MirroredDocumentTest {
 
 	@Test
 	public void setsRoutingFieldForRoutedDocumentLoad() throws Exception {
-		MirroredDocument<MirroredType> document = MirroredDocument.createDocument(MirroredType.class, EnumSet.<Flag>of(Flag.LOAD_DOCUMENTS_ROUTED));
+		DocumentPatch[] patches = {};
+		MirroredDocument<MirroredType> document = MirroredDocumentDefinition.create(MirroredType.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
 		BasicDBObject dbObject = new BasicDBObject();
 
 		document.setDocumentAttributes(dbObject, new MirroredType(23));
@@ -308,7 +334,8 @@ public class MirroredDocumentTest {
 
 	@Test
 	public void canDetermineRoutingKeyFromStringRoutingValue() throws Exception {
-		MirroredDocument<RoutedType> document = MirroredDocument.createDocument(RoutedType.class, EnumSet.<Flag>of(Flag.LOAD_DOCUMENTS_ROUTED));
+		DocumentPatch[] patches = {};
+		MirroredDocument<RoutedType> document = MirroredDocumentDefinition.create(RoutedType.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
 		BasicDBObject dbObject = new BasicDBObject();
 
 		document.setDocumentAttributes(dbObject, new RoutedType(23, "bananskal"));

@@ -16,12 +16,6 @@
 package com.avanza.ymer;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-
-import org.springframework.data.mongodb.MongoCollectionUtils;
 
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
@@ -82,57 +76,14 @@ public final class MirroredDocument<T> {
 	private final boolean keepPersistent;
     private final String collectionName;
 
-	/**
-	 *
-	 * @param mirroredType
-	 * @param patches
-	 */
-	public MirroredDocument(Class<T> mirroredType, DocumentPatch... patches) {
-		this(mirroredType, Collections.<Flag>emptySet(), patches);
-	}
-
-    public MirroredDocument(Class<T> mirroredType, String collectionName, DocumentPatch... patches){
-        this(mirroredType, Collections.<Flag>emptySet(), collectionName, patches);
-    }
-
-	private MirroredDocument(Class<T> mirroredType, Set<Flag> flags, DocumentPatch... patches) {
-		this(new DocumentPatchChain<T>(mirroredType, Arrays.asList(patches)), flags);
-	}
-
-    private MirroredDocument(Class<T> mirroredType, Set<Flag> flags, String collectionName, DocumentPatch... patches){
-        this(new DocumentPatchChain<T>(mirroredType, Arrays.asList(patches)), flags, collectionName);
-    }
-
-    private MirroredDocument(DocumentPatchChain<T> patchChain, Set<Flag> flags) {
-        this(patchChain, flags, MongoCollectionUtils.getPreferredCollectionName(patchChain.getMirroredType()));
-    }
-
-	private MirroredDocument(DocumentPatchChain<T> patchChain, Set<Flag> flags, String collectionName) {
-		this.patchChain = Objects.requireNonNull(patchChain);
+	public MirroredDocument(MirroredDocumentDefinition<T> definition) {
+		this.patchChain = definition.createPatchChain();
 		this.routingKeyExtractor = findRoutingKeyMethod(patchChain.getMirroredType());
-		this.excludeFromInitialLoad = flags.contains(Flag.EXCLUDE_FROM_INITIAL_LOAD);
-        this.writeBackPatchedDocuments = !flags.contains(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS);
-        this.loadDocumentsRouted = flags.contains(Flag.LOAD_DOCUMENTS_ROUTED);
-        this.keepPersistent = flags.contains(Flag.KEEP_PERSISTENT);
-        this.collectionName = collectionName;
-	}
-
-	public MirroredDocument(MirroredDocumentBuilder<T> mirroredDocumentBuilder) {
-		this.patchChain = mirroredDocumentBuilder.createPatchChain();
-		this.routingKeyExtractor = findRoutingKeyMethod(patchChain.getMirroredType());
-		this.excludeFromInitialLoad = mirroredDocumentBuilder.excludeFromInitialLoad();
-        this.writeBackPatchedDocuments = mirroredDocumentBuilder.writeBackPatchedDocuments();
-        this.loadDocumentsRouted = mirroredDocumentBuilder.loadDocumentsRouted();
-        this.keepPersistent = mirroredDocumentBuilder.keepPersistent();
-        this.collectionName = mirroredDocumentBuilder.collectionName();
-	}
-
-	public static <T> MirroredDocument<T> createDocument(Class<T> mirroredType, DocumentPatch... patches) {
-		return new MirroredDocument<>(mirroredType, Collections.<Flag>emptySet(), patches);
-	}
-
-	public static <T> MirroredDocument<T> createDocument(Class<T> mirroredType, Set<Flag> flags, DocumentPatch... patches) {
-		return new MirroredDocument<>(mirroredType, flags, patches);
+		this.excludeFromInitialLoad = definition.excludeFromInitialLoad();
+        this.writeBackPatchedDocuments = definition.writeBackPatchedDocuments();
+        this.loadDocumentsRouted = definition.loadDocumentsRouted();
+        this.keepPersistent = definition.keepPersistent();
+        this.collectionName = definition.collectionName();
 	}
 
 	private RoutingKeyExtractor findRoutingKeyMethod(Class<T> mirroredType) {

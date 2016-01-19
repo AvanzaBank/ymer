@@ -37,8 +37,7 @@ public class YmerMigrationTestBaseTest {
 		BasicDBObject v2 = new BasicDBObject();
 		v2.put("foo", "bar");
 		v2.put("baz", "baz");
-		
-		final MirroredDocuments mirroredDocuments = new MirroredDocuments(new MirroredDocument<>(TestSpaceObject.class, new DocumentPatch() {
+		DocumentPatch[] patches = { new DocumentPatch() {
 			@Override
 			public void apply(BasicDBObject dbObject) {
 				dbObject.put("baz", "baz");
@@ -47,7 +46,9 @@ public class YmerMigrationTestBaseTest {
 			public int patchedVersion() {
 				return 1;
 			}
-		}));
+		} };
+		
+		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {
@@ -66,8 +67,7 @@ public class YmerMigrationTestBaseTest {
 		BasicDBObject v2 = new BasicDBObject();
 		v2.put("foo", "bar");
 		v2.put("baz", "baz<");
-		
-		final MirroredDocuments mirroredDocuments = new MirroredDocuments(new MirroredDocument<>(TestSpaceObject.class, new DocumentPatch() {
+		DocumentPatch[] patches = { new DocumentPatch() {
 			@Override
 			public void apply(BasicDBObject dbObject) {
 				dbObject.put("baz", "baz");
@@ -76,7 +76,9 @@ public class YmerMigrationTestBaseTest {
 			public int patchedVersion() {
 				return 1;
 			}
-		}));
+		} };
+		
+		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertFails(new TestRun() {
@@ -100,8 +102,7 @@ public class YmerMigrationTestBaseTest {
 		v3.put("foo", "bar");
 		v3.put("bar", "bar");
 		v3.put("baz", "baz");
-		
-		final MirroredDocuments mirroredDocuments = new MirroredDocuments(new MirroredDocument<>(TestSpaceObject.class, new DocumentPatch() {
+		DocumentPatch[] patches = { new DocumentPatch() {
 			@Override
 			public void apply(BasicDBObject dbObject) {
 				dbObject.put("bar", "bar");
@@ -119,7 +120,9 @@ public class YmerMigrationTestBaseTest {
 			public int patchedVersion() {
 				return 2;
 			}
-		}));
+		} };
+		
+		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {

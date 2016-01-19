@@ -38,17 +38,19 @@ final class MirroredDocuments {
 	 * @param mirroredDocuments
 	 */
 	MirroredDocuments(MirroredDocument<?>... mirroredDocuments) {
-		this(Stream.of(mirroredDocuments));
+		Stream.of(mirroredDocuments).forEach(mirroredDocument -> {
+			this.documentByMirroredType.put(mirroredDocument.getMirroredType(), mirroredDocument);
+		});
 	}
 	
-	MirroredDocuments(Stream<MirroredDocument<?>> mirroredDocuments) {
-		mirroredDocuments.forEach(mirroredDocument -> {
+	MirroredDocuments(Stream<MirroredDocumentDefinition<?>> mirroredDocuments) {
+		mirroredDocuments.map(MirroredDocumentDefinition::buildMirroredDocument).forEach(mirroredDocument -> {
 			this.documentByMirroredType.put(mirroredDocument.getMirroredType(), mirroredDocument);
 		});
 	}
 	
 	/**
-	 * Returns a set of all mirrod types <p>
+	 * Returns a set of all mirrored types <p>
 	 * 
 	 * @return
 	 */

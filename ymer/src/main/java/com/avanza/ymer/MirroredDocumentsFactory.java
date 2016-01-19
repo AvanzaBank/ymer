@@ -19,5 +19,5 @@ import java.util.stream.Stream;
 
 @FunctionalInterface
 public interface MirroredDocumentsFactory {
-	Stream<MirroredDocument<?>> getDocuments();
+	Stream<MirroredDocumentDefinition<?>> getDocuments();
 }

@@ -69,7 +69,8 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	@Test
 	public void canLoadDocumentsRouted() throws Exception {
-		MirroredDocument<FakeSpaceObject> mirroredDocument = MirroredDocument.createDocument(FakeSpaceObject.class, EnumSet.of(Flag.LOAD_DOCUMENTS_ROUTED));
+		DocumentPatch[] patches = {};
+		MirroredDocument<FakeSpaceObject> mirroredDocument = MirroredDocumentDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();
@@ -114,7 +115,8 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	@Test
 	public void canLoadDocumentsRoutedWithoutWriteBack() throws Exception {
-		MirroredDocument<FakeSpaceObject> mirroredDocument = MirroredDocument.createDocument(FakeSpaceObject.class, EnumSet.of(Flag.LOAD_DOCUMENTS_ROUTED, Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS));
+		DocumentPatch[] patches = {};
+		MirroredDocument<FakeSpaceObject> mirroredDocument = MirroredDocumentDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED, Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS).documentPatches(patches).buildMirroredDocument();
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();
