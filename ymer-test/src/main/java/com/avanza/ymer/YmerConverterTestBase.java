@@ -81,7 +81,7 @@ public abstract class YmerConverterTestBase {
 	@Test
 	public void serializationTest() throws Exception {
 		Object spaceObject = testCase.spaceObject;
-		MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredDocument(spaceObject.getClass());
+		MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredObject(spaceObject.getClass());
 		
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
 		BasicDBObject basicDBObject = documentConverter.convertToDBObject(spaceObject);
@@ -97,7 +97,7 @@ public abstract class YmerConverterTestBase {
     @Test
     public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() throws Exception{
         Object spaceObject = testCase.spaceObject;
-        MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredDocument(spaceObject.getClass());
+        MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredObject(spaceObject.getClass());
 
         DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
         BasicDBObject basicDBObject = documentConverter.convertToDBObject(spaceObject);

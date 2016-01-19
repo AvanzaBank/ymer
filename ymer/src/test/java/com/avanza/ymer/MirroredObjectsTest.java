@@ -41,7 +41,7 @@ public class MirroredObjectsTest {
 	@Test(expected = NonMirroredTypeException.class)
 	public void getMirroredDocumentThrowsIllegalArgumentExceptionForNonMirroredType() throws Exception {
 		MirroredObjects mirroredObjects = new MirroredObjects();
-		mirroredObjects.getMirroredDocument(FakeMirroredType.class);
+		mirroredObjects.getMirroredObject(FakeMirroredType.class);
 	}
 	
 	@Test
@@ -49,7 +49,7 @@ public class MirroredObjectsTest {
 		DocumentPatch[] patches = {};
 		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
-		assertSame(mirroredObject, mirroredObjects.getMirroredDocument(FakeMirroredType.class));
+		assertSame(mirroredObject, mirroredObjects.getMirroredObject(FakeMirroredType.class));
 	}
 	
 	@Test
@@ -82,7 +82,7 @@ public class MirroredObjectsTest {
 		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
-		Collection<MirroredObject<?>> allMirroredDocs = mirroredObjects.getMirroredDocuments();
+		Collection<MirroredObject<?>> allMirroredDocs = mirroredObjects.getMirroredObjects();
 		assertEquals(1, allMirroredDocs.size());
 		assertSame(mirroredObject, allMirroredDocs.iterator().next());
 	}

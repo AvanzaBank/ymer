@@ -62,7 +62,7 @@ final class MirroredObjects {
 	 * Returns a Collection of all MirroredObject's
 	 * @return
 	 */
-	public Collection<MirroredObject<?>> getMirroredDocuments() {
+	public Collection<MirroredObject<?>> getMirroredObjects() {
 		return mirroredObjectByType.values();
 	}
 	
@@ -87,7 +87,7 @@ final class MirroredObjects {
 	 * @throws NonMirroredTypeException if the given type is not mirrored
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> MirroredObject<T> getMirroredDocument(Class<T> type) {
+	public <T> MirroredObject<T> getMirroredObject(Class<T> type) {
 		MirroredObject<T> result = (MirroredObject<T>) mirroredObjectByType.get(type);
 		if (result == null) {
 			throw new NonMirroredTypeException(type);

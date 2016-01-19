@@ -50,7 +50,7 @@ final class SpaceMirrorContext {
 		this.mirrorExceptionListener = Objects.requireNonNull(mirrorExceptionListener);
 		this.mirroredObjects = Objects.requireNonNull(mirroredObjects);
 		this.documentConverter = Objects.requireNonNull(documentConverter);
-		for (MirroredObject<?> mirroredObject : mirroredObjects.getMirroredDocuments()) {
+		for (MirroredObject<?> mirroredObject : mirroredObjects.getMirroredObjects()) {
 			DocumentCollection documentCollection = documentDb.getCollection(mirroredObject.getCollectionName());
 			this.documentCollectionByMirroredType.put(mirroredObject.getMirroredType(), documentCollection);
 		}
@@ -61,7 +61,7 @@ final class SpaceMirrorContext {
 	}
 
 	String getCollectionName(Class<?> type) {
-		return mirroredObjects.getMirroredDocument(type).getCollectionName();
+		return mirroredObjects.getMirroredObject(type).getCollectionName();
 	}
 
 	DocumentCollection getDocumentCollection(Class<?> type) {
@@ -78,7 +78,7 @@ final class SpaceMirrorContext {
 	}
 
 	Collection<MirroredObject<?>> getMirroredDocuments() {
-		return this.mirroredObjects.getMirroredDocuments();
+		return this.mirroredObjects.getMirroredObjects();
 	}
 
 	DocumentConverter getDocumentConverter() {
@@ -95,14 +95,14 @@ final class SpaceMirrorContext {
 	 */
 	<T> BasicDBObject toVersionedDbObject(T spaceObject) {
 		@SuppressWarnings("unchecked")
-		MirroredObject<T> mirroredObject = (MirroredObject<T>) this.mirroredObjects.getMirroredDocument(spaceObject.getClass());
+		MirroredObject<T> mirroredObject = (MirroredObject<T>) this.mirroredObjects.getMirroredObject(spaceObject.getClass());
 		BasicDBObject dbObject = this.documentConverter.convertToDBObject(spaceObject);
 		mirroredObject.setDocumentAttributes(dbObject, spaceObject);
 		return dbObject;
 	}
 
 	<T> MirroredObject<T> getMirroredDocument(Class<T> type) {
-		return this.mirroredObjects.getMirroredDocument(type);
+		return this.mirroredObjects.getMirroredObject(type);
 	}
 
 	void onMirrorException(Exception e, MirrorOperation operation, Object... faieldObjects) {

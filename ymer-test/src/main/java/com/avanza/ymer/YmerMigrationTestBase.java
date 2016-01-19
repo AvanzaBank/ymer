@@ -79,9 +79,9 @@ public abstract class YmerMigrationTestBase {
 	
 	@Test
 	public void migratesTheOldDocumentToTheNextDocumentVersion() throws Exception {
-		getMirroredDocuments().getMirroredDocument(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
+		getMirroredDocuments().getMirroredObject(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
 		
-		MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredDocument(migrationTest.spaceObjectType);
+		MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredObject(migrationTest.spaceObjectType);
 		
 		BasicDBObject patched = (BasicDBObject) migrationTest.toBePatched.copy();
 		mirroredDocument.patchToNextVersion(patched);
@@ -94,8 +94,8 @@ public abstract class YmerMigrationTestBase {
 	
 	@Test
 	public void oldVersionShouldRequirePatching() {
-		getMirroredDocuments().getMirroredDocument(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
-		assertTrue("Should reqiure patching: " + migrationTest.toBePatched, getMirroredDocuments().getMirroredDocument(migrationTest.spaceObjectType).requiresPatching(migrationTest.toBePatched));
+		getMirroredDocuments().getMirroredObject(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
+		assertTrue("Should reqiure patching: " + migrationTest.toBePatched, getMirroredDocuments().getMirroredObject(migrationTest.spaceObjectType).requiresPatching(migrationTest.toBePatched));
 	}
 	
 	@Test
