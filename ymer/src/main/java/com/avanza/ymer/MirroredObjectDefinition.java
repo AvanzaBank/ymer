@@ -36,7 +36,7 @@ import java.util.Optional;
 
 import org.springframework.data.mongodb.MongoCollectionUtils;
 
-import com.avanza.ymer.MirroredDocument.Flag;
+import com.avanza.ymer.MirroredObject.Flag;
 /**
  * Holds information about one mirrored space object type.
  *
@@ -47,7 +47,7 @@ public final class MirroredObjectDefinition<T> {
 
 	final Class<T> mirroredType;
 	String collectionName;
-	EnumSet<MirroredDocument.Flag> flags = EnumSet.noneOf(MirroredDocument.Flag.class);
+	EnumSet<MirroredObject.Flag> flags = EnumSet.noneOf(MirroredObject.Flag.class);
 	DocumentPatch[] patches = new DocumentPatch[0];
 
 	public MirroredObjectDefinition(Class<T> mirroredType) {
@@ -59,7 +59,7 @@ public final class MirroredObjectDefinition<T> {
 		return this;
     }
 
-    public MirroredObjectDefinition<T> flags(MirroredDocument.Flag first, MirroredDocument.Flag... rest) {
+    public MirroredObjectDefinition<T> flags(MirroredObject.Flag first, MirroredObject.Flag... rest) {
     	this.flags = EnumSet.of(first, rest);
     	return this;
 	}
@@ -69,8 +69,8 @@ public final class MirroredObjectDefinition<T> {
     	return this;
 	}
     
-    public MirroredDocument<T> buildMirroredDocument() {
-    	return new MirroredDocument<T>(this);
+    public MirroredObject<T> buildMirroredDocument() {
+    	return new MirroredObject<T>(this);
     }
 
 	DocumentPatchChain<T> createPatchChain() {

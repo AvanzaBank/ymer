@@ -39,8 +39,8 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.avanza.ymer.DocumentConverter;
-import com.avanza.ymer.MirroredDocument;
-import com.avanza.ymer.MirroredDocuments;
+import com.avanza.ymer.MirroredObject;
+import com.avanza.ymer.MirroredObjects;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 
@@ -81,7 +81,7 @@ public abstract class YmerConverterTestBase {
 	@Test
 	public void serializationTest() throws Exception {
 		Object spaceObject = testCase.spaceObject;
-		MirroredDocument<?> mirroredDocument = getMirroredDocuments().getMirroredDocument(spaceObject.getClass());
+		MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredDocument(spaceObject.getClass());
 		
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
 		BasicDBObject basicDBObject = documentConverter.convertToDBObject(spaceObject);
@@ -97,7 +97,7 @@ public abstract class YmerConverterTestBase {
     @Test
     public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() throws Exception{
         Object spaceObject = testCase.spaceObject;
-        MirroredDocument<?> mirroredDocument = getMirroredDocuments().getMirroredDocument(spaceObject.getClass());
+        MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredDocument(spaceObject.getClass());
 
         DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
         BasicDBObject basicDBObject = documentConverter.convertToDBObject(spaceObject);
@@ -145,7 +145,7 @@ public abstract class YmerConverterTestBase {
     			+ "add at least one element to ensure proper test coverage.: " + emptyFields, emptyFields.isEmpty());
     }
 	
-	protected abstract MirroredDocuments getMirroredDocuments();
+	protected abstract MirroredObjects getMirroredDocuments();
 	
 	protected abstract MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory);
 	

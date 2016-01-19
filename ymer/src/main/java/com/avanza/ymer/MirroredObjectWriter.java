@@ -36,14 +36,14 @@ import com.mongodb.BasicDBObject;
  * @author Elias Lindholm (elilin)
  * 
  */
-final class MirroredDocumentWriter {
+final class MirroredObjectWriter {
 
-	private static final Logger logger = LoggerFactory.getLogger(MirroredDocumentWriter.class);
+	private static final Logger logger = LoggerFactory.getLogger(MirroredObjectWriter.class);
 
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
 
-	MirroredDocumentWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
+	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
 		this.mirror = Objects.requireNonNull(mirror);
 		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
 	}

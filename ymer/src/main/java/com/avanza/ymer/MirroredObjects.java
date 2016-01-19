@@ -28,24 +28,24 @@ import java.util.stream.Stream;
  * @author Elias Lindholm (elilin)
  *
  */
-final class MirroredDocuments {
+final class MirroredObjects {
 
-	private final Map<Class<?>, MirroredDocument<?>> documentByMirroredType = new ConcurrentHashMap<>();
+	private final Map<Class<?>, MirroredObject<?>> mirroredObjectByType = new ConcurrentHashMap<>();
 	
 	/**
-	 * Creates MirroredDocuments holding the given documents. <p>
+	 * Creates MirroredObjects holding the given documents. <p>
 	 * 
-	 * @param mirroredDocuments
+	 * @param mirroredObjects
 	 */
-	MirroredDocuments(MirroredDocument<?>... mirroredDocuments) {
-		Stream.of(mirroredDocuments).forEach(mirroredDocument -> {
-			this.documentByMirroredType.put(mirroredDocument.getMirroredType(), mirroredDocument);
+	MirroredObjects(MirroredObject<?>... mirroredObjects) {
+		Stream.of(mirroredObjects).forEach(mirroredObject -> {
+			this.mirroredObjectByType.put(mirroredObject.getMirroredType(), mirroredObject);
 		});
 	}
 	
-	MirroredDocuments(Stream<MirroredObjectDefinition<?>> mirroredDocuments) {
-		mirroredDocuments.map(MirroredObjectDefinition::buildMirroredDocument).forEach(mirroredDocument -> {
-			this.documentByMirroredType.put(mirroredDocument.getMirroredType(), mirroredDocument);
+	MirroredObjects(Stream<MirroredObjectDefinition<?>> mirroredObjects) {
+		mirroredObjects.map(MirroredObjectDefinition::buildMirroredDocument).forEach(mirroredObject -> {
+			this.mirroredObjectByType.put(mirroredObject.getMirroredType(), mirroredObject);
 		});
 	}
 	
@@ -55,15 +55,15 @@ final class MirroredDocuments {
 	 * @return
 	 */
 	public Set<Class<?>> getMirroredTypes() {
-		return documentByMirroredType.keySet();
+		return mirroredObjectByType.keySet();
 	}
 	
 	/**
-	 * Returns a Collection of all MirroredDocument's
+	 * Returns a Collection of all MirroredObject's
 	 * @return
 	 */
-	public Collection<MirroredDocument<?>> getMirroredDocuments() {
-		return documentByMirroredType.values();
+	public Collection<MirroredObject<?>> getMirroredDocuments() {
+		return mirroredObjectByType.values();
 	}
 	
 	/**
@@ -73,22 +73,22 @@ final class MirroredDocuments {
 	 */
 	public Set<String> getMirroredTypeNames() {
 		Set<String> result = new HashSet<>();
-		for (MirroredDocument<?> doc : documentByMirroredType.values()) {
+		for (MirroredObject<?> doc : mirroredObjectByType.values()) {
 			result.add(doc.getMirroredType().getName());
 		}
 		return result;
 	}
 
 	/**
-	 * Returns the MirroredDocument for a given type. <p>
+	 * Returns the MirroredObject for a given type. <p>
 	 * 
 	 * @param type
 	 * @return
 	 * @throws NonMirroredTypeException if the given type is not mirrored
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> MirroredDocument<T> getMirroredDocument(Class<T> type) {
-		MirroredDocument<T> result = (MirroredDocument<T>) documentByMirroredType.get(type);
+	public <T> MirroredObject<T> getMirroredDocument(Class<T> type) {
+		MirroredObject<T> result = (MirroredObject<T>) mirroredObjectByType.get(type);
 		if (result == null) {
 			throw new NonMirroredTypeException(type);
 		}

@@ -29,19 +29,19 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	
 	private static final Logger log = LoggerFactory.getLogger(YmerSpaceSynchronizationEndpoint.class);
 	
-	private final MirroredDocumentWriter mirroredDocumentWriter;
+	private final MirroredObjectWriter mirroredObjectWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
 
 	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());
-		this.mirroredDocumentWriter = new MirroredDocumentWriter(spaceMirror, exceptionHandler);
+		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler);
 	}
 
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
-		mirroredDocumentWriter.executeBulk(batchData);
+		mirroredObjectWriter.executeBulk(batchData);
 	}
 	
 	void registerExceptionHandlerMBean() {

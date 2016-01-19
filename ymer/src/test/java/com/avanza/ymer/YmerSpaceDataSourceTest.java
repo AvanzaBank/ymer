@@ -29,8 +29,8 @@ import com.avanza.ymer.DocumentCollection;
 import com.avanza.ymer.DocumentConverter;
 import com.avanza.ymer.DocumentDb;
 import com.avanza.ymer.DocumentPatch;
-import com.avanza.ymer.MirroredDocument;
-import com.avanza.ymer.MirroredDocuments;
+import com.avanza.ymer.MirroredObject;
+import com.avanza.ymer.MirroredObjects;
 import com.avanza.ymer.YmerSpaceDataSource;
 import com.avanza.ymer.SpaceMirrorContext;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
@@ -46,9 +46,9 @@ public class YmerSpaceDataSourceTest {
 	@Test
 	public void documentsMustNotBeWrittenToDbBeforeAllElementsAreLoaded() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredDocument<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		DocumentDb fakeDb = FakeDocumentDb.create();
-		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredDocuments(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb);
+		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb);
 		YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
 		ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
@@ -76,10 +76,10 @@ public class YmerSpaceDataSourceTest {
 	@Test
 	public void loadsAndPatchesASingleDocumentById() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredDocument<TestReloadableSpaceObject> mirroredDocument = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<TestReloadableSpaceObject> mirroredDocument = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		DocumentDb documentDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(
-				new MirroredDocuments(mirroredDocument),
+				new MirroredObjects(mirroredDocument),
 				TestSpaceObjectFakeConverter.create(),
 				documentDb);
 		YmerSpaceDataSource externalDataSourceForPartition1 = new YmerSpaceDataSource(spaceMirror);

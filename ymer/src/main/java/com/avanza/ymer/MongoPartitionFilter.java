@@ -39,9 +39,9 @@ public class MongoPartitionFilter {
 
 	private static BasicDBObject buildFilter(PartitionFilter<?> partitionFilter) {
 		return new BasicDBObject("$or", Arrays.asList(
-				new BasicDBObject(MirroredDocument.DOCUMENT_ROUTING_KEY, new BasicDBObject("$mod", Arrays.asList(partitionFilter.getTotalPartitions(), partitionFilter.getCurrentPartition() - 1))),
-				new BasicDBObject(MirroredDocument.DOCUMENT_ROUTING_KEY, new BasicDBObject("$mod", Arrays.asList(partitionFilter.getTotalPartitions(), -(partitionFilter.getCurrentPartition() - 1)))),
-				new BasicDBObject(MirroredDocument.DOCUMENT_ROUTING_KEY, new BasicDBObject("$exists", false))
+				new BasicDBObject(MirroredObject.DOCUMENT_ROUTING_KEY, new BasicDBObject("$mod", Arrays.asList(partitionFilter.getTotalPartitions(), partitionFilter.getCurrentPartition() - 1))),
+				new BasicDBObject(MirroredObject.DOCUMENT_ROUTING_KEY, new BasicDBObject("$mod", Arrays.asList(partitionFilter.getTotalPartitions(), -(partitionFilter.getCurrentPartition() - 1)))),
+				new BasicDBObject(MirroredObject.DOCUMENT_ROUTING_KEY, new BasicDBObject("$exists", false))
 				));
 	}
 

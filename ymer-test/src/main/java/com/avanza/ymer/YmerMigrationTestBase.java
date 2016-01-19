@@ -25,8 +25,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import com.avanza.ymer.MirroredDocument;
-import com.avanza.ymer.MirroredDocuments;
+import com.avanza.ymer.MirroredObject;
+import com.avanza.ymer.MirroredObjects;
 import com.mongodb.BasicDBObject;
 /**
  * Base class for testing that migration of documents is working properly.
@@ -40,7 +40,7 @@ import com.mongodb.BasicDBObject;
  *	}
  *
  *	@Override
- *	protected MirroredDocuments getMirroredDocuments() {
+ *	protected MirroredObjects getMirroredDocuments() {
  *		return AuthenticationSpaceMirrorFactory.getMirroredDocuments();
  *	}
  *
@@ -81,7 +81,7 @@ public abstract class YmerMigrationTestBase {
 	public void migratesTheOldDocumentToTheNextDocumentVersion() throws Exception {
 		getMirroredDocuments().getMirroredDocument(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
 		
-		MirroredDocument<?> mirroredDocument = getMirroredDocuments().getMirroredDocument(migrationTest.spaceObjectType);
+		MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredDocument(migrationTest.spaceObjectType);
 		
 		BasicDBObject patched = (BasicDBObject) migrationTest.toBePatched.copy();
 		mirroredDocument.patchToNextVersion(patched);
@@ -103,7 +103,7 @@ public abstract class YmerMigrationTestBase {
 		assertTrue("Mirroring of " + migrationTest.getClass(), getMirroredDocuments().isMirroredType(migrationTest.spaceObjectType));
 	}
 	
-	protected abstract MirroredDocuments getMirroredDocuments();
+	protected abstract MirroredObjects getMirroredDocuments();
 	
 	protected final static List<Object[]> buildTestCases(MigrationTest... list) {
 		List<Object[]> result = new ArrayList<Object[]>();

@@ -34,7 +34,7 @@ final class SpaceObjectFilter<T> {
 		this.impl = Objects.requireNonNull(impl);
 	}
 
-	static <T> SpaceObjectFilter<T> partitionFilter(MirroredDocument<T> document, int partitionId, int partitionCount) {
+	static <T> SpaceObjectFilter<T> partitionFilter(MirroredObject<T> document, int partitionId, int partitionCount) {
 		return new SpaceObjectFilter<T>(new PartitionFilter<T>(document, partitionId, partitionCount));
 	}
 
@@ -64,11 +64,11 @@ final class SpaceObjectFilter<T> {
 
 	public static class PartitionFilter<T> implements SpaceObjectFilter.Impl<T> {
 
-		private final MirroredDocument<T> document;
+		private final MirroredObject<T> document;
 		private final int partitionId;
 		private final int partitionCount;
 
-		public PartitionFilter(MirroredDocument<T> document, int partitionId, int partitionCount) {
+		public PartitionFilter(MirroredObject<T> document, int partitionId, int partitionCount) {
 			this.document = document;
 			this.partitionId = partitionId;
 			this.partitionCount = partitionCount;

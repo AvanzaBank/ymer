@@ -21,8 +21,8 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 import com.avanza.ymer.DocumentPatch;
-import com.avanza.ymer.MirroredDocument;
-import com.avanza.ymer.MirroredDocuments;
+import com.avanza.ymer.MirroredObject;
+import com.avanza.ymer.MirroredObjects;
 import com.avanza.ymer.YmerMigrationTestBase.MigrationTest;
 import com.mongodb.BasicDBObject;
 
@@ -48,13 +48,13 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 		
-		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+		final MirroredObjects mirroredObjects = new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {
 			@Override
 			void run() throws Exception {
-				new FakeTestSuite(testCase, mirroredDocuments).migratesTheOldDocumentToTheNextDocumentVersion();
+				new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion();
 			}
 		});
 	}
@@ -78,13 +78,13 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 		
-		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+		final MirroredObjects mirroredObjects = new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertFails(new TestRun() {
 			@Override
 			void run() throws Exception {
-				new FakeTestSuite(testCase, mirroredDocuments).migratesTheOldDocumentToTheNextDocumentVersion();
+				new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion();
 			}
 		});
 	}
@@ -122,29 +122,29 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 		
-		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+		final MirroredObjects mirroredObjects = new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {
 			@Override
 			void run() throws Exception {
-				new FakeTestSuite(testCase, mirroredDocuments).migratesTheOldDocumentToTheNextDocumentVersion();
+				new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion();
 			}
 		});
 	}
 
 	class FakeTestSuite extends YmerMigrationTestBase {
 
-		private final MirroredDocuments mirroredDocuments;
+		private final MirroredObjects mirroredObjects;
 
-		public FakeTestSuite(MigrationTest testCase, MirroredDocuments mirroredDocuments) {
+		public FakeTestSuite(MigrationTest testCase, MirroredObjects mirroredObjects) {
 			super(testCase);
-			this.mirroredDocuments = mirroredDocuments;
+			this.mirroredObjects = mirroredObjects;
 		}
 
 		@Override
-		protected MirroredDocuments getMirroredDocuments() {
-			return mirroredDocuments;
+		protected MirroredObjects getMirroredDocuments() {
+			return mirroredObjects;
 		}
 
 	}

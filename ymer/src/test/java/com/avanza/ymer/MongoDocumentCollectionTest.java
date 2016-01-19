@@ -28,12 +28,12 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.DocumentCollection;
 import com.avanza.ymer.DocumentConverter;
-import com.avanza.ymer.MirroredDocument;
-import com.avanza.ymer.MirroredDocumentLoader;
+import com.avanza.ymer.MirroredObject;
+import com.avanza.ymer.MirroredObjectLoader;
 import com.avanza.ymer.MongoDocumentCollection;
 import com.avanza.ymer.SpaceObjectFilter;
-import com.avanza.ymer.MirroredDocument.Flag;
-import com.avanza.ymer.MirroredDocumentLoader.LoadedDocument;
+import com.avanza.ymer.MirroredObject.Flag;
+import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObject;
@@ -70,7 +70,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	@Test
 	public void canLoadDocumentsRouted() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredDocument<FakeSpaceObject> mirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();
@@ -96,7 +96,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		DocumentCollection documentCollection = testCollection.createEmptyCollection();
 		documentCollection.insertAll(doc1, doc2, doc3, doc4);
 
-		MirroredDocumentLoader<FakeSpaceObject> documentLoader = new MirroredDocumentLoader<>(
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(
 				documentCollection,
 				FakeMirroredDocumentConverter.create(),
 				mirroredDocument,
@@ -116,7 +116,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	@Test
 	public void canLoadDocumentsRoutedWithoutWriteBack() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredDocument<FakeSpaceObject> mirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED, Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED, Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS).documentPatches(patches).buildMirroredDocument();
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();
@@ -142,7 +142,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		DocumentCollection documentCollection = testCollection.createEmptyCollection();
 		documentCollection.insertAll(doc1, doc2, doc3, doc4);
 
-		MirroredDocumentLoader<FakeSpaceObject> documentLoader = new MirroredDocumentLoader<>(
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(
 				documentCollection,
 				FakeMirroredDocumentConverter.create(),
 				mirroredDocument,

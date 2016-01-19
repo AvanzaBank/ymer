@@ -33,33 +33,35 @@ import com.avanza.ymer.util.OptionalUtil;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 /**
+ * Loads mirrored objects from an external (persistent) source.
+ * 
  * Implementation note: multithreaded patching to increase throughput.
  * 
  * @author Elias Lindholm (elilin), Kristoffer Erlandsson, Andreas Skoog
  */
-final class MirroredDocumentLoader<T> {
+final class MirroredObjectLoader<T> {
 	
 	private static final int CONVERSION_TIMEOUT_MINUTES = 60;
 	private static final int NUM_THREADS = 15;
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final MirroredDocument<T> document;
+	private final MirroredObject<T> mirroredObject;
 	private final DocumentCollection documentCollection;
 	private final SpaceObjectFilter<T> spaceObjectFilter;
-	private final Logger LOGGER = LoggerFactory.getLogger(MirroredDocumentLoader.class);
+	private final Logger LOGGER = LoggerFactory.getLogger(MirroredObjectLoader.class);
 	private final DocumentConverter documentConverter;
 	private final AtomicLong numLoadedObjects = new AtomicLong();
 
-	MirroredDocumentLoader(DocumentCollection documentCollection, DocumentConverter documentConverter, MirroredDocument<T> mirroredDocument, SpaceObjectFilter<T> spaceObjectFilter) {
+	MirroredObjectLoader(DocumentCollection documentCollection, DocumentConverter documentConverter, MirroredObject<T> mirroredObject, SpaceObjectFilter<T> spaceObjectFilter) {
 		this.documentConverter = documentConverter;
 		this.spaceObjectFilter = spaceObjectFilter;
 		this.documentCollection = documentCollection;
-		this.document = mirroredDocument;
+		this.mirroredObject = mirroredObject;
 	}
 
 	List<LoadedDocument<T>> loadAllObjects() {
 		long startTime = System.currentTimeMillis();
-		log.info("Begin loadAllObjects. targetCollection={}", document.getCollectionName());
+		log.info("Begin loadAllObjects. targetCollection={}", mirroredObject.getCollectionName());
 		ForkJoinPool forkJoinPool = new ForkJoinPool(NUM_THREADS);
 		ForkJoinTask<List<LoadedDocument<T>>> loadedDocuments = forkJoinPool.submit(() -> {
 			return loadDocuments().parallel()
@@ -69,7 +71,7 @@ final class MirroredDocumentLoader<T> {
 		});
 		try {
 			List<LoadedDocument<T>> result = loadedDocuments.get(CONVERSION_TIMEOUT_MINUTES, TimeUnit.MINUTES);
-			log.info("loadAllObjects for {} finished. {} objects were loaded in {} seconds", document.getCollectionName(),
+			log.info("loadAllObjects for {} finished. {} objects were loaded in {} seconds", mirroredObject.getCollectionName(),
 					result.size(), ((System.currentTimeMillis() - startTime) / 1000d));
 			return result;
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -80,7 +82,7 @@ final class MirroredDocumentLoader<T> {
 	}
 
 	private Stream<DBObject> loadDocuments() {
-		if (document.loadDocumentsRouted()) {
+		if (mirroredObject.loadDocumentsRouted()) {
 			return documentCollection.findAll(spaceObjectFilter);
 		}
 		return documentCollection.findAll();
@@ -91,7 +93,7 @@ final class MirroredDocumentLoader<T> {
 			Optional<LoadedDocument<T>> result = patchAndConvert(new BasicDBObject(object.toMap()));
 			long loaded = numLoadedObjects.incrementAndGet();
 			if (loaded % 10000 == 0) {
-				log.info("Status: loaded {} records for collection {}", loaded, document.getCollectionName());
+				log.info("Status: loaded {} records for collection {}", loaded, mirroredObject.getCollectionName());
 			}
 			return result;
 		} catch (RuntimeException e) {
@@ -127,16 +129,16 @@ final class MirroredDocumentLoader<T> {
 	private Optional<LoadedDocument<T>> patchAndConvert(BasicDBObject dbObject) {
 		BasicDBObject currentVersion = dbObject;
 		boolean patched = false;
-		if (this.document.requiresPatching(dbObject)) {
+		if (this.mirroredObject.requiresPatching(dbObject)) {
 			patched = true;
 			try {
-				currentVersion = this.document.patch(dbObject);
+				currentVersion = this.mirroredObject.patch(dbObject);
 			} catch (RuntimeException e) {
-				LOGGER.error("Patch of document failed! document=" + document + "dbObject=" + dbObject, e);
+				LOGGER.error("Patch of document failed! document=" + mirroredObject + "dbObject=" + dbObject, e);
 				throw e;
 			}
 		}
-		T mirroredObject = documentConverter.convert(document.getMirroredType(), currentVersion);
+		T mirroredObject = documentConverter.convert(this.mirroredObject.getMirroredType(), currentVersion);
 		if (!spaceObjectFilter.accept(mirroredObject)) {
 			return Optional.empty();
 		}

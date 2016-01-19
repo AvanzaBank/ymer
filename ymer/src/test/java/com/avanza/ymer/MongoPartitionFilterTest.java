@@ -34,7 +34,7 @@ import com.mongodb.DBObject;
 
 public class MongoPartitionFilterTest {
 
-	private final MirroredDocument<TestSpaceObject> mirroredDocument = 
+	private final MirroredObject<TestSpaceObject> mirroredObject = 
 		MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
 
 	public final Fongo mongoRule = new Fongo("db");
@@ -52,7 +52,7 @@ public class MongoPartitionFilterTest {
 
 		Set<Integer> found = new HashSet<>();
 		for (int i = 1; i <= NUM_PARTITIONS; i++) {
-			DBCursor cur = collection.find(MongoPartitionFilter.create(SpaceObjectFilter.partitionFilter(mirroredDocument, i, NUM_PARTITIONS)).toDBObject());
+			DBCursor cur = collection.find(MongoPartitionFilter.create(SpaceObjectFilter.partitionFilter(mirroredObject, i, NUM_PARTITIONS)).toDBObject());
 			found.addAll(extractIds(cur.toArray()));
 		}
 

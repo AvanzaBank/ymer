@@ -36,7 +36,7 @@ public final class YmerFactory {
 	private ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
 	
-	private final MirroredDocuments mirroredDocuments;
+	private final MirroredObjects mirroredObjects;
 	private final MongoConverterFactory mongoConverterFactory;
 	private final MongoDbFactory mongoDbFactory;
 	
@@ -44,7 +44,7 @@ public final class YmerFactory {
 	public YmerFactory(MongoDbFactory mongodDbFactory, MongoConverterFactory mongoConverterFactory, MirroredDocumentDefinitions mirroredDocumentDefinitions) {
 		this.mongoDbFactory = mongodDbFactory;
 		this.mongoConverterFactory = mongoConverterFactory;
-		this.mirroredDocuments = new MirroredDocuments(mirroredDocumentDefinitions.getDefinitions());
+		this.mirroredObjects = new MirroredObjects(mirroredDocumentDefinitions.getDefinitions());
 	}
 	
 	/**
@@ -90,7 +90,7 @@ public final class YmerFactory {
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
-		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredDocuments, documentConverter, documentDb, exceptionListener);
+		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener);
 		return mirrorContext;
 	}
 	

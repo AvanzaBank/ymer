@@ -17,7 +17,7 @@ package com.avanza.ymer;
 
 import java.util.stream.Stream;
 
-import com.avanza.ymer.MirroredDocument.Flag;
+import com.avanza.ymer.MirroredObject.Flag;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 
 public class TestSpaceMirrorDocumentDefinitions implements MirroredDocumentDefinitions {

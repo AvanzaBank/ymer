@@ -26,15 +26,12 @@ import com.mongodb.BasicDBObject;
  * @author Elias Lindholm, Joakim Sahlstrom
  *
  */
-public final class MirroredDocument<T> {
-
-
-	// TODO: rename to MirroredObjectDefinition? MirroredSpaceObject?
+public final class MirroredObject<T> {
 
 	public enum Flag {
 		/**
-		 * Indicates that a MirroredDocument should not be loaded from the persistent store during InitialLoad. 
-		 * In other words no data for this MirroredDocument will be present if not loaded through other means.<br/>
+		 * Indicates that a MirroredObject should not be loaded from the persistent store during InitialLoad. 
+		 * In other words no data for this MirroredObject will be present if not loaded through other means.<br/>
 		 * <br/>
 		 * Can be used for collections that are loaded via lazy load. See {@link ReloadableSpaceObject}.
 		 */
@@ -62,7 +59,7 @@ public final class MirroredDocument<T> {
 
 		/**
 		 * Effectively stops all DELETE operations performed in space from being reflected in the persistent storage. I.e. an object that is deleted
-		 * in GigaSpaces will remain in the persistent storage. Usually used in combination with {@link MirroredDocument.Flag.EXCLUDE_FROM_INITIAL_LOAD}
+		 * in GigaSpaces will remain in the persistent storage. Usually used in combination with {@link MirroredObject.Flag.EXCLUDE_FROM_INITIAL_LOAD}
 		 */
 		KEEP_PERSISTENT
 	}
@@ -76,7 +73,7 @@ public final class MirroredDocument<T> {
 	private final boolean keepPersistent;
     private final String collectionName;
 
-	public MirroredDocument(MirroredObjectDefinition<T> definition) {
+	public MirroredObject(MirroredObjectDefinition<T> definition) {
 		this.patchChain = definition.createPatchChain();
 		this.routingKeyExtractor = findRoutingKeyMethod(patchChain.getMirroredType());
 		this.excludeFromInitialLoad = definition.excludeFromInitialLoad();

@@ -35,50 +35,50 @@ final class SpaceMirrorContext {
 		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {}
 	};
 
-	private final MirroredDocuments mirroredDocuments;
+	private final MirroredObjects mirroredObjects;
 	private final DocumentConverter documentConverter;
 	private final Map<Class<?>, DocumentCollection> documentCollectionByMirroredType = new ConcurrentHashMap<>();
 	private final DocumentDb documentDb;
 	private final MirrorExceptionListener mirrorExceptionListener;
 
-	SpaceMirrorContext(MirroredDocuments mirroredDocuments, DocumentConverter documentConverter, DocumentDb documentDb) {
-		this(mirroredDocuments, documentConverter, documentDb, NO_EXCEPTION_LISTENER);
+	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb) {
+		this(mirroredObjects, documentConverter, documentDb, NO_EXCEPTION_LISTENER);
 	}
 
-	SpaceMirrorContext(MirroredDocuments mirroredDocuments, DocumentConverter documentConverter, DocumentDb documentDb, MirrorExceptionListener mirrorExceptionListener) {
+	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb, MirrorExceptionListener mirrorExceptionListener) {
 		this.documentDb = Objects.requireNonNull(documentDb);
 		this.mirrorExceptionListener = Objects.requireNonNull(mirrorExceptionListener);
-		this.mirroredDocuments = Objects.requireNonNull(mirroredDocuments);
+		this.mirroredObjects = Objects.requireNonNull(mirroredObjects);
 		this.documentConverter = Objects.requireNonNull(documentConverter);
-		for (MirroredDocument<?> mirroredDocument : mirroredDocuments.getMirroredDocuments()) {
+		for (MirroredObject<?> mirroredDocument : mirroredObjects.getMirroredDocuments()) {
 			DocumentCollection documentCollection = documentDb.getCollection(mirroredDocument.getCollectionName());
 			this.documentCollectionByMirroredType.put(mirroredDocument.getMirroredType(), documentCollection);
 		}
 	}
 
 	boolean isMirroredType(Class<?> type) {
-		return this.mirroredDocuments.isMirroredType(type);
+		return this.mirroredObjects.isMirroredType(type);
 	}
 
 	String getCollectionName(Class<?> type) {
-		return mirroredDocuments.getMirroredDocument(type).getCollectionName();
+		return mirroredObjects.getMirroredDocument(type).getCollectionName();
 	}
 
 	DocumentCollection getDocumentCollection(Class<?> type) {
 		return documentCollectionByMirroredType.get(type);
 	}
 
-	DocumentCollection getDocumentCollection(MirroredDocument<?> document) {
+	DocumentCollection getDocumentCollection(MirroredObject<?> document) {
 		return getDocumentCollection(document.getMirroredType());
 	}
 
-	<T> MirroredDocumentLoader<T> createDocumentLoader(MirroredDocument<T> document, int partitionId, int partitionCount) {
+	<T> MirroredObjectLoader<T> createDocumentLoader(MirroredObject<T> document, int partitionId, int partitionCount) {
 		DocumentCollection documentCollection = getDocumentCollection(document.getMirroredType());
-		return new MirroredDocumentLoader<>(documentCollection, documentConverter, document, SpaceObjectFilter.partitionFilter(document, partitionId, partitionCount));
+		return new MirroredObjectLoader<>(documentCollection, documentConverter, document, SpaceObjectFilter.partitionFilter(document, partitionId, partitionCount));
 	}
 
-	Collection<MirroredDocument<?>> getMirroredDocuments() {
-		return this.mirroredDocuments.getMirroredDocuments();
+	Collection<MirroredObject<?>> getMirroredDocuments() {
+		return this.mirroredObjects.getMirroredDocuments();
 	}
 
 	DocumentConverter getDocumentConverter() {
@@ -95,14 +95,14 @@ final class SpaceMirrorContext {
 	 */
 	<T> BasicDBObject toVersionedDbObject(T spaceObject) {
 		@SuppressWarnings("unchecked")
-		MirroredDocument<T> mirroredDocument = (MirroredDocument<T>) this.mirroredDocuments.getMirroredDocument(spaceObject.getClass());
+		MirroredObject<T> mirroredDocument = (MirroredObject<T>) this.mirroredObjects.getMirroredDocument(spaceObject.getClass());
 		BasicDBObject dbObject = this.documentConverter.convertToDBObject(spaceObject);
 		mirroredDocument.setDocumentAttributes(dbObject, spaceObject);
 		return dbObject;
 	}
 
-	<T> MirroredDocument<T> getMirroredDocument(Class<T> type) {
-		return this.mirroredDocuments.getMirroredDocument(type);
+	<T> MirroredObject<T> getMirroredDocument(Class<T> type) {
+		return this.mirroredObjects.getMirroredDocument(type);
 	}
 
 	void onMirrorException(Exception e, MirrorOperation operation, Object... faieldObjects) {
@@ -110,7 +110,7 @@ final class SpaceMirrorContext {
 	}
 
 	public boolean keepPersistent(Class<?> type) {
-		return this.mirroredDocuments.isMirroredType(type)
+		return this.mirroredObjects.isMirroredType(type)
 				&& getMirroredDocument(type).keepPersistent();
 	}
 }
