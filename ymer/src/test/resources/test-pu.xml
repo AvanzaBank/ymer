@@ -28,7 +28,7 @@
 	</os-core:space>
 	<os-core:giga-space id="gigaSpace" space="testSpace"/>
 	
-	<bean id="mirroredDocuments" class="com.avanza.ymer.TestSpaceMirrorDocumentDefinitions"/>
+	<bean id="mirroredDocuments" class="com.avanza.ymer.TestSpaceMirrorObjectDefinitions"/>
 	<bean id="mongoConverter" class="com.avanza.ymer.TestSpaceMongoConverterFactory"/>
 	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory"/>
 	<bean id="spaceDataSource" factory-bean="ymerFactory" factory-method="createSpaceDataSource"/>

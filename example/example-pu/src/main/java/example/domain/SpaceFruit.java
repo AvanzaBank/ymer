@@ -23,12 +23,14 @@ public class SpaceFruit {
 
 	@Id
 	private String name;
-	
-	public SpaceFruit(String name) {
-		this.name = name;
-	}
+	private String origin;
 	
 	public SpaceFruit() {
+	}
+	
+	public SpaceFruit(String name, String origin) {
+		this.name = name;
+		this.origin = origin;
 	}
 
 	@SpaceId(autoGenerate=false)
@@ -38,6 +40,14 @@ public class SpaceFruit {
 	
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public void setOrigin(String origin) {
+		this.origin = origin;
+	}
+	
+	public String getOrigin() {
+		return origin;
 	}
 
 }

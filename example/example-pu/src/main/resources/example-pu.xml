@@ -7,7 +7,9 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
 	<context:annotation-config/>
+	
 	<os-core:space id="testSpace" url="/./example-space" mirror="true" space-data-source="spaceDataSource">
+	
 		<os-core:properties>
 			<props>
 				<prop key="cluster-config.mirror-service.url">jini://*/*/example-space-mirror</prop>
@@ -23,9 +25,15 @@
 	
 	
 	<!-- Configure SpaceDataSource used for initial load -->
-	<bean id="mirroredDocumentDefinitions" class="example.mirror.ExampleMirroredDocumentDefinitions"/>
+	
+	<bean id="mirroredObjectDefinitions" class="example.mirror.ExampleMirroredObjectDefinitions"/>
+	
 	<bean id="mongoConverterFactory" class="example.mirror.ExampleMongoConverterFactory"/>
+	
 	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory"/>
+	
 	<bean id="spaceDataSource" factory-bean="ymerFactory" factory-method="createSpaceDataSource"/>
+	
+	
 	
 </beans>

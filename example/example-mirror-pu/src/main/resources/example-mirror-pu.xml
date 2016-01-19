@@ -11,14 +11,21 @@
 		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
 	<context:annotation-config />
+	
 	<os-core:mirror id="mirrorGigaSpace" url="/./example-space-mirror" space-sync-endpoint="spaceSyncEndpoint">
+	
 		<os-core:source-space name="example-space" partitions="1" backups="1"/>
 	</os-core:mirror>
 	
 	<!-- Configure SpaceSynchronizationEndpoin -->
-	<bean id="mirroredDocumentDefinitions" class="example.mirror.ExampleMirroredDocumentDefinitions"/>
+	
+	<bean id="mirroredObjectDefinitions" class="example.mirror.ExampleMirroredObjectDefinitions"/>
+	
 	<bean id="mongoConverterFactory" class="example.mirror.ExampleMongoConverterFactory"/>
+	
 	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory"/>
-	<bean id="spaceSyncEndpoint" factory-bean="ymerFactory" factory-method="createSpaceSynchronizationEndpoint"/>
+	
+	<bean id="spaceSyncEndpoint" factory-bean="ymerFactory"
+								 factory-method="createSpaceSynchronizationEndpoint"/>			
 	
 </beans>

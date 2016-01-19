@@ -15,21 +15,19 @@
  */
 package example.mirror;
 
-import java.util.stream.Stream;
+import com.avanza.ymer.DocumentPatch;
+import com.mongodb.BasicDBObject;
 
-import com.avanza.ymer.MirroredDocumentDefinitions;
-import com.avanza.ymer.MirroredObjectDefinition;
-
-import example.domain.SpaceFruit;
-
-
-public class ExampleMirroredDocumentDefinitions implements MirroredDocumentDefinitions {
+public class SpaceFruitV1ToV2Patch implements DocumentPatch {
 
 	@Override
-	public Stream<MirroredObjectDefinition<?>> getDefinitions() {
-		return Stream.of(
-			MirroredObjectDefinition.create(SpaceFruit.class)
-		);
+	public void apply(BasicDBObject dbObject) {
+		dbObject.put("organic", false);
+	}
+
+	@Override
+	public int patchedVersion() {
+		return 1;
 	}
 
 }

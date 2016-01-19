@@ -13,11 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package example.mirror;
 
 import java.util.stream.Stream;
 
-@FunctionalInterface
-public interface MirroredDocumentDefinitions {
-	Stream<MirroredObjectDefinition<?>> getDefinitions();
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.MirroredObjectDefinitions;
+
+import example.domain.SpaceFruit;
+
+
+public class ExampleMirroredObjectDefinitions implements MirroredObjectDefinitions {
+
+	@Override
+	public Stream<MirroredObjectDefinition<?>> getDefinitions() {
+		return Stream.of(
+			MirroredObjectDefinition.create(SpaceFruit.class)
+		);
+	}
+
 }
+
+
