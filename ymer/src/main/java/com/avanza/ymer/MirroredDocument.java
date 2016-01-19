@@ -117,6 +117,16 @@ public final class MirroredDocument<T> {
         this.collectionName = collectionName;
 	}
 
+	public MirroredDocument(MirroredDocumentBuilder<T> mirroredDocumentBuilder) {
+		this.patchChain = mirroredDocumentBuilder.createPatchChain();
+		this.routingKeyExtractor = findRoutingKeyMethod(patchChain.getMirroredType());
+		this.excludeFromInitialLoad = mirroredDocumentBuilder.excludeFromInitialLoad();
+        this.writeBackPatchedDocuments = mirroredDocumentBuilder.writeBackPatchedDocuments();
+        this.loadDocumentsRouted = mirroredDocumentBuilder.loadDocumentsRouted();
+        this.keepPersistent = mirroredDocumentBuilder.keepPersistent();
+        this.collectionName = mirroredDocumentBuilder.collectionName();
+	}
+
 	public static <T> MirroredDocument<T> createDocument(Class<T> mirroredType, DocumentPatch... patches) {
 		return new MirroredDocument<>(mirroredType, Collections.<Flag>emptySet(), patches);
 	}
