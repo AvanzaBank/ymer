@@ -50,9 +50,9 @@ final class SpaceMirrorContext {
 		this.mirrorExceptionListener = Objects.requireNonNull(mirrorExceptionListener);
 		this.mirroredObjects = Objects.requireNonNull(mirroredObjects);
 		this.documentConverter = Objects.requireNonNull(documentConverter);
-		for (MirroredObject<?> mirroredDocument : mirroredObjects.getMirroredDocuments()) {
-			DocumentCollection documentCollection = documentDb.getCollection(mirroredDocument.getCollectionName());
-			this.documentCollectionByMirroredType.put(mirroredDocument.getMirroredType(), documentCollection);
+		for (MirroredObject<?> mirroredObject : mirroredObjects.getMirroredDocuments()) {
+			DocumentCollection documentCollection = documentDb.getCollection(mirroredObject.getCollectionName());
+			this.documentCollectionByMirroredType.put(mirroredObject.getMirroredType(), documentCollection);
 		}
 	}
 
@@ -95,9 +95,9 @@ final class SpaceMirrorContext {
 	 */
 	<T> BasicDBObject toVersionedDbObject(T spaceObject) {
 		@SuppressWarnings("unchecked")
-		MirroredObject<T> mirroredDocument = (MirroredObject<T>) this.mirroredObjects.getMirroredDocument(spaceObject.getClass());
+		MirroredObject<T> mirroredObject = (MirroredObject<T>) this.mirroredObjects.getMirroredDocument(spaceObject.getClass());
 		BasicDBObject dbObject = this.documentConverter.convertToDBObject(spaceObject);
-		mirroredDocument.setDocumentAttributes(dbObject, spaceObject);
+		mirroredObject.setDocumentAttributes(dbObject, spaceObject);
 		return dbObject;
 	}
 

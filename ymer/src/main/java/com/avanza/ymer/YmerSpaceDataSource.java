@@ -94,10 +94,10 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 
 	@Override
 	public <T extends ReloadableSpaceObject> T reloadObject(Class<T> spaceType, Object documentId) {
-		MirroredObject<T> mirroredDocument = spaceMirrorContext.getMirroredDocument(spaceType);
-		MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredDocument, getPartitionId(), getPartitionCount());
+		MirroredObject<T> mirroredObject = spaceMirrorContext.getMirroredDocument(spaceType);
+		MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getPartitionId(), getPartitionCount());
 		Optional<LoadedDocument<T>> loadDocument = documentLoader.loadById(documentId);
-		writeBackPatchedDocuments(mirroredDocument, loadDocument.map(Arrays::asList).orElse(Collections.emptyList()));
+		writeBackPatchedDocuments(mirroredObject, loadDocument.map(Arrays::asList).orElse(Collections.emptyList()));
 		return loadDocument
 					   .map(LoadedDocument::getDocument)
 					   .orElse(null);
@@ -113,10 +113,10 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 	
 	@Override
 	public <T> Collection<T> loadObjects(Class<T> spaceType, T template) {
-		MirroredObject<T> mirroredDocument = spaceMirrorContext.getMirroredDocument(spaceType);
-		MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredDocument, getPartitionId(), getPartitionCount());
+		MirroredObject<T> mirroredObject = spaceMirrorContext.getMirroredDocument(spaceType);
+		MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getPartitionId(), getPartitionCount());
 		List<LoadedDocument<T>> loadedDocuments = documentLoader.loadByQuery(template);
-		writeBackPatchedDocuments(mirroredDocument, loadedDocuments);
+		writeBackPatchedDocuments(mirroredObject, loadedDocuments);
 		return loadedDocuments
 					  .stream()
 					  .map(LoadedDocument::getDocument)

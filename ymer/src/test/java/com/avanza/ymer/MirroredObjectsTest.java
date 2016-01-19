@@ -47,16 +47,16 @@ public class MirroredObjectsTest {
 	@Test
 	public void returnsMirroredDocumentForGivenType() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredDocument = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
-		MirroredObjects mirroredObjects = new MirroredObjects(mirroredDocument);
-		assertSame(mirroredDocument, mirroredObjects.getMirroredDocument(FakeMirroredType.class));
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
+		assertSame(mirroredObject, mirroredObjects.getMirroredDocument(FakeMirroredType.class));
 	}
 	
 	@Test
 	public void returnsSetOfMirroredTypes() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredDocument = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
-		MirroredObjects mirroredObjects = new MirroredObjects(mirroredDocument);
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
 		Set<Class<?>> expected = new HashSet<>();
 		expected.add(FakeMirroredType.class);
@@ -67,8 +67,8 @@ public class MirroredObjectsTest {
 	@Test
 	public void returnsSetOfMirroredTypeNames() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredDocument = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
-		MirroredObjects mirroredObjects = new MirroredObjects(mirroredDocument);
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
 		Set<String> expected = new HashSet<String>();
 		expected.add(FakeMirroredType.class.getName());
@@ -79,19 +79,19 @@ public class MirroredObjectsTest {
 	@Test
 	public void returnsAllMirroredDocuments() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredDocument = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
-		MirroredObjects mirroredObjects = new MirroredObjects(mirroredDocument);
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
 		Collection<MirroredObject<?>> allMirroredDocs = mirroredObjects.getMirroredDocuments();
 		assertEquals(1, allMirroredDocs.size());
-		assertSame(mirroredDocument, allMirroredDocs.iterator().next());
+		assertSame(mirroredObject, allMirroredDocs.iterator().next());
 	}
 	
 	@Test
 	public void mirroredTypes() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredDocument = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
-		MirroredObjects mirroredObjects = new MirroredObjects(mirroredDocument);
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		assertTrue(mirroredObjects.isMirroredType(FakeMirroredType.class));
 		class NonMirroredType {
 			

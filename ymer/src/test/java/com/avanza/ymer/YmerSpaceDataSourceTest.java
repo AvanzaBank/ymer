@@ -76,16 +76,16 @@ public class YmerSpaceDataSourceTest {
 	@Test
 	public void loadsAndPatchesASingleDocumentById() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<TestReloadableSpaceObject> mirroredDocument = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<TestReloadableSpaceObject> mirroredObject = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		DocumentDb documentDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(
-				new MirroredObjects(mirroredDocument),
+				new MirroredObjects(mirroredObject),
 				TestSpaceObjectFakeConverter.create(),
 				documentDb);
 		YmerSpaceDataSource externalDataSourceForPartition1 = new YmerSpaceDataSource(spaceMirror);
 		externalDataSourceForPartition1.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
-		DocumentCollection documentCollection = documentDb.getCollection(mirroredDocument.getCollectionName());
+		DocumentCollection documentCollection = documentDb.getCollection(mirroredObject.getCollectionName());
 		BasicDBObject doc1 = new BasicDBObject();
 		doc1.put("_id", 1);
 		doc1.put("spaceRouting", 1);
@@ -106,8 +106,8 @@ public class YmerSpaceDataSourceTest {
 		documentCollection.insert(doc3);
 		assertNotNull(externalDataSourceForPartition1.reloadObject(TestReloadableSpaceObject.class, 2));
 
-		DBObject dbObject = documentDb.getCollection(mirroredDocument.getCollectionName()).findById(2);
-		assertFalse(mirroredDocument.requiresPatching(new BasicDBObject(dbObject.toMap())));
+		DBObject dbObject = documentDb.getCollection(mirroredObject.getCollectionName()).findById(2);
+		assertFalse(mirroredObject.requiresPatching(new BasicDBObject(dbObject.toMap())));
 	}
 
 

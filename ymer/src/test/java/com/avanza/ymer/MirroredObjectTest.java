@@ -68,8 +68,8 @@ public class MirroredObjectTest {
 			}
 		}
 		DocumentPatch[] patches = {};
-		MirroredObject<SpaceObject> mirroredDocument = MirroredObjectDefinition.create(SpaceObject.class).documentPatches(patches).buildMirroredDocument();
-		assertEquals(21, mirroredDocument.getRoutingKey(new SpaceObject()));
+		MirroredObject<SpaceObject> mirroredObject = MirroredObjectDefinition.create(SpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		assertEquals(21, mirroredObject.getRoutingKey(new SpaceObject()));
 	}
 
 	@Test
@@ -81,8 +81,8 @@ public class MirroredObjectTest {
 			}
 		}
 		DocumentPatch[] patches = {};
-		MirroredObject<SpaceObject> mirroredDocument = MirroredObjectDefinition.create(SpaceObject.class).documentPatches(patches).buildMirroredDocument();
-		assertEquals("A1", mirroredDocument.getRoutingKey(new SpaceObject()));
+		MirroredObject<SpaceObject> mirroredObject = MirroredObjectDefinition.create(SpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		assertEquals("A1", mirroredObject.getRoutingKey(new SpaceObject()));
 	}
 
 	public static class MySpaceObject {
@@ -103,11 +103,11 @@ public class MirroredObjectTest {
 		GigaSpace gigaSpace = embeddedSpace.gigaSpace();
 		DocumentPatch[] patches = {};
 
-		MirroredObject<MySpaceObject> mirroredDocument = MirroredObjectDefinition.create(MySpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<MySpaceObject> mirroredObject = MirroredObjectDefinition.create(MySpaceObject.class).documentPatches(patches).buildMirroredDocument();
 
 		gigaSpace.writeMultiple(new MySpaceObject[] {new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject(),new MySpaceObject()});
 		for (MySpaceObject spaceObject : gigaSpace.readMultiple(new MySpaceObject())) {
-			assertEquals((String)mirroredDocument.getRoutingKey(spaceObject), 1, Math.abs(mirroredDocument.getRoutingKey(spaceObject).hashCode()) % 2);
+			assertEquals((String)mirroredObject.getRoutingKey(spaceObject), 1, Math.abs(mirroredObject.getRoutingKey(spaceObject).hashCode()) % 2);
 		}
 
 		embeddedSpace.destroy();
@@ -127,8 +127,8 @@ public class MirroredObjectTest {
 			}
 		}
 		DocumentPatch[] patches = {};
-		MirroredObject<SpaceObject> mirroredDocument = MirroredObjectDefinition.create(SpaceObject.class).documentPatches(patches).buildMirroredDocument();
-		assertEquals(21, mirroredDocument.getRoutingKey(new SpaceObject()));
+		MirroredObject<SpaceObject> mirroredObject = MirroredObjectDefinition.create(SpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		assertEquals(21, mirroredObject.getRoutingKey(new SpaceObject()));
 	}
 
 

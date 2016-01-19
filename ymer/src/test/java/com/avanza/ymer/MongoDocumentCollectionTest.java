@@ -70,18 +70,18 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	@Test
 	public void canLoadDocumentsRouted() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeSpaceObject> mirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();
 		doc1.put("_id", 1);
 		doc1.put("value", "a");
-		mirroredDocument.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"));
+		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"));
 
 		final BasicDBObject doc2 = new BasicDBObject();
 		doc2.put("_id", 2);
 		doc2.put("value", "b");
-		mirroredDocument.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"));
+		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"));
 
 		// Objects WITHOUT routed field
 		final BasicDBObject doc3 = new BasicDBObject();
@@ -99,8 +99,8 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(
 				documentCollection,
 				FakeMirroredDocumentConverter.create(),
-				mirroredDocument,
-				SpaceObjectFilter.partitionFilter(mirroredDocument, 2, 2));
+				mirroredObject,
+				SpaceObjectFilter.partitionFilter(mirroredObject, 2, 2));
 		
 		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects()
 					  .stream()
@@ -116,18 +116,18 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	@Test
 	public void canLoadDocumentsRoutedWithoutWriteBack() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeSpaceObject> mirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED, Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED, Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS).documentPatches(patches).buildMirroredDocument();
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();
 		doc1.put("_id", 1);
 		doc1.put("value", "a");
-		mirroredDocument.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"));
+		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"));
 
 		final BasicDBObject doc2 = new BasicDBObject();
 		doc2.put("_id", 2);
 		doc2.put("value", "b");
-		mirroredDocument.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"));
+		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"));
 
 		// Objects WITHOUT routed field
 		final BasicDBObject doc3 = new BasicDBObject();
@@ -145,8 +145,8 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(
 				documentCollection,
 				FakeMirroredDocumentConverter.create(),
-				mirroredDocument,
-				SpaceObjectFilter.partitionFilter(mirroredDocument, 1, 2));
+				mirroredObject,
+				SpaceObjectFilter.partitionFilter(mirroredObject, 1, 2));
 		
 		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects()
 				  .stream()
