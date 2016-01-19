@@ -43,28 +43,28 @@ import com.avanza.ymer.MirroredDocument.Flag;
  * @author Elias Lindholm, Joakim Sahlstrom
  *
  */
-public final class MirroredDocumentDefinition<T> {
+public final class MirroredObjectDefinition<T> {
 
 	final Class<T> mirroredType;
 	String collectionName;
 	EnumSet<MirroredDocument.Flag> flags = EnumSet.noneOf(MirroredDocument.Flag.class);
 	DocumentPatch[] patches = new DocumentPatch[0];
 
-	public MirroredDocumentDefinition(Class<T> mirroredType) {
+	public MirroredObjectDefinition(Class<T> mirroredType) {
 		this.mirroredType = mirroredType;
 	}
 
-    public MirroredDocumentDefinition<T> collectionName(String collectionName) {
+    public MirroredObjectDefinition<T> collectionName(String collectionName) {
         this.collectionName = collectionName;
 		return this;
     }
 
-    public MirroredDocumentDefinition<T> flags(MirroredDocument.Flag first, MirroredDocument.Flag... rest) {
+    public MirroredObjectDefinition<T> flags(MirroredDocument.Flag first, MirroredDocument.Flag... rest) {
     	this.flags = EnumSet.of(first, rest);
     	return this;
 	}
     
-    public MirroredDocumentDefinition<T> documentPatches(DocumentPatch... patches) {
+    public MirroredObjectDefinition<T> documentPatches(DocumentPatch... patches) {
     	this.patches = patches;
     	return this;
 	}
@@ -98,8 +98,8 @@ public final class MirroredDocumentDefinition<T> {
 						  .orElseGet(() -> MongoCollectionUtils.getPreferredCollectionName(mirroredType));
 	}
 
-	public static <T> MirroredDocumentDefinition<T> create(Class<T> mirroredType) {
-		return new MirroredDocumentDefinition<>(mirroredType);
+	public static <T> MirroredObjectDefinition<T> create(Class<T> mirroredType) {
+		return new MirroredObjectDefinition<>(mirroredType);
 	}
 
 	

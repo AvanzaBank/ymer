@@ -41,10 +41,10 @@ public final class YmerFactory {
 	private final MongoDbFactory mongoDbFactory;
 	
 	@Autowired
-	public YmerFactory(MongoDbFactory mongodDbFactory, MongoConverterFactory mongoConverterFactory, MirroredDocumentsFactory mirroredDocumentsFactory) {
+	public YmerFactory(MongoDbFactory mongodDbFactory, MongoConverterFactory mongoConverterFactory, MirroredDocumentDefinitions mirroredDocumentDefinitions) {
 		this.mongoDbFactory = mongodDbFactory;
 		this.mongoConverterFactory = mongoConverterFactory;
-		this.mirroredDocuments = new MirroredDocuments(mirroredDocumentsFactory.getDocuments());
+		this.mirroredDocuments = new MirroredDocuments(mirroredDocumentDefinitions.getDefinitions());
 	}
 	
 	/**

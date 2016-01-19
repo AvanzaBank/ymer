@@ -17,7 +17,17 @@ package com.avanza.ymer;
 
 import java.util.stream.Stream;
 
-@FunctionalInterface
-public interface MirroredDocumentsFactory {
-	Stream<MirroredDocumentDefinition<?>> getDocuments();
+import com.avanza.ymer.MirroredDocument.Flag;
+import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
+
+public class TestSpaceMirrorDocumentDefinitions implements MirroredDocumentDefinitions {
+	
+	@Override
+	public Stream<MirroredObjectDefinition<?>> getDefinitions() {
+		return Stream.of(
+				MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()),
+				MirroredObjectDefinition.create(TestSpaceOtherObject.class).flags(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS).documentPatches(new TestSpaceObjectV1Patch())
+		);
+	}
+	
 }

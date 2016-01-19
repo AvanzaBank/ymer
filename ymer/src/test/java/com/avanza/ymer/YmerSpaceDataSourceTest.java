@@ -46,7 +46,7 @@ public class YmerSpaceDataSourceTest {
 	@Test
 	public void documentsMustNotBeWrittenToDbBeforeAllElementsAreLoaded() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredDocument<FakeSpaceObject> patchedMirroredDocument = MirroredDocumentDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredDocument<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		DocumentDb fakeDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredDocuments(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb);
 		YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
@@ -76,7 +76,7 @@ public class YmerSpaceDataSourceTest {
 	@Test
 	public void loadsAndPatchesASingleDocumentById() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredDocument<TestReloadableSpaceObject> mirroredDocument = MirroredDocumentDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredDocument<TestReloadableSpaceObject> mirroredDocument = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		DocumentDb documentDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(
 				new MirroredDocuments(mirroredDocument),

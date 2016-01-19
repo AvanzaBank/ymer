@@ -25,26 +25,26 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-import com.avanza.ymer.MirroredDocumentDefinition;
-import com.avanza.ymer.MirroredDocumentsFactory;
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.MirroredDocumentDefinitions;
 import com.avanza.ymer.MongoConverterFactory;
 
 import example.domain.SpaceFruit;
 
 
-public class ExampleMirroredDocumentsFactory implements MirroredDocumentsFactory, MongoConverterFactory {
+public class ExampleMirroredDocumentDefinitions implements MirroredDocumentDefinitions, MongoConverterFactory {
 	
 	private MongoDbFactory mongoDbFactory;
 
 	@Autowired
-	public ExampleMirroredDocumentsFactory(MongoDbFactory mongoDbFactory) {
+	public ExampleMirroredDocumentDefinitions(MongoDbFactory mongoDbFactory) {
 		this.mongoDbFactory = mongoDbFactory;
 	}
 
 	@Override
-	public Stream<MirroredDocumentDefinition<?>> getDocuments() {
+	public Stream<MirroredObjectDefinition<?>> getDefinitions() {
 		return Stream.of(
-			MirroredDocumentDefinition.create(SpaceFruit.class)
+			MirroredObjectDefinition.create(SpaceFruit.class)
 		);
 	}
 

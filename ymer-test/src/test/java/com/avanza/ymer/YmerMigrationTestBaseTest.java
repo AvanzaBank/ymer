@@ -48,7 +48,7 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 		
-		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {
@@ -78,7 +78,7 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 		
-		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertFails(new TestRun() {
@@ -122,7 +122,7 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 		
-		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+		final MirroredDocuments mirroredDocuments = new MirroredDocuments(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {

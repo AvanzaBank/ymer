@@ -35,7 +35,7 @@ import com.mongodb.DBObject;
 public class MongoPartitionFilterTest {
 
 	private final MirroredDocument<TestSpaceObject> mirroredDocument = 
-		MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
+		MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
 
 	public final Fongo mongoRule = new Fongo("db");
 

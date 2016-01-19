@@ -60,12 +60,12 @@ public class MirroredDocumentWriterTest {
 	@Before
 	public void setup() {
 		DocumentPatch[] patches = { new TestSpaceObjectV1Patch() };
-		mirroredDocument = MirroredDocumentDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		mirroredDocument = MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		DocumentPatch[] patches2 = {};
 		anotherMirroredDocument =
-				MirroredDocumentDefinition.create(TestSpaceOtherObject.class).flags(MirroredDocument.Flag.KEEP_PERSISTENT).documentPatches(patches2).buildMirroredDocument();
+				MirroredObjectDefinition.create(TestSpaceOtherObject.class).flags(MirroredDocument.Flag.KEEP_PERSISTENT).documentPatches(patches2).buildMirroredDocument();
 		DocumentPatch[] patches1 = {};
-		mirroredReloadableDocument = MirroredDocumentDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches1).buildMirroredDocument();
+		mirroredReloadableDocument = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches1).buildMirroredDocument();
 		mirroredDocuments = new MirroredDocuments(mirroredDocument, mirroredReloadableDocument, anotherMirroredDocument);
 		documentConverter = TestSpaceObjectFakeConverter.create();
 		documentDb = FakeDocumentDb.create();

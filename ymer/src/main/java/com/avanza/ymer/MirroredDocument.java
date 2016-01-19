@@ -29,7 +29,7 @@ import com.mongodb.BasicDBObject;
 public final class MirroredDocument<T> {
 
 
-	// TODO: rename to MirroredDocumentDefinition? MirroredSpaceObject?
+	// TODO: rename to MirroredObjectDefinition? MirroredSpaceObject?
 
 	public enum Flag {
 		/**
@@ -76,7 +76,7 @@ public final class MirroredDocument<T> {
 	private final boolean keepPersistent;
     private final String collectionName;
 
-	public MirroredDocument(MirroredDocumentDefinition<T> definition) {
+	public MirroredDocument(MirroredObjectDefinition<T> definition) {
 		this.patchChain = definition.createPatchChain();
 		this.routingKeyExtractor = findRoutingKeyMethod(patchChain.getMirroredType());
 		this.excludeFromInitialLoad = definition.excludeFromInitialLoad();
