@@ -17,41 +17,19 @@ package example.mirror;
 
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-
-import com.avanza.ymer.MirroredObjectDefinition;
 import com.avanza.ymer.MirroredDocumentDefinitions;
-import com.avanza.ymer.MongoConverterFactory;
+import com.avanza.ymer.MirroredObjectDefinition;
 
 import example.domain.SpaceFruit;
 
 
-public class ExampleMirroredDocumentDefinitions implements MirroredDocumentDefinitions, MongoConverterFactory {
-	
-	private MongoDbFactory mongoDbFactory;
-
-	@Autowired
-	public ExampleMirroredDocumentDefinitions(MongoDbFactory mongoDbFactory) {
-		this.mongoDbFactory = mongoDbFactory;
-	}
+public class ExampleMirroredDocumentDefinitions implements MirroredDocumentDefinitions {
 
 	@Override
 	public Stream<MirroredObjectDefinition<?>> getDefinitions() {
 		return Stream.of(
 			MirroredObjectDefinition.create(SpaceFruit.class)
 		);
-	}
-
-	@Override
-	public MongoConverter createMongoConverter() {
-		DbRefResolver dbRef = new DefaultDbRefResolver(mongoDbFactory);
-		return new MappingMongoConverter(dbRef , new MongoMappingContext());
 	}
 
 }
