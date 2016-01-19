@@ -73,7 +73,6 @@ public class RunningPuImpl implements RunningPu {
 		return new Statement() {
 			@Override
 			public void evaluate() throws Throwable {
-				System.setProperty("com.gs.jini_lus.groups", runner.getLookupGroupName());
 				try {
 					if (runner.autostart()) {
 						start();
@@ -98,6 +97,7 @@ public class RunningPuImpl implements RunningPu {
 	
 	@Override
 	public synchronized void start() throws Exception {
+		System.setProperty("com.gs.jini_lus.groups", runner.getLookupGroupName());
 		this.state = this.state.start(this.runner);
 	}
 	

@@ -18,7 +18,7 @@ package example.domain;
 import com.gigaspaces.annotation.pojo.SpaceId;
 
 public class SpaceCar {
-	
+
 	private String name;
 	
 	public SpaceCar(String name) {

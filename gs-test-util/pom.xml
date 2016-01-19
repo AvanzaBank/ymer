@@ -25,6 +25,12 @@
 		<dependency>
 			<groupId>com.gigaspaces</groupId>
 			<artifactId>gs-runtime</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>tools</artifactId>
+					<groupId>com.sun</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>

@@ -15,6 +15,11 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>example-mirror-pu</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>gs-test-util</artifactId>
 			<version>${project.version}</version>
 			<scope>test</scope>

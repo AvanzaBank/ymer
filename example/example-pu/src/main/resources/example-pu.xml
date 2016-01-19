@@ -7,15 +7,15 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
 	<context:annotation-config/>
-	<os-core:space id="testSpace" url="/./mirrortest-space" mirror="true" space-data-source="spaceDataSource">
+	<os-core:space id="testSpace" url="/./example-space" mirror="true" space-data-source="spaceDataSource">
 		<os-core:properties>
 			<props>
-				<prop key="cluster-config.mirror-service.url">jini://*/*/mirrortest-space-mirror</prop>
+				<prop key="cluster-config.mirror-service.url">jini://*/*/example-space-mirror</prop>
 				<prop key="space-config.engine.cache_policy">1</prop><!-- ALL_IN_CACHE -->
 				<prop key="space-config.external-data-source.usage">read-only</prop>
 				<prop key="cluster-config.cache-loader.external-data-source">true</prop>
 				<prop key="cluster-config.cache-loader.central-data-source">true</prop>
-				<prop key="cluster-config.mirror-service.interval-opers">1</prop><!-- Replicate each event right away to speed up tests -->
+				<prop key="cluster-config.mirror-service.interval-opers">10</prop><!-- Replicate each event right away to speed up tests -->
 			</props>
 		</os-core:properties>
 	</os-core:space>

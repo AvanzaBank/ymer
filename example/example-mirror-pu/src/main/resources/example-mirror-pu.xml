@@ -1,0 +1,23 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:os-core="http://www.openspaces.org/schema/core"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.openspaces.org/schema/core http://www.openspaces.org/schema/core/openspaces-core.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.1.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<context:annotation-config />
+	<os-core:mirror id="mirrorGigaSpace" url="/./example-space-mirror" space-sync-endpoint="spaceSyncEndpoint">
+		<os-core:source-space name="example-space" partitions="1" backups="1"/>
+	</os-core:mirror>
+	
+	<!-- Configure SpaceSynchronizationEndpoin -->
+	<bean id="mirroredDocuments" class="example.mirror.ExampleMirroredDocumentsFactory"/>
+	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory"/>
+	<bean id="spaceSyncEndpoint" factory-bean="ymerFactory" factory-method="createSpaceSynchronizationEndpoint"/>
+	
+</beans>

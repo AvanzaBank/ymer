@@ -42,47 +42,46 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
 import com.github.fakemongo.Fongo;
-import com.mongodb.BasicDBObject;
+import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 
-import example.domain.SpaceCar;
 import example.domain.SpaceFruit;
 
-public class InitialLoadTest {
+public class SpaceObjectWriteSynchronizationTest {
 	
 	private Fongo fongo = new Fongo("fongoDb");
 	private RunningPu pu;
+	private RunningPu mirrorPu;
 
 	@After
 	public void shutdownPus() throws Exception {
 		closeSafe(pu);
+		closeSafe(mirrorPu);
 	}
 	
 	@Test
-	public void intialLoadDemo() throws Exception {
-		fongo.getDB("exampleDb").getCollection("spaceFruit").insert(new BasicDBObject("name", "banana"));
-		fongo.getDB("exampleDb").getCollection("spaceFruit").insert(new BasicDBObject("name", "apple"));
-		fongo.getDB("exampleDb").getCollection("spaceCar").insert(new BasicDBObject("name", "Volvo")); // SpaceCar is not Mirrored
-		
-		
+	public void mirrorDemo() throws Exception {
 		pu = PuConfigurers.partitionedPu("classpath:example-pu.xml")
+									.numberOfPrimaries(1)
+									.numberOfBackups(1)
 								    .parentContext(createSingleInstanceAppContext(fongo.getMongo()))
 								    .configure();
-		
 		pu.start();
+
+		mirrorPu = PuConfigurers.mirrorPu("classpath:example-mirror-pu.xml")
+		   	     				.parentContext(createSingleInstanceAppContext(fongo.getMongo()))
+		   	     				.configure();
+		mirrorPu.start();
 		
 		
 		GigaSpace gigaSpace = pu.getClusteredGigaSpace();
+		gigaSpace.write(new SpaceFruit("banana"));
+		gigaSpace.write(new SpaceFruit("apple"));
 		
-		assertEquals(0, gigaSpace.count(new SpaceCar()));
-		assertEquals(2, gigaSpace.count(new SpaceFruit()));
-	}
-
-	private ApplicationContext createSingleInstanceAppContext(MongoClient mongo) {
-		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.getBeanFactory().registerSingleton("mongoClient", new SimpleMongoDbFactory(mongo, "exampleDb"));
-		context.refresh();
-		return context;
+		assertEventuallyPasses(() -> {
+			DBCursor cursor = fongo.getDB("exampleDb").getCollection("spaceFruit").find();
+			assertEquals("Expected spaceFruit count in mongodb", 2, cursor.count());
+		});
 	}
 	
 	private void closeSafe(AutoCloseable a) {
@@ -91,6 +90,30 @@ public class InitialLoadTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void assertEventuallyPasses(Runnable test) throws InterruptedException {
+		long timeout = System.currentTimeMillis() + 10_000;
+		while (true) {
+			try {
+				test.run();
+				return; // Test passed, return
+			} catch (AssertionError e) {
+				// Test failed
+				if (System.currentTimeMillis() > timeout) {
+					throw e;
+				} else {
+					Thread.sleep(100);
+				}
+			}
+		}
+	}
+
+	private ApplicationContext createSingleInstanceAppContext(MongoClient mongo) {
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+		context.getBeanFactory().registerSingleton("mongoClient", new SimpleMongoDbFactory(mongo, "exampleDb"));
+		context.refresh();
+		return context;
 	}
 
 }
