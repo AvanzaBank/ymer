@@ -18,6 +18,7 @@ package com.avanza.ymer;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -27,12 +28,11 @@ import org.hamcrest.TypeSafeMatcher;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-import com.avanza.ymer.MirroredObject;
-import com.avanza.ymer.MirroredObjects;
 import com.avanza.ymer.YmerConverterTestBase.MirrorTest;
 import com.gigaspaces.annotation.pojo.SpaceId;
 
@@ -173,14 +173,14 @@ public class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MirroredObjects getMirroredDocuments() {
+		protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
 			DocumentPatch[] patches = {};
-			return new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyCollection.class).documentPatches(patches).buildMirroredDocument());
+			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyCollection.class).documentPatches(patches));
 		}
 
 		@Override
 		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-			return new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
+			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 		}
 
 	}
@@ -192,14 +192,14 @@ public class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MirroredObjects getMirroredDocuments() {
+		protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
 			DocumentPatch[] patches = {};
-			return new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyMap.class).documentPatches(patches).buildMirroredDocument());
+			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyMap.class).documentPatches(patches));
 		}
 
 		@Override
 		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-			return new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
+			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 		}
 
 	}
@@ -211,14 +211,14 @@ public class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MirroredObjects getMirroredDocuments() {
+		protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
 			DocumentPatch[] patches = {};
-			return new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		}
 
 		@Override
 		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-			return new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
+			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 		}
 
 	}
@@ -228,16 +228,16 @@ public class YmerConverterTestBaseTest {
 		public FakeTestSuiteWithoutId(MirrorTest<?> testCase) {
 			super(testCase);
 		}
-
+		
 		@Override
-		protected MirroredObjects getMirroredDocuments() {
+		protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
 			DocumentPatch[] patches = {};
-			return new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObjectWithoutSpringDataIdAnnotation.class).documentPatches(patches).buildMirroredDocument());
+			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObjectWithoutSpringDataIdAnnotation.class).documentPatches(patches));
 		}
 
 		@Override
 		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-			return new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
+			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 		}
 
 	}

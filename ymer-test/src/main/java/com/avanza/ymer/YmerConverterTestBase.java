@@ -81,7 +81,7 @@ public abstract class YmerConverterTestBase {
 	@Test
 	public void serializationTest() throws Exception {
 		Object spaceObject = testCase.spaceObject;
-		MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredObject(spaceObject.getClass());
+		MirroredObject<?> mirroredDocument = getMirroredObjects().getMirroredObject(spaceObject.getClass());
 		
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
 		BasicDBObject basicDBObject = documentConverter.convertToDBObject(spaceObject);
@@ -91,13 +91,13 @@ public abstract class YmerConverterTestBase {
 	
 	@Test
 	public void canMirrorSpaceObject() {
-		assertTrue("Mirroring of " + testCase.getClass(), getMirroredDocuments().isMirroredType(testCase.spaceObject.getClass()));
+		assertTrue("Mirroring of " + testCase.getClass(), getMirroredObjects().isMirroredType(testCase.spaceObject.getClass()));
 	}
 
     @Test
     public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() throws Exception{
         Object spaceObject = testCase.spaceObject;
-        MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredObject(spaceObject.getClass());
+        MirroredObject<?> mirroredDocument = getMirroredObjects().getMirroredObject(spaceObject.getClass());
 
         DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
         BasicDBObject basicDBObject = documentConverter.convertToDBObject(spaceObject);
@@ -145,8 +145,12 @@ public abstract class YmerConverterTestBase {
     			+ "add at least one element to ensure proper test coverage.: " + emptyFields, emptyFields.isEmpty());
     }
 	
-	protected abstract MirroredObjects getMirroredDocuments();
+	protected MirroredObjects getMirroredObjects() {
+		return new MirroredObjects(getMirroredDocumentDefinitions().stream());
+	}
 	
+	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions();
+
 	protected abstract MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory);
 	
 	protected final static List<Object[]> buildTestCases(MirrorTest<?>... list) {
