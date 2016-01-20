@@ -19,29 +19,28 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import com.avanza.ymer.MirroredObject;
-import com.avanza.ymer.MirroredObjects;
 import com.mongodb.BasicDBObject;
 /**
  * Base class for testing that migration of documents is working properly.
  * 
  * Example usage: 
  * <pre>
- * public class AuthenticationMirrorDocumentsMigrationTest extends YmerMigrationTestBase {
+ * public class AuthenticationMigrationTest extends YmerMigrationTestBase {
  * 
- * 	public AuthenticationMirrorDocumentsMigrationTest(MigrationTest testCase) {
+ * 	public AuthenticationMigrationTest(MigrationTest testCase) {
  *		super(testCase);
  *	}
  *
  *	@Override
- *	protected MirroredObjects getMirroredDocuments() {
- *		return AuthenticationSpaceMirrorFactory.getMirroredDocuments();
+ *	protected MirroredObjects getMirroredObjectDefinitions() {
+ *		return AuthenticationSpaceMirrorFactory.getMirroredObjectDefinitions();
  *	}
  *
  *	@Parameters
@@ -79,9 +78,9 @@ public abstract class YmerMigrationTestBase {
 	
 	@Test
 	public void migratesTheOldDocumentToTheNextDocumentVersion() throws Exception {
-		getMirroredDocuments().getMirroredObject(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
+		getMirroredObjects().getMirroredObject(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
 		
-		MirroredObject<?> mirroredDocument = getMirroredDocuments().getMirroredObject(migrationTest.spaceObjectType);
+		MirroredObject<?> mirroredDocument = getMirroredObjects().getMirroredObject(migrationTest.spaceObjectType);
 		
 		BasicDBObject patched = (BasicDBObject) migrationTest.toBePatched.copy();
 		mirroredDocument.patchToNextVersion(patched);
@@ -94,16 +93,21 @@ public abstract class YmerMigrationTestBase {
 	
 	@Test
 	public void oldVersionShouldRequirePatching() {
-		getMirroredDocuments().getMirroredObject(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
-		assertTrue("Should reqiure patching: " + migrationTest.toBePatched, getMirroredDocuments().getMirroredObject(migrationTest.spaceObjectType).requiresPatching(migrationTest.toBePatched));
+		getMirroredObjects().getMirroredObject(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
+		assertTrue("Should reqiure patching: " + migrationTest.toBePatched, getMirroredObjects().getMirroredObject(migrationTest.spaceObjectType).requiresPatching(migrationTest.toBePatched));
 	}
 	
 	@Test
 	public void targetSpaceTypeShouldBeAMirroredType() {
-		assertTrue("Mirroring of " + migrationTest.getClass(), getMirroredDocuments().isMirroredType(migrationTest.spaceObjectType));
+		assertTrue("Mirroring of " + migrationTest.getClass(), getMirroredObjects().isMirroredType(migrationTest.spaceObjectType));
 	}
 	
-	protected abstract MirroredObjects getMirroredDocuments();
+	private MirroredObjects getMirroredObjects() {
+		return new MirroredObjects(getMirroredObjectDefinitions().stream());
+	}
+	
+	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
+	
 	
 	protected final static List<Object[]> buildTestCases(MigrationTest... list) {
 		List<Object[]> result = new ArrayList<Object[]>();

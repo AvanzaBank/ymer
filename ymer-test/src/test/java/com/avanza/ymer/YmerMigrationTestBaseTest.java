@@ -18,11 +18,11 @@ package com.avanza.ymer;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.junit.Test;
 
-import com.avanza.ymer.DocumentPatch;
-import com.avanza.ymer.MirroredObject;
-import com.avanza.ymer.MirroredObjects;
 import com.avanza.ymer.YmerMigrationTestBase.MigrationTest;
 import com.mongodb.BasicDBObject;
 
@@ -48,7 +48,7 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 		
-		final MirroredObjects mirroredObjects = new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {
@@ -77,8 +77,8 @@ public class YmerMigrationTestBaseTest {
 				return 1;
 			}
 		} };
-		
-		final MirroredObjects mirroredObjects = new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertFails(new TestRun() {
@@ -121,8 +121,8 @@ public class YmerMigrationTestBaseTest {
 				return 2;
 			}
 		} };
-		
-		final MirroredObjects mirroredObjects = new MirroredObjects(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument());
+
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {
@@ -135,15 +135,15 @@ public class YmerMigrationTestBaseTest {
 
 	class FakeTestSuite extends YmerMigrationTestBase {
 
-		private final MirroredObjects mirroredObjects;
+		private final Collection<MirroredObjectDefinition<?>> mirroredObjects;
 
-		public FakeTestSuite(MigrationTest testCase, MirroredObjects mirroredObjects) {
+		public FakeTestSuite(MigrationTest testCase, Collection<MirroredObjectDefinition<?>> mirroredObjects) {
 			super(testCase);
 			this.mirroredObjects = mirroredObjects;
 		}
 
 		@Override
-		protected MirroredObjects getMirroredDocuments() {
+		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			return mirroredObjects;
 		}
 
