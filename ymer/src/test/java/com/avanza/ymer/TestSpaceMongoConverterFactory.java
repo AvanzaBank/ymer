@@ -22,7 +22,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-public class TestSpaceMongoConverterFactory implements MongoConverterFactory {
+public class TestSpaceMongoConverterFactory {
 
 	private MongoDbFactory mongoDbFactory;
 
@@ -31,7 +31,6 @@ public class TestSpaceMongoConverterFactory implements MongoConverterFactory {
 		this.mongoDbFactory = mongoDbFactory;
 	}
 
-	@Override
 	public MongoConverter createMongoConverter() {
 		return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 	}

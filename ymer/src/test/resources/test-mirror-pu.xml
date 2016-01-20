@@ -15,13 +15,10 @@
 		<os-core:source-space name="mirrortest-space" partitions="1" backups="1"/>
 	</os-core:mirror>
 	
-	<bean id="mirroredDocuments" class="com.avanza.ymer.TestSpaceMirrorObjectDefinitions"/>
-	<bean id="mongoConverter" class="com.avanza.ymer.TestSpaceMongoConverterFactory"/>
-
-	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory">
+	<bean id="mirrorFactory" class="com.avanza.ymer.TestSpaceMirrorFactory">
 		<property name="exportExceptionHandlerMBean" value="${exportExceptionHandlerMBean:false}"/>
 	</bean>
-	<bean id="spaceSyncEndpoint" factory-bean="ymerFactory" factory-method="createSpaceSynchronizationEndpoint"/>
+	<bean id="spaceSyncEndpoint" factory-bean="mirrorFactory" factory-method="createSpaceSynchronizationEndpoint"/>
 
 	
 </beans>

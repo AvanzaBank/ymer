@@ -15,7 +15,8 @@
  */
 package com.avanza.ymer;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.stream.Stream;
+
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -37,19 +38,20 @@ public final class YmerFactory {
 	private boolean exportExceptionHandleMBean = true;
 	
 	private final MirroredObjects mirroredObjects;
-	private final MongoConverterFactory mongoConverterFactory;
+	private final MongoConverter mongoConverter;
 	private final MongoDbFactory mongoDbFactory;
 	
-	@Autowired
-	public YmerFactory(MongoDbFactory mongodDbFactory, MongoConverterFactory mongoConverterFactory, MirroredObjectDefinitions mirroredObjectDefinitions) {
-		this.mongoDbFactory = mongodDbFactory;
-		this.mongoConverterFactory = mongoConverterFactory;
-		this.mirroredObjects = new MirroredObjects(mirroredObjectDefinitions.getDefinitions());
+	public YmerFactory(MongoDbFactory mongoDbFactory, 
+					   MongoConverter mongoConverter,
+					   Stream<MirroredObjectDefinition<?>> definitions) {
+		this.mongoDbFactory = mongoDbFactory;
+		this.mongoConverter = mongoConverter;
+		this.mirroredObjects = new MirroredObjects(definitions);
 	}
-	
+
 	/**
 	 * Defines whether an ExceptionHandlerMBean should be exported. The ExceptionHandlerMBean allows setting the SpaceSynchronizationEndpoint
-	 * in a state where the bulk of operations is discarded if a failure occurs during synchronization. The default behavior is to keep a filed bulk
+	 * in a state where a bulk of operations is discarded if a failure occurs during synchronization. The default behavior is to keep a failed bulk
 	 * operation first in the queue and wait for a defined interval before running a new attempt to synchronize the bulk. This blocks all 
 	 * subsequent synchronization operations until the bulk succeeds. 
 	 * 
@@ -83,7 +85,6 @@ public final class YmerFactory {
 	}
 	
 	private SpaceMirrorContext createSpaceMirrorContext() {
-		MongoConverter mongoConverter = mongoConverterFactory.createMongoConverter();
 		DocumentDb documentDb = DocumentDb.mongoDb(this.mongoDbFactory.getDb(), readPreference);
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(mongoConverter);
 		// Set the event publisher to null to avoid deadlocks when loading data in parallel

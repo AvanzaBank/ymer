@@ -19,13 +19,9 @@
 	
 	<!-- Configure SpaceSynchronizationEndpoin -->
 	
-	<bean id="mirroredObjectDefinitions" class="example.mirror.ExampleMirroredObjectDefinitions"/>
+	<bean id="mirrorFactory" class="example.mirror.ExampleMirrorFactory"/>
 	
-	<bean id="mongoConverterFactory" class="example.mirror.ExampleMongoConverterFactory"/>
-	
-	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory"/>
-	
-	<bean id="spaceSyncEndpoint" factory-bean="ymerFactory"
+	<bean id="spaceSyncEndpoint" factory-bean="mirrorFactory"
 								 factory-method="createSpaceSynchronizationEndpoint"/>			
 	
 </beans>

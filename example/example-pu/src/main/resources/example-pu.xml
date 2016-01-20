@@ -25,14 +25,8 @@
 	
 	
 	<!-- Configure SpaceDataSource used for initial load -->
-	
-	<bean id="mirroredObjectDefinitions" class="example.mirror.ExampleMirroredObjectDefinitions"/>
-	
-	<bean id="mongoConverterFactory" class="example.mirror.ExampleMongoConverterFactory"/>
-	
-	<bean id="ymerFactory" class="com.avanza.ymer.YmerFactory"/>
-	
-	<bean id="spaceDataSource" factory-bean="ymerFactory" factory-method="createSpaceDataSource"/>
+	<bean id="mirrorFactory" class="example.mirror.ExampleMirrorFactory"/>
+	<bean id="spaceDataSource" factory-bean="mirrorFactory" factory-method="createSpaceDataSource"/>
 	
 	
 	

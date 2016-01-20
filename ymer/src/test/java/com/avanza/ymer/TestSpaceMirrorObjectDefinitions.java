@@ -20,9 +20,8 @@ import java.util.stream.Stream;
 import com.avanza.ymer.MirroredObject.Flag;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 
-public class TestSpaceMirrorObjectDefinitions implements MirroredObjectDefinitions {
+public class TestSpaceMirrorObjectDefinitions  {
 	
-	@Override
 	public Stream<MirroredObjectDefinition<?>> getDefinitions() {
 		return Stream.of(
 				MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()),

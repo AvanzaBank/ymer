@@ -15,6 +15,8 @@
  */
 package example.mirror;
 
+import java.util.stream.Stream;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -23,21 +25,39 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-import com.avanza.ymer.MongoConverterFactory;
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.YmerFactory;
+import com.gigaspaces.datasource.SpaceDataSource;
+import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
-public class ExampleMongoConverterFactory implements MongoConverterFactory {
+import example.domain.SpaceFruit;
 
+public class ExampleMirrorFactory {
+	
 	private MongoDbFactory mongoDbFactory;
-
+	
 	@Autowired
-	public ExampleMongoConverterFactory(MongoDbFactory mongoDbFactory) {
+	public ExampleMirrorFactory(MongoDbFactory mongoDbFactory) {
 		this.mongoDbFactory = mongoDbFactory;
 	}
 
-	@Override
-	public MongoConverter createMongoConverter() {
+	public SpaceDataSource createSpaceDataSource() {
+		return new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions()).createSpaceDataSource();
+	}
+	
+	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
+		return new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions()).createSpaceSynchronizationEndpoint();
+	}
+
+	private MongoConverter createMongoConverter() {
 		DbRefResolver dbRef = new DefaultDbRefResolver(mongoDbFactory);
 		return new MappingMongoConverter(dbRef , new MongoMappingContext());
+	}
+	
+	private Stream<MirroredObjectDefinition<?>> getDefinitions() {
+		return Stream.of(
+			MirroredObjectDefinition.create(SpaceFruit.class)
+		);
 	}
 
 }
