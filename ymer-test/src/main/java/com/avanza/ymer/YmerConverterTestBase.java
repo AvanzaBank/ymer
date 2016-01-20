@@ -55,10 +55,10 @@ import com.mongodb.DB;
 public abstract class YmerConverterTestBase {
 
 	@SuppressWarnings("rawtypes")
-	private MirrorTest testCase;
+	private ConverterTest testCase;
 	private MongoDbFactory dummyMongoDbFactory;
 
-	public YmerConverterTestBase(MirrorTest<?> testCase) {
+	public YmerConverterTestBase(ConverterTest<?> testCase) {
 		this.testCase = testCase;
 		this.dummyMongoDbFactory = new MongoDbFactory() {
 			// The MongoDbFactory is never used during the tests.
@@ -153,40 +153,40 @@ public abstract class YmerConverterTestBase {
 
 	protected abstract MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory);
 	
-	protected final static List<Object[]> buildTestCases(MirrorTest<?>... list) {
+	protected final static List<Object[]> buildTestCases(ConverterTest<?>... list) {
 		List<Object[]> result = new ArrayList<Object[]>();
-		for (MirrorTest<?> testCase : list) {
+		for (ConverterTest<?> testCase : list) {
 			result.add(new Object[] { testCase });
 		}
 		return result;
 	}
 
-	protected static class MirrorTest<T> {
+	protected static class ConverterTest<T> {
 		
 		final T spaceObject;
 		final Matcher<T> matcher;
 
 		/**
-		 * Creates a mirror tests that serializes and deserializes the given space-object.
+		 * Creates a converter test that serializes and deserializes the given space-object.
 		 * 
 		 * Matching for determining if deserialized object is 'correct' will be made using
 		 * Matchers.samePropertyValuesAs(spaceObject).  
 		 * 
 		 * @param spaceObject
 		 */
-		public MirrorTest(T spaceObject) {
+		public ConverterTest(T spaceObject) {
 			this(spaceObject, Matchers.samePropertyValuesAs(spaceObject));
 		}
 
 		/**
-		 * Creates a mirror tests that serializes and deserializes the given space-object.
+		 * Creates a converter test that serializes and deserializes the given space-object.
 		 * 
-		 * Uses given matcher to check if desirialized version is correct. <p>
+		 * Uses given matcher to check if deserialized version is correct. <p>
 		 * 
 		 * @param spaceObject
 		 * @param matcher
 		 */
-		public MirrorTest(T spaceObject, Matcher<T> matcher) {
+		public ConverterTest(T spaceObject, Matcher<T> matcher) {
 			this.spaceObject = spaceObject;
 			this.matcher = matcher;
 		}

@@ -33,14 +33,14 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-import com.avanza.ymer.YmerConverterTestBase.MirrorTest;
+import com.avanza.ymer.YmerConverterTestBase.ConverterTest;
 import com.gigaspaces.annotation.pojo.SpaceId;
 
 public class YmerConverterTestBaseTest {
 
 	@Test
 	public void testingIfMirroredObjectIsMirrroedPasses() throws Exception {
-		final FakeTestSuite test1 = new FakeTestSuite(new MirrorTest<>(new TestSpaceObject("foo", "message")));
+		final FakeTestSuite test1 = new FakeTestSuite(new ConverterTest<>(new TestSpaceObject("foo", "message")));
 		assertPasses(new TestRun() {
 			void run() {
 				test1.canMirrorSpaceObject();
@@ -53,7 +53,7 @@ public class YmerConverterTestBaseTest {
 		class NonMirroredType {
 
 		}
-		final FakeTestSuite test1 = new FakeTestSuite(new MirrorTest<>(new NonMirroredType()));
+		final FakeTestSuite test1 = new FakeTestSuite(new ConverterTest<>(new NonMirroredType()));
 		assertFails(new TestRun() {
 			void run() {
 				test1.canMirrorSpaceObject();
@@ -64,7 +64,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void serializationTestSucceds() throws Exception {
 		final FakeTestSuite test1 = new FakeTestSuite(
-				new MirrorTest<>(new TestSpaceObject("foo", "message"), new TypeSafeMatcher<TestSpaceObject>() {
+				new ConverterTest<>(new TestSpaceObject("foo", "message"), new TypeSafeMatcher<TestSpaceObject>() {
 					@Override
 					public void describeTo(Description arg0) {
 					}
@@ -84,7 +84,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void serializationTestFails() throws Exception {
 		final FakeTestSuite test1 = new FakeTestSuite(
-				new MirrorTest<>(new TestSpaceObject("foo", "message"), new TypeSafeMatcher<TestSpaceObject>() {
+				new ConverterTest<>(new TestSpaceObject("foo", "message"), new TypeSafeMatcher<TestSpaceObject>() {
 					@Override
 					public void describeTo(Description arg0) {
 					}
@@ -104,7 +104,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void spaceObjectWithoutAnnotationTestFails() throws Exception {
 		final FakeTestSuiteWithoutId test1 = new FakeTestSuiteWithoutId(
-				new MirrorTest<>(new TestSpaceObjectWithoutSpringDataIdAnnotation("foo"),
+				new ConverterTest<>(new TestSpaceObjectWithoutSpringDataIdAnnotation("foo"),
 						new TypeSafeMatcher<TestSpaceObjectWithoutSpringDataIdAnnotation>() {
 							@Override
 							public void describeTo(Description arg0) {
@@ -125,7 +125,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void spaceObjectWithEmptyCollectionTestFails() throws Exception {
 		final FakeTestSuiteWithEmptyCollection test = new FakeTestSuiteWithEmptyCollection(
-			new MirrorTest<>(new TestSpaceObjectWithEmptyCollection(),
+			new ConverterTest<>(new TestSpaceObjectWithEmptyCollection(),
 				new TypeSafeMatcher<TestSpaceObjectWithEmptyCollection>() {
 					@Override
 					public void describeTo(Description arg0) {
@@ -147,7 +147,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void spaceObjectWithEmptyMapTestFails() throws Exception {
 		final FakeTestSuiteWithEmptyMap test = new FakeTestSuiteWithEmptyMap(
-			new MirrorTest<>(new TestSpaceObjectWithEmptyMap(),
+			new ConverterTest<>(new TestSpaceObjectWithEmptyMap(),
 				new TypeSafeMatcher<TestSpaceObjectWithEmptyMap>() {
 					@Override
 					public void describeTo(Description arg0) {
@@ -168,7 +168,7 @@ public class YmerConverterTestBaseTest {
 
 	class FakeTestSuiteWithEmptyCollection extends YmerConverterTestBase {
 
-		public FakeTestSuiteWithEmptyCollection(MirrorTest<?> testCase) {
+		public FakeTestSuiteWithEmptyCollection(ConverterTest<?> testCase) {
 			super(testCase);
 		}
 
@@ -187,7 +187,7 @@ public class YmerConverterTestBaseTest {
 	
 	class FakeTestSuiteWithEmptyMap extends YmerConverterTestBase {
 
-		public FakeTestSuiteWithEmptyMap(MirrorTest<?> testCase) {
+		public FakeTestSuiteWithEmptyMap(ConverterTest<?> testCase) {
 			super(testCase);
 		}
 
@@ -206,7 +206,7 @@ public class YmerConverterTestBaseTest {
 
 	class FakeTestSuite extends YmerConverterTestBase {
 
-		public FakeTestSuite(MirrorTest<?> testCase) {
+		public FakeTestSuite(ConverterTest<?> testCase) {
 			super(testCase);
 		}
 
@@ -225,7 +225,7 @@ public class YmerConverterTestBaseTest {
 
 	class FakeTestSuiteWithoutId extends YmerConverterTestBase {
 
-		public FakeTestSuiteWithoutId(MirrorTest<?> testCase) {
+		public FakeTestSuiteWithoutId(ConverterTest<?> testCase) {
 			super(testCase);
 		}
 		

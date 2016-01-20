@@ -33,5 +33,11 @@
 			<artifactId>ymer</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>ymer-test</artifactId>
+			<scope>test</scope>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 </project>
