@@ -7,6 +7,7 @@
 	<packaging>pom</packaging>
 	<name>${project.artifactId}</name>
 	<description>${project.artifactId}</description>
+	<url>https://github.com/AvanzaBank/ymer</url>
 	<modules>
 		<module>ymer</module>
 		<module>ymer-test</module>
