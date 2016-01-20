@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-import java.util.stream.Stream;
+import java.util.Collection;
 
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -43,10 +43,10 @@ public final class YmerFactory {
 	
 	public YmerFactory(MongoDbFactory mongoDbFactory, 
 					   MongoConverter mongoConverter,
-					   Stream<MirroredObjectDefinition<?>> definitions) {
+					   Collection<MirroredObjectDefinition<?>> definitions) {
 		this.mongoDbFactory = mongoDbFactory;
 		this.mongoConverter = mongoConverter;
-		this.mirroredObjects = new MirroredObjects(definitions);
+		this.mirroredObjects = new MirroredObjects(definitions.stream());
 	}
 
 	/**

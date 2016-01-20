@@ -15,15 +15,16 @@
  */
 package com.avanza.ymer;
 
-import java.util.stream.Stream;
+import java.util.Arrays;
+import java.util.Collection;
 
 import com.avanza.ymer.MirroredObject.Flag;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 
 public class TestSpaceMirrorObjectDefinitions  {
 	
-	public Stream<MirroredObjectDefinition<?>> getDefinitions() {
-		return Stream.of(
+	public Collection<MirroredObjectDefinition<?>> getDefinitions() {
+		return Arrays.asList(
 				MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()),
 				MirroredObjectDefinition.create(TestSpaceOtherObject.class).flags(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS).documentPatches(new TestSpaceObjectV1Patch())
 		);

@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-import java.util.stream.Stream;
+import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -50,13 +50,12 @@ public class TestSpaceMirrorFactory {
 		return ymerFactory.createSpaceSynchronizationEndpoint();
 	}
 	
-	private Stream<MirroredObjectDefinition<?>> getDefinitions() {
+	private Collection<MirroredObjectDefinition<?>> getDefinitions() {
 		return new TestSpaceMirrorObjectDefinitions().getDefinitions();
 	}
 
 	private MongoConverter createMongoConverter() {
 		return new TestSpaceMongoConverterFactory(mongoDbFactory).createMongoConverter();
 	}
-
 
 }
