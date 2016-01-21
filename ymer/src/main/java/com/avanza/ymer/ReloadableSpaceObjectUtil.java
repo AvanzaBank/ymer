@@ -21,20 +21,20 @@ package com.avanza.ymer;
  * @author joasah Joakim Sahlström
  *
  */
-/*package*/ class ReloadableSpaceObjectUtil {
+class ReloadableSpaceObjectUtil {
 
 	private ReloadableSpaceObjectUtil() {
 		// hide me
 	}
 
-	/*package*/ static void markReloaded(ReloadableSpaceObject reloadableSpaceObject) {
+	static void markReloaded(ReloadableSpaceObject reloadableSpaceObject) {
 		// GigaSpaces will set version id to 1 during insert operation into space, even if it's >1 in MongoDb.
 		int versionId = 1;
 		reloadableSpaceObject.setVersionID(versionId);
 		reloadableSpaceObject.setLatestRestoreVersion(versionId);
 	}
 
-	/*package*/ static boolean isReloaded(ReloadableSpaceObject reloadableSpaceObject) {
+	static boolean isReloaded(ReloadableSpaceObject reloadableSpaceObject) {
 		return reloadableSpaceObject.getLatestRestoreVersion() != null
 				&& reloadableSpaceObject.getLatestRestoreVersion().intValue() == reloadableSpaceObject.getVersionID();
 	}

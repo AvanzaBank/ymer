@@ -34,7 +34,7 @@ import org.springframework.data.mongodb.core.query.Query;
  * @author joasah Joakim Sahlström
  *
  */
-public class MongoQueryFactory {
+class MongoQueryFactory {
 
 	private final HashMap<Class<?>, List<PropertyDescriptor>> propertyDescriptors = new HashMap<Class<?>, List<PropertyDescriptor>>();
 	private final MongoMappingContext mongoMappingContext;

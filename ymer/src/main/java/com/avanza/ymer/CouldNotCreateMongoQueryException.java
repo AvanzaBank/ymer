@@ -19,7 +19,7 @@ package com.avanza.ymer;
  * Thrown when {@link MongoQueryFactory} is unable to create a mongo query
  * @author joasah Joakim Sahlström
  */
-public class CouldNotCreateMongoQueryException extends RuntimeException {
+class CouldNotCreateMongoQueryException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	/**

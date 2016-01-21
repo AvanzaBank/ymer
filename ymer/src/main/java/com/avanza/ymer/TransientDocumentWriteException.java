@@ -21,7 +21,7 @@ package com.avanza.ymer;
  * 
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
  */
-public class TransientDocumentWriteException extends RuntimeException {
+class TransientDocumentWriteException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 

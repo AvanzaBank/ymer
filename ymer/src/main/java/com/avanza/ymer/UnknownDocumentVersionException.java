@@ -19,7 +19,7 @@ package com.avanza.ymer;
  * @author Elias Lindholm (elilin)
  *
  */
-public final class UnknownDocumentVersionException extends RuntimeException {
+final class UnknownDocumentVersionException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 

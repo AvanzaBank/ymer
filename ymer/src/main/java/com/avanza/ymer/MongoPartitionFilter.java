@@ -21,7 +21,7 @@ import java.util.Objects;
 import com.avanza.ymer.SpaceObjectFilter.PartitionFilter;
 import com.mongodb.BasicDBObject;
 
-public class MongoPartitionFilter {
+class MongoPartitionFilter {
 
 	private final BasicDBObject filter;
 

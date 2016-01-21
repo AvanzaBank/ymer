@@ -19,7 +19,7 @@ package com.avanza.ymer;
  * @author Elias Lindholm (elilin)
  *
  */
-public enum MirrorOperation {
+enum MirrorOperation {
 	INSERT,
 	UPDATE,
 	REMOVE

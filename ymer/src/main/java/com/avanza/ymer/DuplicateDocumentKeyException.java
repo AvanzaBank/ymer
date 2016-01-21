@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-public final class DuplicateDocumentKeyException extends RuntimeException {
+final class DuplicateDocumentKeyException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 

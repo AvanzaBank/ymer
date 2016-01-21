@@ -22,7 +22,7 @@ import java.util.Objects;
  * 
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
  */
-public class ToggleableDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler,
+class ToggleableDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler,
 		ToggleableDocumentWriteExceptionHandlerMBean {
 
 	private final DocumentWriteExceptionHandler defaultHandler;

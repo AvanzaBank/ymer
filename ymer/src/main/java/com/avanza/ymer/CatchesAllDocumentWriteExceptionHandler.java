@@ -18,7 +18,7 @@ package com.avanza.ymer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CatchesAllDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler {
+class CatchesAllDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler {
 
 	private Logger log = LoggerFactory.getLogger(CatchesAllDocumentWriteExceptionHandler.class);
 	

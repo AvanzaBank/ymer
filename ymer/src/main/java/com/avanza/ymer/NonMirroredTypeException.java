@@ -19,7 +19,7 @@ package com.avanza.ymer;
  * @author Elias Lindholm (elilin)
  *
  */
-public final class NonMirroredTypeException extends IllegalArgumentException {
+final class NonMirroredTypeException extends IllegalArgumentException {
 	
 	private static final long serialVersionUID = 1L;
 	

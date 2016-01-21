@@ -26,7 +26,7 @@ import com.mongodb.MongoSocketException;
 /**
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
  */
-public class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler {
+class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler {
 
 	private final Collection<Class<? extends Exception>> transientErrorClasses;
 	private final Collection<String> transientErrorMessages;

@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-public interface DocumentWriteExceptionHandler {
+interface DocumentWriteExceptionHandler {
 
 	void handleException(Exception exception, String operationDescription);
 
