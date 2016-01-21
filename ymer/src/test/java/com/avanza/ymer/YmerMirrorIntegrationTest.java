@@ -45,7 +45,6 @@ import org.springframework.data.mongodb.core.MongoOperations;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
-import com.avanza.ymer.SpaceObjectLoader;
 import com.avanza.ymer.test.util.Poller;
 import com.avanza.ymer.test.util.Probe;
 import com.gigaspaces.client.WriteModifiers;

@@ -17,8 +17,6 @@ package com.avanza.ymer;
 
 import org.junit.Test;
 
-import com.avanza.ymer.ToggleableDocumentWriteExceptionHandler;
-
 public class ToggleableDocumentWriteExceptionHandlerTest {
 
 	private FakeDocumentWriteExceptionHandler catchesAllHandler = new FakeDocumentWriteExceptionHandler();

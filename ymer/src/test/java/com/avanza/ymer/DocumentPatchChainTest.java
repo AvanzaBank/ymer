@@ -24,9 +24,6 @@ import java.util.Iterator;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.avanza.ymer.DocumentPatch;
-import com.avanza.ymer.DocumentPatchChain;
-
 public class DocumentPatchChainTest {
 	
 	@Test

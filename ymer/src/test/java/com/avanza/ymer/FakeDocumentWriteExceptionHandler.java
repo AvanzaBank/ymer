@@ -15,8 +15,6 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.DocumentWriteExceptionHandler;
-
 public class FakeDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler {
 
 	private final RuntimeException exceptionToThrow;

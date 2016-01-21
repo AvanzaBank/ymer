@@ -21,8 +21,6 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import com.avanza.ymer.CatchesAllDocumentWriteExceptionHandler;
-import com.avanza.ymer.DocumentWriteExceptionHandler;
 import com.mongodb.MongoException;
 import com.mongodb.MongoSocketException;
 

@@ -31,12 +31,10 @@ o * Copyright 2015 Avanza Bank AB
 package com.avanza.ymer;
 
 import java.util.Arrays;
-import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.MongoCollectionUtils;
-
-import com.avanza.ymer.MirroredObject.Flag;
 /**
  * Holds information about one mirrored space object type.
  *
@@ -45,25 +43,23 @@ import com.avanza.ymer.MirroredObject.Flag;
  */
 public final class MirroredObjectDefinition<T> {
 
-	final Class<T> mirroredType;
-	String collectionName;
-	EnumSet<MirroredObject.Flag> flags = EnumSet.noneOf(MirroredObject.Flag.class);
-	DocumentPatch[] patches = new DocumentPatch[0];
+	private final Class<T> mirroredType;
+	private String collectionName;
+	private DocumentPatch[] patches = new DocumentPatch[0];
+	private boolean excludeFromInitialLoad = false;
+	private boolean writeBackPatchedDocuments = true;
+	private boolean loadDocumentsRouted = false;
+	private boolean keepPersistent = false;
 
 	public MirroredObjectDefinition(Class<T> mirroredType) {
-		this.mirroredType = mirroredType;
+		this.mirroredType = Objects.requireNonNull(mirroredType);
 	}
 
     public MirroredObjectDefinition<T> collectionName(String collectionName) {
-        this.collectionName = collectionName;
+        this.collectionName = Objects.requireNonNull(collectionName);
 		return this;
     }
 
-    public MirroredObjectDefinition<T> flags(MirroredObject.Flag first, MirroredObject.Flag... rest) {
-    	this.flags = EnumSet.of(first, rest);
-    	return this;
-	}
-    
     public MirroredObjectDefinition<T> documentPatches(DocumentPatch... patches) {
     	this.patches = patches;
     	return this;
@@ -76,21 +72,72 @@ public final class MirroredObjectDefinition<T> {
 	DocumentPatchChain<T> createPatchChain() {
 		return new DocumentPatchChain<T>(mirroredType, Arrays.asList(patches));
 	}
+	
+	/**
+	 * Indicates that a MirroredObject should not be loaded from the persistent store during InitialLoad. 
+	 * In other words no data for this MirroredObject will be present if not loaded through other means.<br/>
+	 * <br/>
+	 * Can be used for collections that are loaded via lazy load. See {@link ReloadableSpaceObject}.
+	 */
+	public MirroredObjectDefinition<T> excludeFromInitialLoad(boolean excludeFromInitialLoad) {
+		this.excludeFromInitialLoad = excludeFromInitialLoad;
+		return this;
+	}
 
 	boolean excludeFromInitialLoad() {
-		return flags.contains(Flag.EXCLUDE_FROM_INITIAL_LOAD);
+		return this.excludeFromInitialLoad;
+	}
+
+	/**
+	 * Objects that has been patched (and thus modified) by Ymer during InitialLoad will not be written back to persistent storage
+	 * during the last stage of InitialLoad. <br/>
+	 * <br/>
+	 * When true, persistence-support can utilize several optimizations which reduce system load and memory usage during InitialLoad.
+	 * 
+	 * Default value is false, indicating that documents will be written back to persistent storage.
+	 */
+	public MirroredObjectDefinition<T> writeBackPatchedDocuments(boolean writeBackPatchedDocuments) {
+		this.writeBackPatchedDocuments = writeBackPatchedDocuments;
+		return this;
 	}
 
 	boolean writeBackPatchedDocuments() {
-		return !flags.contains(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS);
+		return this.writeBackPatchedDocuments;
+	}
+	
+	/**
+	 * Adds a routing field to documents that are mirrored to the persistent storage. This field allows objects to be selected with the correct
+	 * routing filtering directly in the persistent storage during initial load, drastically reducing the network load since only the correct
+	 * subset of data will be transferred to each partition.<br/>
+	 * <br/>
+	 * Requires documents in the persistent storage to be updated before taking effect. Will take (partial) effect on partially updated collections.<br/>
+	 * <br/>
+	 * <b>WARNING!</b> Don't activate loadedDocumentRouting if the routing field of a space object is changed, as such changes will not be reflected in the
+	 * persistent storage. Make sure to rewrite all space objects before turning routed document loading back on.
+	 * 
+	 * Default value is false.
+	 * 
+	 */
+	public MirroredObjectDefinition<T> loadDocumentsRouted(boolean loadDocumentsRouted) {
+		this.loadDocumentsRouted = loadDocumentsRouted;
+		return this;
 	}
 
 	boolean loadDocumentsRouted() {
-		return flags.contains(Flag.LOAD_DOCUMENTS_ROUTED);
+		return this.loadDocumentsRouted;
+	}
+	
+	/**
+	 * Effectively stops all DELETE operations performed in space from being reflected in the persistent storage. I.e. an object that is deleted
+	 * in GigaSpaces will remain in the persistent storage. Usually used in combination with {@link #excludeFromInitialLoad()}
+	 */
+	public MirroredObjectDefinition<T> keepPersistent(boolean keepPersistent) {
+		this.keepPersistent = keepPersistent;
+		return this;
 	}
 
 	boolean keepPersistent() {
-		return flags.contains(Flag.KEEP_PERSISTENT);
+		return this.keepPersistent;
 	}
 
 	String collectionName() {

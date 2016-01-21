@@ -18,8 +18,6 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.DocumentCollection;
-
 /**
  * @author Elias Lindholm (elilin)
  *

@@ -23,9 +23,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.avanza.ymer.DocumentWriteExceptionHandler;
-import com.avanza.ymer.RethrowsTransientDocumentWriteExceptionHandler;
-import com.avanza.ymer.TransientDocumentWriteException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoSocketException;
 

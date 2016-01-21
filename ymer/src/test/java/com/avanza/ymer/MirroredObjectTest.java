@@ -21,7 +21,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,10 +31,6 @@ import org.openspaces.core.space.EmbeddedSpaceConfigurer;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 
 import com.avanza.gs.test.JVMGlobalLus;
-import com.avanza.ymer.DocumentPatch;
-import com.avanza.ymer.MirroredObject;
-import com.avanza.ymer.UnknownDocumentVersionException;
-import com.avanza.ymer.MirroredObject.Flag;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
@@ -325,7 +320,7 @@ public class MirroredObjectTest {
 	@Test
 	public void setsRoutingFieldForRoutedDocumentLoad() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument();
 		BasicDBObject dbObject = new BasicDBObject();
 
 		document.setDocumentAttributes(dbObject, new MirroredType(23));
@@ -335,7 +330,7 @@ public class MirroredObjectTest {
 	@Test
 	public void canDetermineRoutingKeyFromStringRoutingValue() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<RoutedType> document = MirroredObjectDefinition.create(RoutedType.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<RoutedType> document = MirroredObjectDefinition.create(RoutedType.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument();
 		BasicDBObject dbObject = new BasicDBObject();
 
 		document.setDocumentAttributes(dbObject, new RoutedType(23, "bananskal"));

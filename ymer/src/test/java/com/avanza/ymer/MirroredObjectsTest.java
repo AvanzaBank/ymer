@@ -26,9 +26,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.avanza.ymer.MirroredObject;
-import com.avanza.ymer.MirroredObjects;
-import com.avanza.ymer.NonMirroredTypeException;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 
 /**

@@ -22,9 +22,6 @@ import java.util.stream.Stream;
 
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.avanza.ymer.DocumentCollection;
-import com.avanza.ymer.DuplicateDocumentKeyException;
-import com.avanza.ymer.SpaceObjectFilter;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 /**

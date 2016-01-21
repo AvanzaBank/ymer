@@ -17,7 +17,6 @@ package com.avanza.ymer;
 
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.avanza.ymer.DocumentConverter;
 import com.mongodb.BasicDBObject;
 
 public class TestSpaceObjectFakeConverter {

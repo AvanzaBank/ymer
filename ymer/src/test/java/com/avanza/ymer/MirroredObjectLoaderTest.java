@@ -26,13 +26,6 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.avanza.ymer.DocumentConverter;
-import com.avanza.ymer.DocumentPatch;
-import com.avanza.ymer.MirroredObject;
-import com.avanza.ymer.MirroredObjectLoader;
-import com.avanza.ymer.PatchedDocument;
-import com.avanza.ymer.ReloadableSpaceObject;
-import com.avanza.ymer.SpaceObjectFilter;
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.util.OptionalUtil;
 import com.gigaspaces.annotation.pojo.SpaceId;

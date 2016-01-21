@@ -17,7 +17,6 @@ package com.avanza.ymer;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.After;
@@ -27,14 +26,13 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
-import com.avanza.ymer.MirroredObject.Flag;
 import com.mongodb.BasicDBObject;
 
 public class YmerInitialLoadIntegrationTest {
 	
 	static MirroredObject<TestSpaceObject> mirroredObject = MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
 	static MirroredObject<TestSpaceOtherObject> mirroredOtherDocument = MirroredObjectDefinition.create(TestSpaceOtherObject.class)
-																									.flags(Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS) 
+																									.writeBackPatchedDocuments(false)
 																									.documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
 	static MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject, mirroredOtherDocument);
 	

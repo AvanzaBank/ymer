@@ -21,9 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.avanza.ymer.ReloadableSpaceObject;
-import com.avanza.ymer.ReloadableSpaceObjectUtil;
-
 
 
 public class ReloadableSpaceObjectUtilTest {

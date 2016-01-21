@@ -18,22 +18,12 @@ package com.avanza.ymer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.EnumSet;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.avanza.ymer.DocumentConverter;
-import com.avanza.ymer.DocumentDb;
-import com.avanza.ymer.MirrorExceptionListener;
-import com.avanza.ymer.MirrorOperation;
-import com.avanza.ymer.MirroredObject;
-import com.avanza.ymer.MirroredObjectWriter;
-import com.avanza.ymer.MirroredObjects;
-import com.avanza.ymer.SpaceMirrorContext;
-import com.avanza.ymer.TransientDocumentWriteException;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.gigaspaces.document.SpaceDocument;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
@@ -63,7 +53,7 @@ public class MirroredObjectWriterTest {
 		mirroredObject = MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		DocumentPatch[] patches2 = {};
 		anotherMirroredDocument =
-				MirroredObjectDefinition.create(TestSpaceOtherObject.class).flags(MirroredObject.Flag.KEEP_PERSISTENT).documentPatches(patches2).buildMirroredDocument();
+				MirroredObjectDefinition.create(TestSpaceOtherObject.class).keepPersistent(true).documentPatches(patches2).buildMirroredDocument();
 		DocumentPatch[] patches1 = {};
 		mirroredReloadableDocument = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches1).buildMirroredDocument();
 		mirroredObjects = new MirroredObjects(mirroredObject, mirroredReloadableDocument, anotherMirroredDocument);

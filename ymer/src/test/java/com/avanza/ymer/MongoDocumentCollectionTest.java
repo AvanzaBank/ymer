@@ -18,7 +18,6 @@ package com.avanza.ymer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -26,13 +25,6 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.avanza.ymer.DocumentCollection;
-import com.avanza.ymer.DocumentConverter;
-import com.avanza.ymer.MirroredObject;
-import com.avanza.ymer.MirroredObjectLoader;
-import com.avanza.ymer.MongoDocumentCollection;
-import com.avanza.ymer.SpaceObjectFilter;
-import com.avanza.ymer.MirroredObject.Flag;
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.github.fakemongo.Fongo;
@@ -70,7 +62,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	@Test
 	public void canLoadDocumentsRouted() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument();
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();
@@ -116,7 +108,10 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	@Test
 	public void canLoadDocumentsRoutedWithoutWriteBack() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).flags(Flag.LOAD_DOCUMENTS_ROUTED, Flag.DO_NOT_WRITE_BACK_PATCHED_DOCUMENTS).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class)
+																			     .loadDocumentsRouted(true)
+																				 .writeBackPatchedDocuments(false)
+																				 .documentPatches(patches).buildMirroredDocument();
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();

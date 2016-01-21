@@ -15,7 +15,6 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.ReloadableSpaceObject;
 import com.gigaspaces.annotation.pojo.SpaceId;
 
 public class TestReloadableSpaceObject implements ReloadableSpaceObject {

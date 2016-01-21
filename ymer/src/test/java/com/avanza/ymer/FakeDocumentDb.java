@@ -17,9 +17,6 @@ package com.avanza.ymer;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.avanza.ymer.DocumentCollection;
-import com.avanza.ymer.DocumentDb;
-
 public class FakeDocumentDb implements DocumentDb.Provider {
 
 	private ConcurrentHashMap<String, FakeDocumentCollection> collectionByName = new ConcurrentHashMap<>();
