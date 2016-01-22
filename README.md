@@ -17,7 +17,7 @@ A `SpaceDataSource` and `SpaceSynchronizationEndpoint` is created using an `Ymer
 
 You configure `YmerFactory` with a `MongoConverter` that can convert all objects that are intended to be persisted in MongoDB, and you provide a `MongoDBFactory` which effectively defines in what MongoDB instance the objects should be persisted. In addition to a `MongoConverter` and a `MongoDBFactory` instance you also have to provide a collection of `MirroredObjectDefinition's` to define what set of space objects are intended to be persisted in MongoDB.
 
-You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` which the following example illustrates:
+You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` as the following example illustrates:
 
 ## Example
 This example shows how use Ymer to create an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint`. In the example all objects of type `SpaceFruit` will be persisted in MongoDB using Ymer.
