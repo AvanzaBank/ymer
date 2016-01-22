@@ -6,16 +6,23 @@
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/AvanzaBank/ymer.svg)](http://isitmaintained.com/project/AvanzaBank/Ymer "Percentage of issues still open")
 
 
-Ymer is a MongoDB based `SpaceDataSource` and `SpaceSynchronizationEndpoint` for GigaSpaces with support to apply data migrations during initial load.
+Ymer is a MongoDB based `SpaceDataSource` and `SpaceSynchronizationEndpoint` for __GigaSpaces__ with support to apply data migrations during initial load.
 
-## Example Usage
-### Use Ymer to define a custom factory for a SpaceDataSource and SpaceSynchronizationEndpoint
+Ymer uses __Spring Data MongoDB__ to:
+
+* Convert between space object form and bson (MongoDB) form using the `MongoConverter` abstraction
+* Create the target `com.mongodb.DB` instance using the `MongoDBFactory` abstraction
+
+A `SpaceDataSource` and `SpaceSynchronizationEndpoint` is created using an `YmerFactory`. In addition to a `MongoConverter` and a `MongoDBFactory` instance you also have to provide a collection of `MirroredObjectDefinition`s to define what set of space objects are intended to be persisted in MongoDB. You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` which the following example illustrates:
+
+## Example
+This example shows how use Ymer to create an application specific factory for a SpaceDataSource and SpaceSynchronizationEndpoint. In the example all objects of type `SpaceFruit` will be persisted in MongoDB using Ymer.
+
+### Application specific factory
 ```java
 public class ExampleMirrorFactory {
 	
-	/*
-	* Ymer uses a MongoDbFactory to "connect" to a given mongo database (by invoking MongoDbFactory#getDb()).
-	*/
+	// Ymer uses a MongoDbFactory to create the target `cm.mongodb.DB` instance using MongoDbFactory#getDb().
 	private MongoDbFactory mongoDbFactory;
 
 	public SpaceDataSource createSpaceDataSource() {
@@ -26,19 +33,17 @@ public class ExampleMirrorFactory {
 		return new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions()).createSpaceSynchronizationEndpoint();
 	}
 	
-	/* 
-	* Ymer uses the given MongoConverter to convert between space object form and the bson form used to store it
-	* in mongo db.
-	*/
+	 
+	// Ymer uses the given MongoConverter to convert between space object form and the bson form used to store it
+	// in mongo db.
 	private MongoConverter createMongoConverter() {
 		DbRefResolver dbRef = new DefaultDbRefResolver(mongoDbFactory);
 		return new MappingMongoConverter(dbRef , new MongoMappingContext());
 	}
 	
-	/* 
-	* Each MirroredObjectDefinition defines that all space objects of a given type should be persisted
-	* using Ymer.
-	*/
+	
+	// Each MirroredObjectDefinition defines that all space objects of a given type should be persisted
+	// using Ymer.
 	private Collection<MirroredObjectDefinition<?>> getDefinitions() {
 		return Arrays.asList(
 			MirroredObjectDefinition.create(SpaceFruit.class)
