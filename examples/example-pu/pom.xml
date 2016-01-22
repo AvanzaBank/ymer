@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.avanza.ymer</groupId>
-		<artifactId>example</artifactId>
+		<artifactId>examples</artifactId>
 		<version>1.1.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>example-pu</artifactId>

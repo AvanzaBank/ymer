@@ -11,7 +11,7 @@
 	<modules>
 		<module>ymer</module>
 		<module>ymer-test</module>
-		<module>example</module>
+		<module>examples</module>
 		<module>gs-test-util</module>
 	</modules>
 	<licenses>
