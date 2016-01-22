@@ -75,8 +75,8 @@ public class SpaceObjectWriteSynchronizationTest {
 		
 		
 		GigaSpace gigaSpace = pu.getClusteredGigaSpace();
-		gigaSpace.write(new SpaceFruit("banana", "Brazil"));
-		gigaSpace.write(new SpaceFruit("apple", "Spain"));
+		gigaSpace.write(new SpaceFruit("banana", "Brazil", false));
+		gigaSpace.write(new SpaceFruit("apple", "Spain", true));
 		
 		assertEventuallyPasses(() -> {
 			DBCursor cursor = fongo.getDB("exampleDb").getCollection("spaceFruit").find();

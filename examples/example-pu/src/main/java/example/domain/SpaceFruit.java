@@ -24,13 +24,15 @@ public class SpaceFruit {
 	@Id
 	private String name;
 	private String origin;
+	private boolean organic;
 	
 	public SpaceFruit() {
 	}
 	
-	public SpaceFruit(String name, String origin) {
+	public SpaceFruit(String name, String origin, boolean organic) {
 		this.name = name;
 		this.origin = origin;
+		this.organic = organic;
 	}
 
 	@SpaceId(autoGenerate=false)
@@ -48,6 +50,14 @@ public class SpaceFruit {
 	
 	public String getOrigin() {
 		return origin;
+	}
+	
+	public boolean isOrganic() {
+		return organic;
+	}
+	
+	public void setOrganic(boolean organic) {
+		this.organic = organic;
 	}
 
 }

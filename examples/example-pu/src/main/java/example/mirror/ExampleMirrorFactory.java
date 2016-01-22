@@ -19,15 +19,12 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 import com.avanza.ymer.MirroredObjectDefinition;
 import com.avanza.ymer.YmerFactory;
@@ -58,9 +55,10 @@ public class ExampleMirrorFactory {
 		return new MappingMongoConverter(dbRef , new MongoMappingContext());
 	}
 	
-	private Collection<MirroredObjectDefinition<?>> getDefinitions() {
+	static Collection<MirroredObjectDefinition<?>> getDefinitions() {
 		return Arrays.asList(
 			MirroredObjectDefinition.create(SpaceFruit.class)
+									.documentPatches(new SpaceFruitV1ToV2Patch())
 		);
 	}
 	
