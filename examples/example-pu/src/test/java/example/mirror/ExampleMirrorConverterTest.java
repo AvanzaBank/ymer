@@ -1,0 +1,53 @@
+/*
+ * Copyright 2015 Avanza Bank AB
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package example.mirror;
+
+import java.util.Collection;
+import java.util.List;
+
+import org.junit.runners.Parameterized.Parameters;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.YmerConverterTestBase;
+
+import example.domain.SpaceFruit;
+
+public class ExampleMirrorConverterTest extends YmerConverterTestBase {
+
+	public ExampleMirrorConverterTest(ConverterTest<?> testCase) {
+		super(testCase);
+	}
+
+	@Override
+	protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
+		return ExampleMirrorFactory.getDefinitions();
+	}
+
+	@Override
+	protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+		return ExampleMirrorFactory.createMongoConverter(mongoDbFactory);
+	}
+	
+	@Parameters
+	public static List<Object[]> testCases() {
+		return buildTestCases(
+			new ConverterTest<>(new SpaceFruit("Apple", "France", true))
+		);
+	}
+	
+}

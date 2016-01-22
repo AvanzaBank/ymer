@@ -60,8 +60,12 @@ public class InitialLoadTest {
 	
 	@Test
 	public void intialLoadDemo() throws Exception {
-		fongo.getDB("exampleDb").getCollection("spaceFruit").insert(new BasicDBObject("name", "banana"));
-		fongo.getDB("exampleDb").getCollection("spaceFruit").insert(new BasicDBObject("name", "apple"));
+		BasicDBObject banana = new BasicDBObject("_id", "banana");
+		banana.put("origin", "Brazil");
+		fongo.getDB("exampleDb").getCollection("spaceFruit").insert(banana);
+		BasicDBObject apple = new BasicDBObject("_id", "apple");
+		apple.put("origin", "France");
+		fongo.getDB("exampleDb").getCollection("spaceFruit").insert(apple);
 		fongo.getDB("exampleDb").getCollection("spaceCar").insert(new BasicDBObject("name", "Volvo")); // SpaceCar is not Mirrored
 		
 		
