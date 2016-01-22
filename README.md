@@ -6,7 +6,7 @@
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/AvanzaBank/ymer.svg)](http://isitmaintained.com/project/AvanzaBank/Ymer "Percentage of issues still open")
 
 
-__Ymer__ is a MongoDB based [SpaceDataSource and SpaceSynchronizationEndpoint](http://docs.gigaspaces.com/xap101/space-persistency.html) for __GigaSpaces__ with support to apply data migrations during initial load.
+__Ymer__ is a __MongoDB__ based [SpaceDataSource and SpaceSynchronizationEndpoint](http://docs.gigaspaces.com/xap101/space-persistency.html) for __GigaSpaces__ with support to apply data migrations during initial load.
 
 
 ## Usage
@@ -20,7 +20,7 @@ You configure `YmerFactory` with a `MongoConverter` that can convert all objects
 You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` as the following example illustrates:
 
 ## Example
-This example shows how use Ymer to create an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint`. In the example all objects of type `SpaceFruit` will be persisted in MongoDB using Ymer.
+This example shows how to use Ymer to create an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint`. In the example all objects of type `SpaceFruit` will be persisted in MongoDB using Ymer.
 
 #### Application specific factory
 ```java
