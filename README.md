@@ -8,12 +8,16 @@
 
 Ymer is a MongoDB based `SpaceDataSource` and `SpaceSynchronizationEndpoint` for __GigaSpaces__ with support to apply data migrations during initial load.
 
-Ymer uses __Spring Data MongoDB__ to:
+
+## Usage
+A `SpaceDataSource` and `SpaceSynchronizationEndpoint` is created using an `YmerFactory`. Ymer uses __Spring Data MongoDB__ to:
 
 * Convert between space object form and bson (MongoDB) form using the `MongoConverter` abstraction
 * Create the target `com.mongodb.DB` instance using the `MongoDBFactory` abstraction
 
-A `SpaceDataSource` and `SpaceSynchronizationEndpoint` is created using an `YmerFactory`. In addition to a `MongoConverter` and a `MongoDBFactory` instance you also have to provide a collection of `MirroredObjectDefinition's` to define what set of space objects are intended to be persisted in MongoDB. You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` which the following example illustrates:
+You configure `YmerFactory` with a `MongoConverter` that can convert all objects that are intended to be persisted in MongoDB, and you provide a `MongoDBFactory` which effectively defines in what MongoDB instance the objects should be persisted. In addition to a `MongoConverter` and a `MongoDBFactory` instance you also have to provide a collection of `MirroredObjectDefinition's` to define what set of space objects are intended to be persisted in MongoDB.
+
+You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` which the following example illustrates:
 
 ## Example
 This example shows how use Ymer to create an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint`. In the example all objects of type `SpaceFruit` will be persisted in MongoDB using Ymer.
