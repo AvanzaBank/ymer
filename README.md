@@ -12,8 +12,8 @@ __Ymer__ is a __MongoDB__ based [SpaceDataSource and SpaceSynchronizationEndpoin
 ## Usage
 A `SpaceDataSource` and `SpaceSynchronizationEndpoint` is created using an `YmerFactory`. Ymer uses __Spring Data MongoDB__:
 
-* `MongoConverter` is used to convert between space object form and bson (MongoDB) form
-* `MongoDBFactory` is used to create a `com.mongodb.DB` instance
+* A `MongoConverter` is used to convert between space object form and bson (MongoDB) form
+* A `MongoDBFactory` is used to create a `com.mongodb.DB` instance
 
 You configure `YmerFactory` with a `MongoConverter` that can convert all objects that are intended to be persisted in MongoDB, and you provide a `MongoDBFactory` which effectively defines in what MongoDB instance the objects should be persisted. In addition to a `MongoConverter` and a `MongoDBFactory` instance you also have to provide a collection of `MirroredObjectDefinition's` to define what set of space objects are intended to be persisted in MongoDB. Later in the lifecycle for an application you also use the `MirroredObjectDefinition` to define what patches to (possibly) apply to migrate the data from one version to the next.
 
@@ -87,7 +87,7 @@ The data migration support in Ymer is designed to achieve the following goals:
 * Data migration is performed "just in time" during deployment of the application. No external scripts are required to migrate the data. Migration is performed during __initial load__.
 * The application can migrate any database, regardless of age.
 
-Ymer adds a `_version` property to each persisted document to track the version number for each individual document it stores in MongoDB. The version number is used to decide if a given document requires patching during initial load before using the supplied `MongoConverter` to convert the document into a space object. Note that this design frees the `MongoConvert` instance from handling different versions. The `MongoConverter` only has to know how to convert to and from the latest version of the document format. 
+Ymer adds a `_formatVersion` property to each persisted document to track the version number for each individual document it stores in MongoDB. The version number is used to decide if a given document requires patching during initial load before using the supplied `MongoConverter` to convert the document into a space object. Note that this design frees the `MongoConvert` instance from handling different versions. The `MongoConverter` only has to know how to convert to and from the latest version of the document format. 
 
 In order for Ymer to be able to migrate data, the application developer writes a `DocumentPatch` every time the data format changes. The `DocumentPatches` associated with a given space type implicitly decides the version of the document format. If there a zero `DocumentPatches`, then the current version is "1", but if there exist a patch for version "1", "2" and "3", then the current version is "4".
 
