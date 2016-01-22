@@ -20,7 +20,7 @@ You configure `YmerFactory` with a `MongoConverter` that can convert all objects
 You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` as the following example illustrates:
 
 ### Example
-This example shows how to use Ymer to create an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint`. In the example all objects of type `SpaceFruit` will be persisted in MongoDB using Ymer.
+This example shows how to use Ymer to create an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint`. Source code and a couple of demo test cases is located in the [examples](examples/) folder. In the example all objects of type `SpaceFruit` will be persisted in MongoDB using Ymer.
 
 #### Application specific factory
 ```java
