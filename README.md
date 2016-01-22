@@ -13,12 +13,12 @@ Ymer uses __Spring Data MongoDB__ to:
 * Convert between space object form and bson (MongoDB) form using the `MongoConverter` abstraction
 * Create the target `com.mongodb.DB` instance using the `MongoDBFactory` abstraction
 
-A `SpaceDataSource` and `SpaceSynchronizationEndpoint` is created using an `YmerFactory`. In addition to a `MongoConverter` and a `MongoDBFactory` instance you also have to provide a collection of `MirroredObjectDefinition`s to define what set of space objects are intended to be persisted in MongoDB. You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` which the following example illustrates:
+A `SpaceDataSource` and `SpaceSynchronizationEndpoint` is created using an `YmerFactory`. In addition to a `MongoConverter` and a `MongoDBFactory` instance you also have to provide a collection of `MirroredObjectDefinition's` to define what set of space objects are intended to be persisted in MongoDB. You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` which the following example illustrates:
 
 ## Example
-This example shows how use Ymer to create an application specific factory for a SpaceDataSource and SpaceSynchronizationEndpoint. In the example all objects of type `SpaceFruit` will be persisted in MongoDB using Ymer.
+This example shows how use Ymer to create an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint`. In the example all objects of type `SpaceFruit` will be persisted in MongoDB using Ymer.
 
-### Application specific factory
+#### Application specific factory
 ```java
 public class ExampleMirrorFactory {
 	
@@ -53,7 +53,7 @@ public class ExampleMirrorFactory {
 }
 ```
 
-### Usage of custom factory in pu.xml
+#### Usage of custom factory in pu.xml
 
 ```xml	
 <os-core:space id="testSpace" url="/./example-space" mirror="true" space-data-source="spaceDataSource">
@@ -65,7 +65,7 @@ public class ExampleMirrorFactory {
 <bean id="spaceDataSource" factory-bean="mirrorFactory" factory-method="createSpaceDataSource"/>
 ```
 
-### Usage of custom factory in mirror-pu.xml
+#### Usage of custom factory in mirror-pu.xml
 ```xml
 <os-core:mirror id="mirrorGigaSpace" url="/./example-space-mirror" space-sync-endpoint="spaceSyncEndpoint">
 	<!-- configuration... -->
@@ -77,7 +77,7 @@ public class ExampleMirrorFactory {
 							 factory-method="createSpaceSynchronizationEndpoint"/>	
 ```
 
-### Write DocumentPatches to migrate data on initial load
+#### Write DocumentPatches to migrate data on initial load
 ```java
 // First version of SpaceFruit 
 public class SpaceFruit {
