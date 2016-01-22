@@ -72,6 +72,53 @@ public class ExampleMirrorFactory {
 							 factory-method="createSpaceSynchronizationEndpoint"/>	
 ```
 
+### Write DocumentPatches to migrate data on initial load
+```java
+// First version of SpaceFruit 
+public class SpaceFruit {
+
+	@Id
+	private String name;
+	private String origin;
+
+}
+
+// New version of SpaceFruit adds new property
+public class SpaceFruit {
+
+	@Id
+	private String name;
+	private String origin;
+	private boolean organic;
+
+}
+
+
+// A DocumentPatch is applied by ymer to the raw bson (mongo) document during initial load
+class SpaceFruitV1ToV2Patch implements DocumentPatch {
+
+	@Override
+	public void apply(BasicDBObject dbObject) {
+		// We add a default value for the "organic" property to all existing SpaceFruit's
+		dbObject.put("organic", false);
+	}
+
+	
+	// This patch applies to documents that are on version 1. It patches
+	// the document to version 2.
+	@Override
+	public int patchedVersion() {
+		return 1;
+	}
+
+}
+
+
+// Patches are added to the MirroredObjectDefinition
+MirroredObjectDefinition.create(SpaceFruit.class)
+		        .documentPatches(new SpaceFruitV1ToV2Patch())
+```
+
 
 
 ## License
