@@ -61,6 +61,7 @@ public class ExampleMirrorFactory {
 </os-core:space>
 
 <!-- Configure SpaceDataSource used for initial load -->
+<mongo:db-factory id="mongoDbFactory" dbname="exampleDb" mongo-ref="mongo" />
 <bean id="mirrorFactory" class="example.mirror.ExampleMirrorFactory"/>
 <bean id="spaceDataSource" factory-bean="mirrorFactory" factory-method="createSpaceDataSource"/>
 ```
@@ -72,9 +73,10 @@ public class ExampleMirrorFactory {
 </os-core:mirror>
 
 <!-- Configure SpaceSynchronizationEndpoint -->
+<mongo:db-factory id="mongoDbFactory" dbname="exampleDb" mongo-ref="mongo" />
 <bean id="mirrorFactory" class="example.mirror.ExampleMirrorFactory"/>
 <bean id="spaceSyncEndpoint" factory-bean="mirrorFactory"
-							 factory-method="createSpaceSynchronizationEndpoint"/>	
+				factory-method="createSpaceSynchronizationEndpoint"/>	
 ```
 
 #### Write DocumentPatches to migrate data on initial load
