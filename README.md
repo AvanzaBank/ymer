@@ -138,7 +138,15 @@ MirroredObjectDefinition.create(SpaceFruit.class)
 		        .documentPatches(new SpaceFruitV1ToV2Patch())
 ```
 
-
+## Maven
+Ymer packed as a single jar file. Maven users can get Ymer using the following coordinates:
+```xml
+<dependency>
+  <groupId>com.avanza.ymer</groupId>
+  <artifactId>ymer</artifactId>
+  <version>1.1.0</version>
+</dependency>
+```
 
 ## License
 The Ymer Framework is released under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
