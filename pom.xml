@@ -12,7 +12,6 @@
 		<module>ymer</module>
 		<module>ymer-test</module>
 		<module>examples</module>
-		<module>gs-test-util</module>
 	</modules>
 	<licenses>
 		<license>
@@ -126,6 +125,7 @@
 		<junit.version>4.11</junit.version>
 		<hamcrest.version>1.2.1</hamcrest.version>
 		<mockito.version>1.9.0</mockito.version>
+		<gs-test.version>0.1.0</gs-test.version>
 	</properties>
 	
 	<dependencyManagement>
@@ -154,6 +154,12 @@
 				<groupId>com.gigaspaces</groupId>
 				<artifactId>gs-runtime</artifactId>
 				<version>${gigaspaces.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.avanza.gs</groupId>
+				<artifactId>gs-test</artifactId>
+				<scope>test</scope>
+				<version>${gs-test.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>

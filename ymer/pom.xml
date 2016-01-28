@@ -61,9 +61,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>gs-test-util</artifactId>
-			<version>${project.version}</version>
+			<groupId>com.avanza.gs</groupId>
+			<artifactId>gs-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
