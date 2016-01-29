@@ -139,7 +139,7 @@ MirroredObjectDefinition.create(SpaceFruit.class)
 ```
 
 ## Maven
-Ymer packed as a single jar file. Maven users can get Ymer using the following coordinates:
+Ymer is packed as a single jar file. Maven users can get Ymer using the following coordinates:
 ```xml
 <dependency>
   <groupId>com.avanza.ymer</groupId>
