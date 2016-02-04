@@ -55,6 +55,10 @@ public final class MirroredObjectDefinition<T> {
 		this.mirroredType = Objects.requireNonNull(mirroredType);
 	}
 
+    public Class<T> getMirroredType() {
+        return mirroredType;
+    }
+
     public MirroredObjectDefinition<T> collectionName(String collectionName) {
         this.collectionName = Objects.requireNonNull(collectionName);
 		return this;
