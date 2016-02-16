@@ -140,7 +140,7 @@ MirroredObjectDefinition.create(SpaceFruit.class)
 
 
 ## Test support
-Ymer includes two test base classes (located in the `ymer-test` module).
+Ymer includes two test base classes (located in the `ymer-test` module) which can be used to verify that the defined `MongoConverter` can convert all mirrored space objects to bson, and to test that data-migrations are applied as intended:
 
 ```java
 public class ExampleMirrorConverterTest extends YmerConverterTestBase {
