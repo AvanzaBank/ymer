@@ -138,13 +138,89 @@ MirroredObjectDefinition.create(SpaceFruit.class)
 		        .documentPatches(new SpaceFruitV1ToV2Patch())
 ```
 
+
+## Test support
+Ymer includes two test base classes (located in the `ymer-test` module).
+
+```java
+public class ExampleMirrorConverterTest extends YmerConverterTestBase {
+
+	public ExampleMirrorConverterTest(ConverterTest<?> testCase) {
+		super(testCase);
+	}
+
+	@Override
+	protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
+		return ExampleMirrorFactory.getDefinitions();
+	}
+
+	@Override
+	protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+		return ExampleMirrorFactory.createMongoConverter(mongoDbFactory);
+	}
+	
+	@Parameters
+	public static List<Object[]> testCases() {
+		return buildTestCases(
+			new ConverterTest<>(new SpaceFruit("Apple", "France", true))
+		);
+	}
+	
+}
+```
+
+```java
+public class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
+
+	public ExampleMirrorMigrationTest(MigrationTest testCase) {
+		super(testCase);
+	}
+
+	@Override
+	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
+		return ExampleMirrorFactory.getDefinitions();
+	}
+
+	@Parameters
+	public static List<Object[]> testCases() {
+		return buildTestCases(
+				spaceFruitV1ToV2MigrationTest()
+		);
+	}
+	
+	private static MigrationTest spaceFruitV1ToV2MigrationTest() {
+		BasicDBObject v1Doc = new BasicDBObject();
+		v1Doc.put("_id", "apple");
+		v1Doc.put("_class", "examples.domain.SpaceFruit");
+		v1Doc.put("origin", "Spain");
+		
+		BasicDBObject v2Doc = new BasicDBObject();
+		v2Doc.put("_id", "apple");
+		v2Doc.put("_class", "examples.domain.SpaceFruit");
+		v2Doc.put("origin", "Spain");
+		v2Doc.put("organic", false);
+		
+		return new MigrationTest(v1Doc, v2Doc, 1, SpaceFruit.class);
+	}
+}
+```
+
 ## Maven
 Ymer is packed as a single jar file. Maven users can get Ymer using the following coordinates:
 ```xml
 <dependency>
   <groupId>com.avanza.ymer</groupId>
   <artifactId>ymer</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
+</dependency>
+```
+
+The test support is packed in a distinct jar using the following coordinates:
+```xml
+<dependency>
+  <groupId>com.avanza.ymer</groupId>
+  <artifactId>ymer-test</artifactId>
+  <version>1.1.1</version>
 </dependency>
 ```
 
