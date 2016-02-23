@@ -34,7 +34,7 @@ public class ExampleMirrorConverterTest extends YmerConverterTestBase {
 	}
 
 	@Override
-	protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
+	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 		return ExampleMirrorFactory.getDefinitions();
 	}
 

@@ -38,9 +38,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
-import com.avanza.ymer.DocumentConverter;
-import com.avanza.ymer.MirroredObject;
-import com.avanza.ymer.MirroredObjects;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 
@@ -146,10 +143,10 @@ public abstract class YmerConverterTestBase {
     }
 	
 	protected MirroredObjects getMirroredObjects() {
-		return new MirroredObjects(getMirroredDocumentDefinitions().stream());
+		return new MirroredObjects(getMirroredObjectDefinitions().stream());
 	}
 	
-	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions();
+	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 
 	protected abstract MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory);
 	

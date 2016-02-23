@@ -173,7 +173,7 @@ public class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
+		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			DocumentPatch[] patches = {};
 			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyCollection.class).documentPatches(patches));
 		}
@@ -192,7 +192,7 @@ public class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
+		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			DocumentPatch[] patches = {};
 			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyMap.class).documentPatches(patches));
 		}
@@ -211,7 +211,7 @@ public class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
+		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			DocumentPatch[] patches = {};
 			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		}
@@ -230,7 +230,7 @@ public class YmerConverterTestBaseTest {
 		}
 		
 		@Override
-		protected Collection<MirroredObjectDefinition<?>> getMirroredDocumentDefinitions() {
+		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			DocumentPatch[] patches = {};
 			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObjectWithoutSpringDataIdAnnotation.class).documentPatches(patches));
 		}
