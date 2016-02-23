@@ -140,7 +140,9 @@ MirroredObjectDefinition.create(SpaceFruit.class)
 
 
 ## Test support
-Ymer includes two test base classes (located in the `ymer-test` module) which can be used to verify that the defined `MongoConverter` can convert all mirrored space objects to bson, and to test that data-migrations are applied as intended:
+Ymer includes three test base classes (located in the `ymer-test` module) which can be used to verify that the defined `MongoConverter` can convert all mirrored space objects to bson, that data-migrations are applied as intended and that
+the latest known version of a document can be unmarshalled into a space object:
+
 
 ```java
 public class ExampleMirrorConverterTest extends YmerConverterTestBase {
@@ -202,6 +204,49 @@ public class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
 		
 		return new MigrationTest(v1Doc, v2Doc, 1, SpaceFruit.class);
 	}
+}
+```
+
+```java
+public class ExampleMirrorUnmarshallTest extends YmerUnmarshallTestBase {
+
+	public ExampleMirrorUnmarshallTest(UnmarshallTest testCase) {
+		super(testCase);
+	}
+
+	@Override
+	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
+		return ExampleMirrorFactory.getDefinitions();
+	}
+
+	@Override
+	protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+		return ExampleMirrorFactory.createMongoConverter(mongoDbFactory);
+	}
+
+	@Parameters
+	public static List<Object[]> testCases() {
+		return buildTestCases(
+				spaceFruitV2UnmarshallTest()
+		);
+	}
+
+	private static UnmarshallTest spaceFruitV2UnmarshallTest() {
+		BasicDBObject v2Doc = new BasicDBObject();
+		v2Doc.put("_id", "apple");
+		v2Doc.put("_class", "examples.domain.SpaceFruit");
+		v2Doc.put("origin", "Spain");
+		v2Doc.put("organic", false);
+		v2Doc.put("_formatVersion", 2);
+
+		SpaceFruit expectedSpaceFruit = new SpaceFruit();
+		expectedSpaceFruit.setId("apple");
+		expectedSpaceFruit.setOrigin("Spain");
+		expectedSpaceFruit.setOrganic(false);
+
+		return new UnmarshallTest(v2Doc, expectedSpaceFruit);
+	}
+
 }
 ```
 
