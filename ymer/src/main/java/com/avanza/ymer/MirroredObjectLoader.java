@@ -40,8 +40,6 @@ import com.mongodb.DBObject;
  * @author Elias Lindholm (elilin), Kristoffer Erlandsson, Andreas Skoog
  */
 final class MirroredObjectLoader<T> {
-	
-	private static final int CONVERSION_TIMEOUT_MINUTES = 60;
 	private static final int NUM_THREADS = 15;
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -70,11 +68,11 @@ final class MirroredObjectLoader<T> {
 								  .collect(Collectors.toList());
 		});
 		try {
-			List<LoadedDocument<T>> result = loadedDocuments.get(CONVERSION_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+			List<LoadedDocument<T>> result = loadedDocuments.get();
 			log.info("loadAllObjects for {} finished. {} objects were loaded in {} seconds", mirroredObject.getCollectionName(),
 					result.size(), ((System.currentTimeMillis() - startTime) / 1000d));
 			return result;
-		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
 		} finally {
 			forkJoinPool.shutdown();
