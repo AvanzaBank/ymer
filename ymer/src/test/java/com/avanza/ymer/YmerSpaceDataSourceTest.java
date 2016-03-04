@@ -15,16 +15,16 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.avanza.ymer.YmerSpaceDataSource.InitialLoadCompleteDispatcher;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -34,6 +34,7 @@ public class YmerSpaceDataSourceTest {
 
 	private final Integer partitionId = 1;
 	private final int numberOfInstances = 2;
+	InitialLoadCompleteDispatcher doneDistpacher = new InitialLoadCompleteDispatcher();
 
 	@Test
 	public void documentsMustNotBeWrittenToDbBeforeAllElementsAreLoaded() throws Exception {
@@ -61,7 +62,8 @@ public class YmerSpaceDataSourceTest {
 		documentCollection.insert(doc2);
 		documentCollection.insert(doc3);
 
-		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.load(patchedMirroredDocument);
+		
+		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.load(patchedMirroredDocument, doneDistpacher);
 		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
 	}
 

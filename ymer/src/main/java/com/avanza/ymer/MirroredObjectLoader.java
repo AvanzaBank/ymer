@@ -20,8 +20,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -43,6 +41,7 @@ final class MirroredObjectLoader<T> {
 	private static final int NUM_THREADS = 15;
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
+	private final ForkJoinPool forkJoinPool = new ForkJoinPool(NUM_THREADS);
 	private final MirroredObject<T> mirroredObject;
 	private final DocumentCollection documentCollection;
 	private final SpaceObjectFilter<T> spaceObjectFilter;
@@ -58,25 +57,27 @@ final class MirroredObjectLoader<T> {
 	}
 
 	List<LoadedDocument<T>> loadAllObjects() {
-		long startTime = System.currentTimeMillis();
+		return streamAllObjects().collect(Collectors.toList());
+	}
+	
+	Stream<LoadedDocument<T>> streamAllObjects() {
 		log.info("Begin loadAllObjects. targetCollection={}", mirroredObject.getCollectionName());
-		ForkJoinPool forkJoinPool = new ForkJoinPool(NUM_THREADS);
-		ForkJoinTask<List<LoadedDocument<T>>> loadedDocuments = forkJoinPool.submit(() -> {
+		ForkJoinTask<Stream<LoadedDocument<T>>> loadedDocuments = forkJoinPool.submit(() -> {
 			return loadDocuments().parallel()
 								  .map(this::tryPatchAndConvert)
-								  .flatMap(OptionalUtil::asStream)
-								  .collect(Collectors.toList());
+								  .flatMap(OptionalUtil::asStream);
+								  
 		});
 		try {
-			List<LoadedDocument<T>> result = loadedDocuments.get();
-			log.info("loadAllObjects for {} finished. {} objects were loaded in {} seconds", mirroredObject.getCollectionName(),
-					result.size(), ((System.currentTimeMillis() - startTime) / 1000d));
+			Stream<LoadedDocument<T>> result = loadedDocuments.get();
 			return result;
 		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
-		} finally {
-			forkJoinPool.shutdown();
 		}
+	}
+	
+	public void destroy() {
+		this.forkJoinPool.shutdown();
 	}
 
 	private Stream<DBObject> loadDocuments() {

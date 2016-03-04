@@ -19,8 +19,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,13 +52,13 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 	@SuppressWarnings("unchecked")
 	@Override
 	public DataIterator<Object> initialDataLoad() {
-		// TODO: Reimplement inital-load to avoid loading and holding all spaceobjects in memory before writing them to space.
+		InitialLoadCompleteDispatcher initialLoadCompleteDispatcher = new InitialLoadCompleteDispatcher();
 		Iterator<Object> mongoData = 
 				spaceMirrorContext.getMirroredDocuments().stream()
 														 .filter(md -> !md.excludeFromInitialLoad())
-														 .flatMap(md -> load((MirroredObject<Object>) md))
+														 .flatMap(md -> load((MirroredObject<Object>) md, initialLoadCompleteDispatcher))
 														 .iterator();
-		return new IteratorAdapter(mongoData);
+		return new IteratorAdapter(mongoData, initialLoadCompleteDispatcher::initialLoadComplete);
 	}
 	
 	/*
@@ -62,16 +66,33 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 	 * to the most recent document format before transforming it to an space object. If the document was changed (patched)
 	 * during the load it will also be written back to the document source (i.e mongo database).
 	 */
-	<T> Stream<T> load(MirroredObject<T> document) {
+	<T> Stream<T> load(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
 		logger.info("Loading all documents for type: {}", document.getMirroredType().getName());
 		MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(document, getPartitionId(), getPartitionCount());
-		List<LoadedDocument<T>> loadedDocuments = documentLoader.loadAllObjects();
-		
-		writeBackPatchedDocuments(document, loadedDocuments);
-		return loadedDocuments.stream()
-							  .map(LoadedDocument::getDocument);
+		initialLoadCompleteDispatcher.onInitialLoadComplete(documentLoader::destroy);
+		Stream<LoadedDocument<T>> loadedDocumentStream = documentLoader.streamAllObjects();
+		return loadedDocumentStream.map(writeBackPatchedDocument(document, initialLoadCompleteDispatcher));
 	}
 	
+	private <T> Function<LoadedDocument<T>, T> writeBackPatchedDocument(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
+		AtomicInteger totalWritebackCount = new AtomicInteger(0);
+		initialLoadCompleteDispatcher.onInitialLoadComplete(() -> logger.debug("Updated {} documents in db for {}", totalWritebackCount.get(), document.getMirroredType().getName()));
+		return loadedDocument -> {
+			if (document.writeBackPatchedDocuments()) {
+				patchDocument(document, loadedDocument);
+				totalWritebackCount.incrementAndGet();
+			}
+			return loadedDocument.getDocument();
+		};
+	}
+
+	private <T> void patchDocument(MirroredObject<T> document, LoadedDocument<T> loadedDocument) {
+		loadedDocument.getPatchedDocument().ifPresent(patchedDocument -> {
+					DocumentCollection documentCollection = spaceMirrorContext.getDocumentCollection(document);
+					documentCollection.replace(patchedDocument.getOldVersion(), patchedDocument.getNewVersion());
+				});
+	}
+
 	private <T> void writeBackPatchedDocuments(MirroredObject<T> document, List<LoadedDocument<T>> loadedDocuments) {
 		if (!document.writeBackPatchedDocuments()) {
 			return;
@@ -86,7 +107,7 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 					   }).count();
 		logger.debug("Updated {} documents in db for {}", patchCount, document.getMirroredType().getName());
 	}
-
+	
 	@Override
 	public void setClusterInfo(ClusterInfo clusterInfo) {
 		this.clusterInfo = clusterInfo;
@@ -126,14 +147,20 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 	private static class IteratorAdapter implements DataIterator<Object> {
 
 		private final Iterator<Object> it;
+		private final Runnable iterationDone;
 
-		public IteratorAdapter(Iterator<Object> it) {
+		public IteratorAdapter(Iterator<Object> it, Runnable itrationDoneCallback) {
 			this.it = it;
+			this.iterationDone = itrationDoneCallback;
 		}
 
 		@Override
 		public boolean hasNext() {
-			return it.hasNext();
+			boolean hasNext = it.hasNext();
+			if (!hasNext) {
+				iterationDone.run();
+			}
+			return hasNext;
 		}
 
 		@Override
@@ -151,6 +178,14 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 		}
 
 	}
-
 	
+	static class InitialLoadCompleteDispatcher {
+		private final List<Runnable> l = new CopyOnWriteArrayList<>();
+		public void onInitialLoadComplete(Runnable callback) {
+			l.add(callback);
+		}
+		public void initialLoadComplete() {
+			l.stream().forEach(Runnable::run);
+		}
+	}
 }
