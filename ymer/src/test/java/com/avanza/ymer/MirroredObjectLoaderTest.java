@@ -33,6 +33,8 @@ import com.mongodb.BasicDBObject;
 
 public class MirroredObjectLoaderTest {
 
+	private MirrorContextProperties contextProperties = new MirrorContextProperties(1, 1);
+	
 	@Test
 	public void loadsAllObjectsRoutedToCurrentPartition() {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
@@ -58,7 +60,7 @@ public class MirroredObjectLoaderTest {
 		SpaceObjectFilter.Impl<FakeSpaceObject> filterImpl = spaceObject -> {
 			return spaceObject.getId() == doc2.getInt("_id") || spaceObject.getId() == doc3.getInt("_id");
 		};
-		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.create(filterImpl));
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.create(filterImpl), contextProperties);
 
 		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects().stream()
 																 .map(LoadedDocument::getDocument)
@@ -90,7 +92,7 @@ public class MirroredObjectLoaderTest {
 		SpaceObjectFilter.Impl<FakeSpaceObject> filterImpl = spaceObject -> {
 			return spaceObject.getId() == doc2.getInt("_id") || spaceObject.getId() == doc3.getInt("_id");
 		};
-		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.create(filterImpl));
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.create(filterImpl), contextProperties);
 		List<PatchedDocument> patchedDocuments = documentLoader.loadAllObjects().stream()
 																 .map(LoadedDocument::getPatchedDocument)
 																 .flatMap(OptionalUtil::asStream)
@@ -113,7 +115,7 @@ public class MirroredObjectLoaderTest {
 		FakeDocumentCollection fakeDocumentCollection = new FakeDocumentCollection();
 		fakeDocumentCollection.insertAll(doc3);
 
-		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll());
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll(), contextProperties);
 		Optional<PatchedDocument> patchedDocument = documentLoader.loadById(doc3.get("_id"))
 																  .flatMap(LoadedDocument::getPatchedDocument);
 		
@@ -135,7 +137,7 @@ public class MirroredObjectLoaderTest {
 		FakeDocumentCollection fakeDocumentCollection = new FakeDocumentCollection();
 		fakeDocumentCollection.insertAll(doc3);
 
-		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.create(obj -> false));
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.create(obj -> false), contextProperties);
 		documentLoader.loadById(doc3.get("_id"));
 	}
 
@@ -144,7 +146,7 @@ public class MirroredObjectLoaderTest {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
 		FakeDocumentCollection fakeDocumentCollection = new FakeDocumentCollection();
-		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll());
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll(), contextProperties);
 		assertFalse(documentLoader.loadById("id_3").isPresent());
 	}
 
@@ -161,7 +163,7 @@ public class MirroredObjectLoaderTest {
 		FakeDocumentCollection fakeDocumentCollection = new FakeDocumentCollection();
 		fakeDocumentCollection.insertAll(doc3);
 
-		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll());
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll(), contextProperties);
 		FakeSpaceObject spaceObject = documentLoader.loadById(doc3.get("_id"))
 					  .map(LoadedDocument::getDocument)
 					  .orElseThrow(() -> new AssertionError("Expected a reloaded document"));
@@ -196,7 +198,7 @@ public class MirroredObjectLoaderTest {
 		SpaceObjectFilter.Impl<FakeSpaceObject> filterImpl = spaceObject -> {
 			return spaceObject.getId() == doc2.getInt("_id") || spaceObject.getId() == doc3.getInt("_id");
 		};
-		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.createConverterWhichThrowsException(), mirroredObject, SpaceObjectFilter.create(filterImpl));
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.createConverterWhichThrowsException(), mirroredObject, SpaceObjectFilter.create(filterImpl), contextProperties);
 		documentLoader.loadAllObjects();
 	}
 	
@@ -216,7 +218,7 @@ public class MirroredObjectLoaderTest {
 		FakeDocumentCollection fakeDocumentCollection = new FakeDocumentCollection();
 		fakeDocumentCollection.insertAll(doc3);
 
-		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll());
+		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll(), contextProperties);
 		documentLoader.loadById(doc3.get("_id"));
 	}
 

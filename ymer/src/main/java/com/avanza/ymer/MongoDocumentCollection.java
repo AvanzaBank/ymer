@@ -62,6 +62,11 @@ final class MongoDocumentCollection implements DocumentCollection {
 	public Stream<DBObject> findByQuery(Query query) {
 		return  StreamSupport.stream(dbCollection.find(query.getQueryObject()).spliterator(), false);
 	}
+	
+	@Override
+	public Stream<DBObject> findByTemplate(BasicDBObject query) {
+		return  StreamSupport.stream(dbCollection.find(query).spliterator(), false);
+	}
 
 	@Override
 	public void replace(BasicDBObject oldVersion, BasicDBObject newVersion) {

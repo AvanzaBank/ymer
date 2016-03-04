@@ -74,7 +74,7 @@ final class SpaceMirrorContext {
 
 	<T> MirroredObjectLoader<T> createDocumentLoader(MirroredObject<T> document, int partitionId, int partitionCount) {
 		DocumentCollection documentCollection = getDocumentCollection(document.getMirroredType());
-		return new MirroredObjectLoader<>(documentCollection, documentConverter, document, SpaceObjectFilter.partitionFilter(document, partitionId, partitionCount));
+		return new MirroredObjectLoader<>(documentCollection, documentConverter, document, SpaceObjectFilter.partitionFilter(document, partitionId, partitionCount), new MirrorContextProperties(partitionCount, partitionId));
 	}
 
 	Collection<MirroredObject<?>> getMirroredDocuments() {

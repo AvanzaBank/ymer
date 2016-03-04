@@ -35,6 +35,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.MongoCollectionUtils;
+
+import com.mongodb.BasicDBObject;
 /**
  * Holds information about one mirrored space object type.
  *
@@ -50,6 +52,7 @@ public final class MirroredObjectDefinition<T> {
 	private boolean writeBackPatchedDocuments = true;
 	private boolean loadDocumentsRouted = false;
 	private boolean keepPersistent = false;
+	private TemplateFactory customInitialLoadTemplateFactory;
 
 	public MirroredObjectDefinition(Class<T> mirroredType) {
 		this.mirroredType = Objects.requireNonNull(mirroredType);
@@ -152,7 +155,14 @@ public final class MirroredObjectDefinition<T> {
 	public static <T> MirroredObjectDefinition<T> create(Class<T> mirroredType) {
 		return new MirroredObjectDefinition<>(mirroredType);
 	}
-
 	
+	public MirroredObjectDefinition<T> customInitialLoadTemplateFactory(TemplateFactory templateFactory) {
+		this.customInitialLoadTemplateFactory = templateFactory; 
+		return this;
+	}
+	
+	public TemplateFactory customInitialLoadTemplateFactory() {
+		return customInitialLoadTemplateFactory;
+	}
 
 }

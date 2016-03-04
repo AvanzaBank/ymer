@@ -37,6 +37,7 @@ final class MirroredObject<T> {
 	private final boolean loadDocumentsRouted;
 	private final boolean keepPersistent;
     private final String collectionName;
+	private final TemplateFactory customInitialLoadTemplateFactory;
 
 	public MirroredObject(MirroredObjectDefinition<T> definition) {
 		this.patchChain = definition.createPatchChain();
@@ -46,6 +47,7 @@ final class MirroredObject<T> {
         this.loadDocumentsRouted = definition.loadDocumentsRouted();
         this.keepPersistent = definition.keepPersistent();
         this.collectionName = definition.collectionName();
+        this.customInitialLoadTemplateFactory = definition.customInitialLoadTemplateFactory();
 	}
 
 	private RoutingKeyExtractor findRoutingKeyMethod(Class<T> mirroredType) {
@@ -195,5 +197,13 @@ final class MirroredObject<T> {
 
 	public boolean keepPersistent() {
 		return keepPersistent;
+	}
+
+	public boolean hasCustomInitialLoadTemplate() {
+		return this.customInitialLoadTemplateFactory != null;
+	}
+	
+	public TemplateFactory getCustomInitialLoadTemplateFactory() {
+		return this.customInitialLoadTemplateFactory;
 	}
 }

@@ -92,7 +92,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 				documentCollection,
 				FakeMirroredDocumentConverter.create(),
 				mirroredObject,
-				SpaceObjectFilter.partitionFilter(mirroredObject, 2, 2));
+				SpaceObjectFilter.partitionFilter(mirroredObject, 2, 2), new MirrorContextProperties(2, 2));
 		
 		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects()
 					  .stream()
@@ -141,7 +141,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 				documentCollection,
 				FakeMirroredDocumentConverter.create(),
 				mirroredObject,
-				SpaceObjectFilter.partitionFilter(mirroredObject, 1, 2));
+				SpaceObjectFilter.partitionFilter(mirroredObject, 1, 2), new MirrorContextProperties(2, 1));
 		
 		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects()
 				  .stream()

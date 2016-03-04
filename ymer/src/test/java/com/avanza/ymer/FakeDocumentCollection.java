@@ -140,4 +140,9 @@ class FakeDocumentCollection implements DocumentCollection {
 	public Stream<DBObject> findByQuery(Query query) {
 		throw new UnsupportedOperationException();
 	}
+	
+	@Override
+	public Stream<DBObject> findByTemplate(BasicDBObject object) {
+		throw new UnsupportedOperationException();
+	}
 }

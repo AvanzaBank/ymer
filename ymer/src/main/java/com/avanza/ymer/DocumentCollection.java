@@ -36,6 +36,8 @@ interface DocumentCollection {
 	Stream<DBObject> findAll();
 	
 	Stream<DBObject> findAll(SpaceObjectFilter<?> objectFilter);
+	
+	Stream<DBObject> findByTemplate(BasicDBObject template);
 
 	/**
 	 * Returns a document with a given id. <p>

@@ -48,12 +48,18 @@ final class MirroredObjectLoader<T> {
 	private final Logger LOGGER = LoggerFactory.getLogger(MirroredObjectLoader.class);
 	private final DocumentConverter documentConverter;
 	private final AtomicLong numLoadedObjects = new AtomicLong();
+	private final MirrorContextProperties contextProperties;
 
-	MirroredObjectLoader(DocumentCollection documentCollection, DocumentConverter documentConverter, MirroredObject<T> mirroredObject, SpaceObjectFilter<T> spaceObjectFilter) {
+	MirroredObjectLoader(DocumentCollection documentCollection, 
+						 DocumentConverter documentConverter, 
+						 MirroredObject<T> mirroredObject, 
+						 SpaceObjectFilter<T> spaceObjectFilter,
+						 MirrorContextProperties contextProperties) {
 		this.documentConverter = documentConverter;
 		this.spaceObjectFilter = spaceObjectFilter;
 		this.documentCollection = documentCollection;
 		this.mirroredObject = mirroredObject;
+		this.contextProperties = contextProperties;
 	}
 
 	List<LoadedDocument<T>> loadAllObjects() {
@@ -81,6 +87,10 @@ final class MirroredObjectLoader<T> {
 	}
 
 	private Stream<DBObject> loadDocuments() {
+		if (mirroredObject.hasCustomInitialLoadTemplate()) {
+			BasicDBObject template = mirroredObject.getCustomInitialLoadTemplateFactory().create(contextProperties.getPartitionCount(), contextProperties.getInstanceId());
+			return documentCollection.findByTemplate(template);
+		}
 		if (mirroredObject.loadDocumentsRouted()) {
 			return documentCollection.findAll(spaceObjectFilter);
 		}
