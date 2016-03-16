@@ -72,9 +72,9 @@ final class MongoDocumentCollection implements DocumentCollection {
 	public void replace(BasicDBObject oldVersion, BasicDBObject newVersion) {
 		if (!oldVersion.get("_id").equals(newVersion.get("_id"))) {
 			dbCollection.insert(newVersion);
-            dbCollection.remove(oldVersion);
+            dbCollection.remove(new BasicDBObject("_id", oldVersion.get("_id")));
         } else {
-            dbCollection.update(oldVersion, newVersion);
+            dbCollection.update(new BasicDBObject("_id", oldVersion.get("_id")), newVersion);
         }
 	}
 
