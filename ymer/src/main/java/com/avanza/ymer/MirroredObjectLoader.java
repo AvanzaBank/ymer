@@ -45,7 +45,6 @@ final class MirroredObjectLoader<T> {
 	private final MirroredObject<T> mirroredObject;
 	private final DocumentCollection documentCollection;
 	private final SpaceObjectFilter<T> spaceObjectFilter;
-	private final Logger LOGGER = LoggerFactory.getLogger(MirroredObjectLoader.class);
 	private final DocumentConverter documentConverter;
 	private final AtomicLong numLoadedObjects = new AtomicLong();
 	private final MirrorContextProperties contextProperties;
@@ -106,7 +105,7 @@ final class MirroredObjectLoader<T> {
 			}
 			return result;
 		} catch (RuntimeException e) {
-			LOGGER.error("Unable to load dbObject=" + object, e);
+			log.error("Unable to load dbObject=" + object, e);
 			throw e;
 		}
 	}
@@ -143,7 +142,7 @@ final class MirroredObjectLoader<T> {
 			try {
 				currentVersion = this.mirroredObject.patch(dbObject);
 			} catch (RuntimeException e) {
-				LOGGER.error("Patch of document failed! document=" + mirroredObject + "dbObject=" + dbObject, e);
+				log.error("Patch of document failed! document=" + mirroredObject + "dbObject=" + dbObject, e);
 				throw e;
 			}
 		}
