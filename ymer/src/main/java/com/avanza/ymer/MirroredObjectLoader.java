@@ -98,7 +98,16 @@ final class MirroredObjectLoader<T> {
 
 	private Optional<LoadedDocument<T>> tryPatchAndConvert(DBObject object) {
 		try {
-			Optional<LoadedDocument<T>> result = patchAndConvert(new BasicDBObject(object.toMap()));
+			Optional<LoadedDocument<T>> result;
+			try {
+				result = patchAndConvert(new BasicDBObject(object.toMap()));
+			} catch (RuntimeException e) {
+				// MongoConverter is not thread-safe due to a bug in AbstractMappingContext.addPersistentEntity(). 
+				// The bug occurs at most once or twice per collection but will produce objects without any properties set
+				// Resolve it temporarily by retrying.
+				log.warn("Failed to load dbObject=" + object + ". Retrying.", e);
+				result = patchAndConvert(new BasicDBObject(object.toMap()));
+			}
 			long loaded = numLoadedObjects.incrementAndGet();
 			if (loaded % 10000 == 0) {
 				log.info("Status: loaded {} records for collection {}", loaded, mirroredObject.getCollectionName());
