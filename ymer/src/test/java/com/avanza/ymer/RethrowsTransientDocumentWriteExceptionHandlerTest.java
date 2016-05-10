@@ -17,21 +17,21 @@ package com.avanza.ymer;
 
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
 
-import com.mongodb.MongoException;
 import com.mongodb.MongoSocketException;
+import com.mongodb.MongoSocketReadException;
+import com.mongodb.ServerAddress;
 
 /**
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
  */
 public class RethrowsTransientDocumentWriteExceptionHandlerTest {
 
-	private DocumentWriteExceptionHandler handler = new RethrowsTransientDocumentWriteExceptionHandler();
+	private final DocumentWriteExceptionHandler handler = new RethrowsTransientDocumentWriteExceptionHandler();
 
 	@Test(expected = TransientDocumentWriteException.class)
 	public void throwsOnTransientException() throws Exception {
@@ -59,9 +59,8 @@ public class RethrowsTransientDocumentWriteExceptionHandlerTest {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	private MongoSocketException newMongoNetworkException() {
-		return new MongoException.Network(new IOException());
+		return new MongoSocketReadException("", new ServerAddress());
 	}
 
 }

@@ -17,15 +17,14 @@ package com.avanza.ymer;
 
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
-
 import org.junit.Test;
 
-import com.mongodb.MongoException;
 import com.mongodb.MongoSocketException;
+import com.mongodb.MongoSocketReadException;
+import com.mongodb.ServerAddress;
 
 public class CatchesAllDocumentWriteExceptionHandlerTest {
-	private DocumentWriteExceptionHandler handler = new CatchesAllDocumentWriteExceptionHandler();
+	private final DocumentWriteExceptionHandler handler = new CatchesAllDocumentWriteExceptionHandler();
 
 	@Test
 	public void doesNotThrowNetworkException() throws Exception {
@@ -45,8 +44,7 @@ public class CatchesAllDocumentWriteExceptionHandlerTest {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	private MongoSocketException newMongoNetworkException() {
-		return new MongoException.Network(new IOException());
+		return new MongoSocketReadException("", new ServerAddress());
 	}
 }

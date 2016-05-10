@@ -55,6 +55,8 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	protected DocumentCollection createEmptyCollection() {
 		db = mongoServer.getDB(DBNAME);
 		db.dropDatabase();
+		db = mongoServer.getDB(DBNAME);
+
 		mongoDbCollection = db.getCollection(COLLECTION_NAME);
 		return new MongoDocumentCollection(mongoDbCollection);
 	}
