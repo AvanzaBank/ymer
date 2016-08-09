@@ -38,16 +38,16 @@ final class MongoDocumentCollection implements DocumentCollection {
 	public MongoDocumentCollection(DBCollection dbCollection) {
 		this.dbCollection = Objects.requireNonNull(dbCollection);
 	}
-	
+
 	@Override
 	public Stream<DBObject> findAll(SpaceObjectFilter<?> objectFilter) {
 		if (MongoPartitionFilter.canCreateFrom(objectFilter)) {
 			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.create(objectFilter);
 			return StreamSupport.stream(dbCollection.find(mongoPartitionFilter.toDBObject()).spliterator(), false);
-		} 
+		}
 		return findAll();
 	}
-	
+
 	@Override
 	public Stream<DBObject> findAll() {
 		return StreamSupport.stream(dbCollection.find().spliterator(), false);
@@ -62,14 +62,14 @@ final class MongoDocumentCollection implements DocumentCollection {
 	public Stream<DBObject> findByQuery(Query query) {
 		return  StreamSupport.stream(dbCollection.find(query.getQueryObject()).spliterator(), false);
 	}
-	
+
 	@Override
 	public Stream<DBObject> findByTemplate(BasicDBObject query) {
 		return  StreamSupport.stream(dbCollection.find(query).spliterator(), false);
 	}
 
 	@Override
-	public void replace(BasicDBObject oldVersion, BasicDBObject newVersion) {
+	public void replace(DBObject oldVersion, DBObject newVersion) {
 		if (!oldVersion.get("_id").equals(newVersion.get("_id"))) {
 			dbCollection.insert(newVersion);
             dbCollection.remove(new BasicDBObject("_id", oldVersion.get("_id")));
@@ -79,12 +79,12 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void update(BasicDBObject newVersion) {
+	public void update(DBObject newVersion) {
         dbCollection.save(newVersion);
 	}
 
 	@Override
-	public void insert(BasicDBObject dbObject) {
+	public void insert(DBObject dbObject) {
         try {
 			dbCollection.insert(dbObject);
 		} catch (DuplicateKeyException e) {
@@ -98,7 +98,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void insertAll(BasicDBObject... dbObjects) {
+	public void insertAll(DBObject... dbObjects) {
         dbCollection.insert(dbObjects); // TODO: test for this method
 	}
 

@@ -29,14 +29,14 @@ import com.mongodb.DBObject;
  *
  */
 interface DocumentCollection {
-	
+
 	/**
 	 * Reads all documents from the underlying mongo collection. <p>
 	 */
 	Stream<DBObject> findAll();
-	
+
 	Stream<DBObject> findAll(SpaceObjectFilter<?> objectFilter);
-	
+
 	Stream<DBObject> findByTemplate(BasicDBObject template);
 
 	/**
@@ -55,23 +55,23 @@ interface DocumentCollection {
 	 * have changed from the id of the oldVersion.
 	 *
 	 */
-	void replace(BasicDBObject oldVersion, BasicDBObject newVersion);
+	void replace(DBObject oldVersion, DBObject newVersion);
 
 	/**
 	 * Updates a given object (identified by id) in the underlying mongo collection. <p>
 	 */
-	void update(BasicDBObject newVersion);
+	void update(DBObject newVersion);
 
 	/**
 	 * Inserts the given object into the underlying mongo collection. <p>
 	 */
-	void insert(BasicDBObject dbObject);
+	void insert(DBObject dbObject);
 
 	void delete(BasicDBObject dbObject);
 
 	/**
 	 * Inserts all documents in a single batch to the underlying mongo collection. <p>
 	 */
-	void insertAll(BasicDBObject... dbObjects);
+	void insertAll(DBObject... dbObjects);
 
 }

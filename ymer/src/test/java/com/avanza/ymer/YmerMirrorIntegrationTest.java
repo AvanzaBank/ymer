@@ -50,7 +50,7 @@ import com.avanza.ymer.test.util.Probe;
 import com.gigaspaces.client.WriteModifiers;
 
 public class YmerMirrorIntegrationTest {
-	
+
 	private MongoOperations mongo;
 	private GigaSpace gigaSpace;
 	private static MirrorEnvironment mirrorEnviroment = new MirrorEnvironment();
@@ -152,6 +152,21 @@ public class YmerMirrorIntegrationTest {
 		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", null)).size());
 		assertEquals(0, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", "m2")).size());
 		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject("id3", "m1")).size());
+	}
+
+	@Test
+	public void processingIsApplied() throws Exception {
+		SpaceObjectLoader persister = pu.getPrimaryInstanceApplicationContext(1).getBean(SpaceObjectLoader.class);
+
+		gigaSpace.write(new TestSpaceThirdObject("1", "|"));
+		assertEventually(containsObject(mongo, equalTo(new TestSpaceThirdObject("1", "a|")), TestSpaceThirdObject.class)); // prewrite processor prepends a
+		assertEquals("|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // a removed by postread processor
+
+		mirrorEnviroment.removeFormatVersion(TestSpaceThirdObject.class, "1");
+		assertEquals("b|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // patch adds b to read data (after postread processor)
+		assertEventually(containsObject(mongo, equalTo(new TestSpaceThirdObject("1", "ab|")), TestSpaceThirdObject.class)); // a is prepended after patching by prewrite processor
+		assertEquals("b|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // nothing happens once patch has been applied
+		assertEventually(containsObject(mongo, equalTo(new TestSpaceThirdObject("1", "ab|")), TestSpaceThirdObject.class));  // same in mongo
 	}
 
 	private Probe countOf(final Class<?> mirroredType, final Matcher<Integer> countMatcher) {

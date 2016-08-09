@@ -21,12 +21,13 @@ import java.util.Collection;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 
 public class TestSpaceMirrorObjectDefinitions  {
-	
+
 	public Collection<MirroredObjectDefinition<?>> getDefinitions() {
 		return Arrays.asList(
 				MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()),
-				MirroredObjectDefinition.create(TestSpaceOtherObject.class).writeBackPatchedDocuments(false).documentPatches(new TestSpaceObjectV1Patch())
+				MirroredObjectDefinition.create(TestSpaceOtherObject.class).writeBackPatchedDocuments(false).documentPatches(new TestSpaceObjectV1Patch()),
+				MirroredObjectDefinition.create(TestSpaceThirdObject.class).documentPatches(new TestSpaceThirdObject.TestSpaceThirdObjectPatchV1())
 		);
 	}
-	
+
 }

@@ -38,14 +38,14 @@ class FakeDocumentCollection implements DocumentCollection {
 	public Stream<DBObject> findAll(SpaceObjectFilter<?> filter) {
 		return collection.stream();
 	}
-	
+
 	@Override
 	public Stream<DBObject> findAll() {
 		return collection.stream();
 	}
 
 	@Override
-	public void replace(BasicDBObject oldVersion, BasicDBObject newVersion) {
+	public void replace(DBObject oldVersion, DBObject newVersion) {
 		// Note that the Iterator of the list associated with the given collectionName may reflect changes to the
 		// underlying list. This behavior is similar to a database cursor who may returned elements
 		// that are inserted/updated after the cursor is created.
@@ -58,7 +58,7 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void update(BasicDBObject newVersion) {
+	public void update(DBObject newVersion) {
 		Iterator<DBObject> it = collection.iterator();
 		while (it.hasNext()) {
 			DBObject dbObject = it.next();
@@ -73,7 +73,7 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void insert(BasicDBObject dbObject) {
+	public void insert(DBObject dbObject) {
 		for (DBObject object : collection) {
 			if (object.get("_id").equals(dbObject.get("_id"))) {
 				throw new DuplicateDocumentKeyException("_id: " + dbObject.get("_id"));
@@ -120,8 +120,8 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void insertAll(BasicDBObject... dbObjects) {
-		for (BasicDBObject dbObject : dbObjects) {
+	public void insertAll(DBObject... dbObjects) {
+		for (DBObject dbObject : dbObjects) {
 			insert(dbObject);
 		}
 	}
@@ -140,7 +140,7 @@ class FakeDocumentCollection implements DocumentCollection {
 	public Stream<DBObject> findByQuery(Query query) {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	@Override
 	public Stream<DBObject> findByTemplate(BasicDBObject object) {
 		throw new UnsupportedOperationException();

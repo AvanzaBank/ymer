@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
+import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObject;
@@ -41,7 +42,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	private static final String DBNAME = "testdb";
 	private static final String COLLECTION_NAME = "testcollection";
-	
+
 	Fongo mongoServer = new Fongo("mongo server 1");
 
 
@@ -94,13 +95,15 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 				documentCollection,
 				FakeMirroredDocumentConverter.create(),
 				mirroredObject,
-				SpaceObjectFilter.partitionFilter(mirroredObject, 2, 2), new MirrorContextProperties(2, 2));
-		
+				SpaceObjectFilter.partitionFilter(mirroredObject, 2, 2),
+				new MirrorContextProperties(2, 2),
+				noOpPostReadProcessor());
+
 		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects()
 					  .stream()
 					  .map(LoadedDocument::getDocument)
 					  .collect(Collectors.toList());
-					 
+
 
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(1, "a")));
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(3, "c")));
@@ -143,13 +146,15 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 				documentCollection,
 				FakeMirroredDocumentConverter.create(),
 				mirroredObject,
-				SpaceObjectFilter.partitionFilter(mirroredObject, 1, 2), new MirrorContextProperties(2, 1));
-		
+				SpaceObjectFilter.partitionFilter(mirroredObject, 1, 2),
+				new MirrorContextProperties(2, 1),
+				noOpPostReadProcessor());
+
 		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects()
 				  .stream()
 				  .map(LoadedDocument::getDocument)
 				  .collect(Collectors.toList());
-		
+
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(2, "b")));
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(4, "d")));
 		assertEquals(2, loadedSpaceObjects.size());
@@ -223,6 +228,10 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		public Query toQuery(Object template) {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	private PostReadProcessor noOpPostReadProcessor() {
+		return (postRead, dataType) -> postRead;
 	}
 
 }

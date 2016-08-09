@@ -16,6 +16,7 @@
 package com.avanza.ymer;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -26,14 +27,14 @@ import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
 public class TestSpaceMirrorFactory {
 
-	private MongoDbFactory mongoDbFactory;
+	private final MongoDbFactory mongoDbFactory;
 	private boolean exportExceptionHandlerMBean;
-	
+
 	@Autowired
 	public TestSpaceMirrorFactory(MongoDbFactory mongoDbFactory) {
 		this.mongoDbFactory = mongoDbFactory;
 	}
-	
+
 	public void setExportExceptionHandlerMBean(boolean exportExceptionHandlerMBean) {
 		this.exportExceptionHandlerMBean = exportExceptionHandlerMBean;
 	}
@@ -41,15 +42,17 @@ public class TestSpaceMirrorFactory {
 	public SpaceDataSource createSpaceDataSource() {
 		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions());
 		ymerFactory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
+		ymerFactory.setPlugins(Collections.singleton(new TestProcessor()));
 		return ymerFactory.createSpaceDataSource();
 	}
-	
+
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
 		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions());
 		ymerFactory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
+		ymerFactory.setPlugins(Collections.singleton(new TestProcessor()));
 		return ymerFactory.createSpaceSynchronizationEndpoint();
 	}
-	
+
 	private Collection<MirroredObjectDefinition<?>> getDefinitions() {
 		return new TestSpaceMirrorObjectDefinitions().getDefinitions();
 	}

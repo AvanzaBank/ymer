@@ -27,14 +27,15 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.util.OptionalUtil;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 /**
  * Loads mirrored objects from an external (persistent) source.
- * 
+ *
  * Implementation note: multithreaded patching to increase throughput.
- * 
+ *
  * @author Elias Lindholm (elilin), Kristoffer Erlandsson, Andreas Skoog
  */
 final class MirroredObjectLoader<T> {
@@ -48,30 +49,33 @@ final class MirroredObjectLoader<T> {
 	private final DocumentConverter documentConverter;
 	private final AtomicLong numLoadedObjects = new AtomicLong();
 	private final MirrorContextProperties contextProperties;
+	private final PostReadProcessor postReadProcessor;
 
-	MirroredObjectLoader(DocumentCollection documentCollection, 
-						 DocumentConverter documentConverter, 
-						 MirroredObject<T> mirroredObject, 
+	MirroredObjectLoader(DocumentCollection documentCollection,
+						 DocumentConverter documentConverter,
+						 MirroredObject<T> mirroredObject,
 						 SpaceObjectFilter<T> spaceObjectFilter,
-						 MirrorContextProperties contextProperties) {
+						 MirrorContextProperties contextProperties,
+						 PostReadProcessor postReadProcessor) {
 		this.documentConverter = documentConverter;
 		this.spaceObjectFilter = spaceObjectFilter;
 		this.documentCollection = documentCollection;
 		this.mirroredObject = mirroredObject;
 		this.contextProperties = contextProperties;
+		this.postReadProcessor = postReadProcessor;
 	}
 
 	List<LoadedDocument<T>> loadAllObjects() {
 		return streamAllObjects().collect(Collectors.toList());
 	}
-	
+
 	Stream<LoadedDocument<T>> streamAllObjects() {
 		log.info("Begin loadAllObjects. targetCollection={}", mirroredObject.getCollectionName());
 		ForkJoinTask<Stream<LoadedDocument<T>>> loadedDocuments = forkJoinPool.submit(() -> {
 			return loadDocuments().parallel()
 								  .map(this::tryPatchAndConvert)
 								  .flatMap(OptionalUtil::asStream);
-								  
+
 		});
 		try {
 			Stream<LoadedDocument<T>> result = loadedDocuments.get();
@@ -80,7 +84,7 @@ final class MirroredObjectLoader<T> {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public void destroy() {
 		this.forkJoinPool.shutdown();
 	}
@@ -102,7 +106,7 @@ final class MirroredObjectLoader<T> {
 			try {
 				result = patchAndConvert(new BasicDBObject(object.toMap()));
 			} catch (RuntimeException e) {
-				// MongoConverter is not thread-safe due to a bug in AbstractMappingContext.addPersistentEntity(). 
+				// MongoConverter is not thread-safe due to a bug in AbstractMappingContext.addPersistentEntity().
 				// The bug occurs at most once or twice per collection but will produce objects without any properties set
 				// Resolve it temporarily by retrying.
 				log.warn("Failed to load dbObject=" + object + ". Retrying.", e);
@@ -128,7 +132,7 @@ final class MirroredObjectLoader<T> {
 		LoadedDocument<T> result = patchAndConvert(document).orElseThrow(() -> new IllegalArgumentException("Space object not accepted by filter (id=" + id + ")"));
 		return Optional.of(result);
 	}
-	
+
 	List<LoadedDocument<T>> loadByQuery(T template) {
 		return documentCollection.findByQuery(documentConverter.toQuery(template))
 								.map(BasicDBObject.class::cast)
@@ -149,11 +153,15 @@ final class MirroredObjectLoader<T> {
 		if (this.mirroredObject.requiresPatching(dbObject)) {
 			patched = true;
 			try {
-				currentVersion = this.mirroredObject.patch(dbObject);
+				currentVersion = (BasicDBObject) dbObject.copy();
+				postReadProcessor.postRead(currentVersion, this.mirroredObject.getMirroredType());
+				currentVersion = this.mirroredObject.patch(currentVersion);
 			} catch (RuntimeException e) {
-				log.error("Patch of document failed! document=" + mirroredObject + "dbObject=" + dbObject, e);
+				log.error("Patch of document failed! document=" + mirroredObject + "currentVersion=" + currentVersion, e);
 				throw e;
 			}
+		} else {
+			postReadProcessor.postRead(currentVersion, this.mirroredObject.getMirroredType());
 		}
 		T mirroredObject = documentConverter.convert(this.mirroredObject.getMirroredType(), currentVersion);
 		if (!spaceObjectFilter.accept(mirroredObject)) {
@@ -175,7 +183,7 @@ final class MirroredObjectLoader<T> {
 	/*
 	 * Holds the space representation of a document loaded form an external data source (typically mongo)
 	 * and also an Optional {@link PatchedDocument} which is present if the document was patched during
-	 * the loading 
+	 * the loading
 	 */
 	static class LoadedDocument<T> {
 		private final T document;
@@ -193,7 +201,7 @@ final class MirroredObjectLoader<T> {
 		public Optional<PatchedDocument> getPatchedDocument() {
 			return patchedDocument;
 		}
-		
+
 	}
 
 }

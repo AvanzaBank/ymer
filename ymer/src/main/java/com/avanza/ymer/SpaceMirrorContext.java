@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.avanza.ymer.plugin.Plugins;
+import com.avanza.ymer.plugin.PreWriteProcessor;
 import com.mongodb.BasicDBObject;
 /**
  * Holds the runtime context for a mongo mirror. <p>
@@ -40,16 +42,18 @@ final class SpaceMirrorContext {
 	private final Map<Class<?>, DocumentCollection> documentCollectionByMirroredType = new ConcurrentHashMap<>();
 	private final DocumentDb documentDb;
 	private final MirrorExceptionListener mirrorExceptionListener;
+	private final Plugins plugins;
 
 	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb) {
-		this(mirroredObjects, documentConverter, documentDb, NO_EXCEPTION_LISTENER);
+		this(mirroredObjects, documentConverter, documentDb, NO_EXCEPTION_LISTENER, Plugins.empty());
 	}
 
-	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb, MirrorExceptionListener mirrorExceptionListener) {
+	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb, MirrorExceptionListener mirrorExceptionListener, Plugins plugins) {
 		this.documentDb = Objects.requireNonNull(documentDb);
 		this.mirrorExceptionListener = Objects.requireNonNull(mirrorExceptionListener);
 		this.mirroredObjects = Objects.requireNonNull(mirroredObjects);
 		this.documentConverter = Objects.requireNonNull(documentConverter);
+		this.plugins = Objects.requireNonNull(plugins);
 		for (MirroredObject<?> mirroredObject : mirroredObjects.getMirroredObjects()) {
 			DocumentCollection documentCollection = documentDb.getCollection(mirroredObject.getCollectionName());
 			this.documentCollectionByMirroredType.put(mirroredObject.getMirroredType(), documentCollection);
@@ -74,7 +78,13 @@ final class SpaceMirrorContext {
 
 	<T> MirroredObjectLoader<T> createDocumentLoader(MirroredObject<T> document, int partitionId, int partitionCount) {
 		DocumentCollection documentCollection = getDocumentCollection(document.getMirroredType());
-		return new MirroredObjectLoader<>(documentCollection, documentConverter, document, SpaceObjectFilter.partitionFilter(document, partitionId, partitionCount), new MirrorContextProperties(partitionCount, partitionId));
+		return new MirroredObjectLoader<>(
+				documentCollection,
+				documentConverter,
+				document,
+				SpaceObjectFilter.partitionFilter(document, partitionId, partitionCount),
+				new MirrorContextProperties(partitionCount, partitionId),
+				plugins.getPostReadProcessing());
 	}
 
 	Collection<MirroredObject<?>> getMirroredDocuments() {
@@ -112,5 +122,9 @@ final class SpaceMirrorContext {
 	public boolean keepPersistent(Class<?> type) {
 		return this.mirroredObjects.isMirroredType(type)
 				&& getMirroredDocument(type).keepPersistent();
+	}
+
+	public PreWriteProcessor getPreWriteProcessing() {
+		return plugins.getPreWriteProcessing();
 	}
 }

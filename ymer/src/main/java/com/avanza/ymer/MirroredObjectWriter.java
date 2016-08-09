@@ -30,11 +30,12 @@ import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 /**
- * 
+ *
  * @author Elias Lindholm (elilin)
- * 
+ *
  */
 final class MirroredObjectWriter {
 
@@ -77,7 +78,7 @@ final class MirroredObjectWriter {
 		}
 		insertAll(pendingWrites);
 	}
-	
+
 	private Collection<DataSyncOperation> filterSpaceObjects(DataSyncOperation[] batchDataItems) {
 		ArrayList<DataSyncOperation> result = new ArrayList<>(batchDataItems.length);
 		for (DataSyncOperation bulkItem : batchDataItems) {
@@ -103,7 +104,7 @@ final class MirroredObjectWriter {
 	private void remove(final Object item) {
 		new MongoCommand(MirrorOperation.REMOVE, item) {
 			@Override
-			protected void execute(BasicDBObject... dbOBject) {
+			protected void execute(DBObject... dbOBject) {
 				BasicDBObject id = new BasicDBObject();
 				id.put("_id", dbOBject[0].get("_id"));
 				getDocumentCollection(item).delete(id);
@@ -115,7 +116,7 @@ final class MirroredObjectWriter {
 	private void update(final Object item) {
 		new MongoCommand(MirrorOperation.UPDATE, item) {
 			@Override
-			protected void execute(BasicDBObject... dbOBject) {
+			protected void execute(DBObject... dbOBject) {
 				getDocumentCollection(item).update(dbOBject[0]);
 			}
 
@@ -136,16 +137,12 @@ final class MirroredObjectWriter {
 		for (final List<Object> pendingObjects : pendingItemsByCollection.values()) {
 			new MongoCommand(MirrorOperation.INSERT, pendingObjects) {
 				@Override
-				protected void execute(BasicDBObject... dbObjects) {
+				protected void execute(DBObject... dbObjects) {
 					DocumentCollection documentCollection = getDocumentCollection(pendingObjects.get(0));
 					documentCollection.insertAll(dbObjects);
 				}
 			}.execute(pendingObjects.toArray());
 		}
-	}
-
-	private BasicDBObject toDbObject(Object item) {
-		return this.mirror.toVersionedDbObject(item);
 	}
 
 	private DocumentCollection getDocumentCollection(Object item) {
@@ -164,9 +161,11 @@ final class MirroredObjectWriter {
 
 		final void execute(Object... items) {
 			try {
-				BasicDBObject[] documents = new BasicDBObject[items.length];
+				DBObject[] documents = new DBObject[items.length];
 				for (int i = 0; i < documents.length; i++) {
-					documents[i] = toDbObject(items[i]);
+					BasicDBObject versionedDbObject = MirroredObjectWriter.this.mirror.toVersionedDbObject(items[i]);
+					MirroredObjectWriter.this.mirror.getPreWriteProcessing().preWrite(versionedDbObject, items[i].getClass());
+					documents[i] = versionedDbObject;
 				}
 				execute(documents);
 			} catch (Exception e) {
@@ -180,7 +179,7 @@ final class MirroredObjectWriter {
 					"Operation: " + operation + ", objects: " + Arrays.toString(objects));
 		}
 
-		protected abstract void execute(BasicDBObject... dbOBject);
+		protected abstract void execute(DBObject... dbOBject);
 
 	}
 

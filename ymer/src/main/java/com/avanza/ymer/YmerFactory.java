@@ -16,11 +16,14 @@
 package com.avanza.ymer;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
+import com.avanza.ymer.plugin.Plugins;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.ReadPreference;
@@ -29,19 +32,20 @@ import com.mongodb.ReadPreference;
  *
  */
 public final class YmerFactory {
-	
+
 	private MirrorExceptionListener exceptionListener = new MirrorExceptionListener() {
 		@Override
 		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {}
 	};
-	private ReadPreference readPreference = ReadPreference.primary();
+	private final ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
-	
+	private Set<Object> plugins = Collections.emptySet();
+
 	private final MirroredObjects mirroredObjects;
 	private final MongoConverter mongoConverter;
 	private final MongoDbFactory mongoDbFactory;
-	
-	public YmerFactory(MongoDbFactory mongoDbFactory, 
+
+	public YmerFactory(MongoDbFactory mongoDbFactory,
 					   MongoConverter mongoConverter,
 					   Collection<MirroredObjectDefinition<?>> definitions) {
 		this.mongoDbFactory = mongoDbFactory;
@@ -52,24 +56,28 @@ public final class YmerFactory {
 	/**
 	 * Defines whether an ExceptionHandlerMBean should be exported. The ExceptionHandlerMBean allows setting the SpaceSynchronizationEndpoint
 	 * in a state where a bulk of operations is discarded if a failure occurs during synchronization. The default behavior is to keep a failed bulk
-	 * operation first in the queue and wait for a defined interval before running a new attempt to synchronize the bulk. This blocks all 
-	 * subsequent synchronization operations until the bulk succeeds. 
-	 * 
+	 * operation first in the queue and wait for a defined interval before running a new attempt to synchronize the bulk. This blocks all
+	 * subsequent synchronization operations until the bulk succeeds.
+	 *
 	 * Default is "true"
-	 * 
+	 *
 	 * @param exportExceptionHandleMBean
 	 */
 	public void setExportExceptionHandlerMBean(boolean exportExceptionHandleMBean) {
 		this.exportExceptionHandleMBean = exportExceptionHandleMBean;
 	}
-	
+
 	/**
 	 * Sets a MirrorExceptionListener (optional). <p>
-	 * 
+	 *
 	 * @param exceptionListener
 	 */
 	public void setExceptionListener(MirrorExceptionListener exceptionListener) {
 		this.exceptionListener = exceptionListener;
+	}
+
+	public void setPlugins(Set<Object> plugins) {
+		this.plugins = plugins;
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
@@ -83,7 +91,7 @@ public final class YmerFactory {
 		}
 		return ymerSpaceSynchronizationEndpoint;
 	}
-	
+
 	private SpaceMirrorContext createSpaceMirrorContext() {
 		DocumentDb documentDb = DocumentDb.mongoDb(this.mongoDbFactory.getDb(), readPreference);
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(mongoConverter);
@@ -91,8 +99,8 @@ public final class YmerFactory {
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
-		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener);
+		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins));
 		return mirrorContext;
 	}
-	
+
 }

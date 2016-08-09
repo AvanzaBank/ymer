@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -37,30 +36,31 @@ import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.util.OptionalUtil;
 import com.gigaspaces.datasource.DataIterator;
 import com.gigaspaces.datasource.SpaceDataSource;
+import com.mongodb.DBObject;
 
 final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAware, SpaceObjectLoader {
 
 	private static final Logger logger = LoggerFactory.getLogger(YmerSpaceDataSource.class);
-	
+
 	private final SpaceMirrorContext spaceMirrorContext;
 	private ClusterInfo clusterInfo;
 
 	public YmerSpaceDataSource(SpaceMirrorContext spaceMirror) {
 		this.spaceMirrorContext = spaceMirror;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public DataIterator<Object> initialDataLoad() {
 		InitialLoadCompleteDispatcher initialLoadCompleteDispatcher = new InitialLoadCompleteDispatcher();
-		Iterator<Object> mongoData = 
+		Iterator<Object> mongoData =
 				spaceMirrorContext.getMirroredDocuments().stream()
 														 .filter(md -> !md.excludeFromInitialLoad())
 														 .flatMap(md -> load((MirroredObject<Object>) md, initialLoadCompleteDispatcher))
 														 .iterator();
 		return new IteratorAdapter(mongoData, initialLoadCompleteDispatcher::initialLoadComplete);
 	}
-	
+
 	/*
 	 * Returns all documents for a given space object type. The documents will be patched during the load and upgraded
 	 * to the most recent document format before transforming it to an space object. If the document was changed (patched)
@@ -71,26 +71,19 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 		MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(document, getPartitionId(), getPartitionCount());
 		initialLoadCompleteDispatcher.onInitialLoadComplete(documentLoader::destroy);
 		Stream<LoadedDocument<T>> loadedDocumentStream = documentLoader.streamAllObjects();
-		return loadedDocumentStream.map(writeBackPatchedDocument(document, initialLoadCompleteDispatcher));
+		return loadedDocumentStream.map(createPatchedDocumentWriteBack(document, initialLoadCompleteDispatcher));
 	}
-	
-	private <T> Function<LoadedDocument<T>, T> writeBackPatchedDocument(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
+
+	private <T> Function<LoadedDocument<T>, T> createPatchedDocumentWriteBack(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
 		AtomicInteger totalWritebackCount = new AtomicInteger(0);
 		initialLoadCompleteDispatcher.onInitialLoadComplete(() -> logger.debug("Updated {} documents in db for {}", totalWritebackCount.get(), document.getMirroredType().getName()));
 		return loadedDocument -> {
 			if (document.writeBackPatchedDocuments()) {
-				patchDocument(document, loadedDocument);
+				loadedDocument.getPatchedDocument().ifPresent(patchedDocument -> doWriteBackPatchedDocument(document, patchedDocument));
 				totalWritebackCount.incrementAndGet();
 			}
 			return loadedDocument.getDocument();
 		};
-	}
-
-	private <T> void patchDocument(MirroredObject<T> document, LoadedDocument<T> loadedDocument) {
-		loadedDocument.getPatchedDocument().ifPresent(patchedDocument -> {
-					DocumentCollection documentCollection = spaceMirrorContext.getDocumentCollection(document);
-					documentCollection.replace(patchedDocument.getOldVersion(), patchedDocument.getNewVersion());
-				});
 	}
 
 	private <T> void writeBackPatchedDocuments(MirroredObject<T> document, List<LoadedDocument<T>> loadedDocuments) {
@@ -100,14 +93,18 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 		long patchCount = loadedDocuments.stream()
 					   .map(LoadedDocument::getPatchedDocument)
 					   .flatMap(OptionalUtil::asStream)
-					   .map(patchedDocument -> {
-						   DocumentCollection documentCollection = spaceMirrorContext.getDocumentCollection(document);
-						   documentCollection.replace(patchedDocument.getOldVersion(), patchedDocument.getNewVersion());
-						   return patchedDocument;
-					   }).count();
+					   .map(patchedDocument -> doWriteBackPatchedDocument(document, patchedDocument))
+					   .count();
 		logger.debug("Updated {} documents in db for {}", patchCount, document.getMirroredType().getName());
 	}
-	
+
+	private <T> PatchedDocument doWriteBackPatchedDocument(MirroredObject<T> document, PatchedDocument patchedDocument) {
+		DocumentCollection documentCollection = spaceMirrorContext.getDocumentCollection(document);
+		DBObject newVersion = spaceMirrorContext.getPreWriteProcessing().preWrite(patchedDocument.getNewVersion(), document.getMirroredType());
+		documentCollection.replace(patchedDocument.getOldVersion(), newVersion);
+		return patchedDocument;
+	}
+
 	@Override
 	public void setClusterInfo(ClusterInfo clusterInfo) {
 		this.clusterInfo = clusterInfo;
@@ -131,7 +128,7 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 	private Integer getPartitionId() {
 		return clusterInfo.getInstanceId();
 	}
-	
+
 	@Override
 	public <T> Collection<T> loadObjects(Class<T> spaceType, T template) {
 		MirroredObject<T> mirroredObject = spaceMirrorContext.getMirroredDocument(spaceType);
@@ -143,7 +140,7 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 					  .map(LoadedDocument::getDocument)
 					  .collect(Collectors.toList());
 	}
-	
+
 	private static class IteratorAdapter implements DataIterator<Object> {
 
 		private final Iterator<Object> it;
@@ -178,7 +175,7 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 		}
 
 	}
-	
+
 	static class InitialLoadCompleteDispatcher {
 		private final List<Runnable> l = new CopyOnWriteArrayList<>();
 		public void onInitialLoadComplete(Runnable callback) {

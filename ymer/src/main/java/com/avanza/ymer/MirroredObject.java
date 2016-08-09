@@ -145,11 +145,10 @@ final class MirroredObject<T> {
 		if (!requiresPatching(dbObject)) {
 			throw new IllegalArgumentException("Document does not require patching: " + dbObject.toString());
 		}
-		BasicDBObject patchedDocument = (BasicDBObject) dbObject.copy();
-		while (requiresPatching(patchedDocument)) {
-			patchToNextVersion(patchedDocument);
+		while (requiresPatching(dbObject)) {
+			patchToNextVersion(dbObject);
 		}
-		return patchedDocument;
+		return dbObject;
 	}
 
 	/**
@@ -202,7 +201,7 @@ final class MirroredObject<T> {
 	public boolean hasCustomInitialLoadTemplate() {
 		return this.customInitialLoadTemplateFactory != null;
 	}
-	
+
 	public TemplateFactory getCustomInitialLoadTemplateFactory() {
 		return this.customInitialLoadTemplateFactory;
 	}
