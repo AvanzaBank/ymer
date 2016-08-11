@@ -164,7 +164,7 @@ final class MirroredObjectWriter {
 				DBObject[] documents = new DBObject[items.length];
 				for (int i = 0; i < documents.length; i++) {
 					BasicDBObject versionedDbObject = MirroredObjectWriter.this.mirror.toVersionedDbObject(items[i]);
-					MirroredObjectWriter.this.mirror.getPreWriteProcessing().preWrite(versionedDbObject, items[i].getClass());
+					MirroredObjectWriter.this.mirror.getPreWriteProcessing(items[i].getClass()).preWrite(versionedDbObject);
 					documents[i] = versionedDbObject;
 				}
 				execute(documents);

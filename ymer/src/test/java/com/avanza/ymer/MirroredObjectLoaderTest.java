@@ -353,7 +353,7 @@ public class MirroredObjectLoaderTest {
 	}
 
 	private PostReadProcessor noOpPostReadProcessor() {
-		return (postRead, dataType) -> postRead;
+		return (postRead) -> postRead;
 	}
 
 }

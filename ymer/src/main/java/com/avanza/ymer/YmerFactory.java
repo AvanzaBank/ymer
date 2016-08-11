@@ -23,7 +23,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
-import com.avanza.ymer.plugin.Plugins;
+import com.avanza.ymer.plugin.Plugin;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.ReadPreference;
@@ -39,7 +39,7 @@ public final class YmerFactory {
 	};
 	private final ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
-	private Set<Object> plugins = Collections.emptySet();
+	private Set<Plugin> plugins = Collections.emptySet();
 
 	private final MirroredObjects mirroredObjects;
 	private final MongoConverter mongoConverter;
@@ -76,7 +76,7 @@ public final class YmerFactory {
 		this.exceptionListener = exceptionListener;
 	}
 
-	public void setPlugins(Set<Object> plugins) {
+	public void setPlugins(Set<Plugin> plugins) {
 		this.plugins = plugins;
 	}
 

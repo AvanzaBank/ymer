@@ -154,14 +154,14 @@ final class MirroredObjectLoader<T> {
 			patched = true;
 			try {
 				currentVersion = (BasicDBObject) dbObject.copy();
-				postReadProcessor.postRead(currentVersion, this.mirroredObject.getMirroredType());
+				postReadProcessor.postRead(currentVersion);
 				currentVersion = this.mirroredObject.patch(currentVersion);
 			} catch (RuntimeException e) {
 				log.error("Patch of document failed! document=" + mirroredObject + "currentVersion=" + currentVersion, e);
 				throw e;
 			}
 		} else {
-			postReadProcessor.postRead(currentVersion, this.mirroredObject.getMirroredType());
+			postReadProcessor.postRead(currentVersion);
 		}
 		T mirroredObject = documentConverter.convert(this.mirroredObject.getMirroredType(), currentVersion);
 		if (!spaceObjectFilter.accept(mirroredObject)) {

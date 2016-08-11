@@ -15,17 +15,19 @@
  */
 package com.avanza.ymer.plugin;
 
+import java.util.Optional;
+
 import com.mongodb.DBObject;
 
 /**
- * Applied just before an object is written to Mongo
+ * {@link Plugin}s create processors for ymer<br/>
+ * <br/>
+ * A processor is not required to be thread safe.<br/>
+ * However, multiple processors of each type MAY be requested by ymer so a plugin may not return the same instance of a non-threadsafe class from multiple calls to a createX method.<br/>
+ * <br/>
+ * A processor may manipulate the {@link DBObject}s that are passed to it
  */
-@FunctionalInterface
-public interface PreWriteProcessor {
-	/**
-	 * This method is not required to be thread safe!
-	 * @param preWrite Object before it is written to persistent storage. This object may be modified
-	 * @return processed object, may be different from preWrite
-	 */
-	DBObject preWrite(DBObject preWrite);
+public interface Plugin {
+	Optional<PostReadProcessor> createPostReadProcessor(Class<?> spaceClass);
+	Optional<PreWriteProcessor> createPreWriteProcessor(Class<?> spaceClass);
 }

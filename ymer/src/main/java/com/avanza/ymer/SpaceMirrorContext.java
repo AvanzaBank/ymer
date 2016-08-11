@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.avanza.ymer.plugin.Plugins;
 import com.avanza.ymer.plugin.PreWriteProcessor;
 import com.mongodb.BasicDBObject;
 /**
@@ -84,7 +83,7 @@ final class SpaceMirrorContext {
 				document,
 				SpaceObjectFilter.partitionFilter(document, partitionId, partitionCount),
 				new MirrorContextProperties(partitionCount, partitionId),
-				plugins.getPostReadProcessing());
+				plugins.getPostReadProcessing(document.getMirroredType()));
 	}
 
 	Collection<MirroredObject<?>> getMirroredDocuments() {
@@ -124,7 +123,7 @@ final class SpaceMirrorContext {
 				&& getMirroredDocument(type).keepPersistent();
 	}
 
-	public PreWriteProcessor getPreWriteProcessing() {
-		return plugins.getPreWriteProcessing();
+	public PreWriteProcessor getPreWriteProcessing(Class<?> spaceClass) {
+		return plugins.getPreWriteProcessing(spaceClass);
 	}
 }

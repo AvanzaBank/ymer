@@ -42,14 +42,14 @@ public class TestSpaceMirrorFactory {
 	public SpaceDataSource createSpaceDataSource() {
 		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions());
 		ymerFactory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
-		ymerFactory.setPlugins(Collections.singleton(new TestProcessor()));
+		ymerFactory.setPlugins(Collections.singleton(new TestProcessor.TestPlugin()));
 		return ymerFactory.createSpaceDataSource();
 	}
 
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
 		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions());
 		ymerFactory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
-		ymerFactory.setPlugins(Collections.singleton(new TestProcessor()));
+		ymerFactory.setPlugins(Collections.singleton(new TestProcessor.TestPlugin()));
 		return ymerFactory.createSpaceSynchronizationEndpoint();
 	}
 

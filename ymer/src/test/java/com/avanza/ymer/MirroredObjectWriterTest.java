@@ -25,7 +25,6 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
-import com.avanza.ymer.plugin.Plugins;
 import com.gigaspaces.document.SpaceDocument;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
 import com.gigaspaces.sync.DataSyncOperation;

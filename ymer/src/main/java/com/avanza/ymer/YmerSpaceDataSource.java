@@ -100,7 +100,7 @@ final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAw
 
 	private <T> PatchedDocument doWriteBackPatchedDocument(MirroredObject<T> document, PatchedDocument patchedDocument) {
 		DocumentCollection documentCollection = spaceMirrorContext.getDocumentCollection(document);
-		DBObject newVersion = spaceMirrorContext.getPreWriteProcessing().preWrite(patchedDocument.getNewVersion(), document.getMirroredType());
+		DBObject newVersion = spaceMirrorContext.getPreWriteProcessing(document.getMirroredType()).preWrite(patchedDocument.getNewVersion());
 		documentCollection.replace(patchedDocument.getOldVersion(), newVersion);
 		return patchedDocument;
 	}

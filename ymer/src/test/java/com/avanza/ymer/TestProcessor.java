@@ -15,14 +15,31 @@
  */
 package com.avanza.ymer;
 
+import java.util.Optional;
+
+import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.plugin.PreWriteProcessor;
 import com.mongodb.DBObject;
 
 public class TestProcessor implements PreWriteProcessor, PostReadProcessor {
 
+	public static class TestPlugin implements Plugin {
+
+		@Override
+		public Optional<PostReadProcessor> createPostReadProcessor(Class<?> spaceClass) {
+			return Optional.of(new TestProcessor());
+		}
+
+		@Override
+		public Optional<PreWriteProcessor> createPreWriteProcessor(Class<?> spaceClass) {
+			return Optional.of(new TestProcessor());
+		}
+
+	}
+
 	@Override
-	public DBObject postRead(DBObject postRead, Class<?> dataType) {
+	public DBObject postRead(DBObject postRead) {
 		if (postRead.containsField("name")) {
 			postRead.put("name", postRead.get("name").toString().substring(1));
 		}
@@ -30,7 +47,7 @@ public class TestProcessor implements PreWriteProcessor, PostReadProcessor {
 	}
 
 	@Override
-	public DBObject preWrite(DBObject preWrite, Class<?> dataType) {
+	public DBObject preWrite(DBObject preWrite) {
 		if (preWrite.containsField("name")) {
 			preWrite.put("name", "a" + preWrite.get("name"));
 		}

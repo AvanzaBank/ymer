@@ -231,7 +231,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	}
 
 	private PostReadProcessor noOpPostReadProcessor() {
-		return (postRead, dataType) -> postRead;
+		return (postRead) -> postRead;
 	}
 
 }

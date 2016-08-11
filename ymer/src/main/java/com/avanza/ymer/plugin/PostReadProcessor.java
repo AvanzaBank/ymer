@@ -17,12 +17,15 @@ package com.avanza.ymer.plugin;
 
 import com.mongodb.DBObject;
 
+/**
+ * Applied just after an object has been read from Mongo
+ */
 @FunctionalInterface
 public interface PostReadProcessor {
 	/**
-	 * @param postRead Object after it har been read from persistent storage. This object may be modified
-	 * @param dataType Type of object
+	 * This method is not required to be thread safe
+	 * @param postRead Object after it has been read from persistent storage. This object may be modified
 	 * @return processed object, may be different from postRead
 	 */
-	DBObject postRead(DBObject postRead, Class<?> dataType);
+	DBObject postRead(DBObject postRead);
 }
