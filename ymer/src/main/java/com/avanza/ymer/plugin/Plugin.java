@@ -22,8 +22,8 @@ import com.mongodb.DBObject;
 /**
  * {@link Plugin}s create processors for ymer<br/>
  * <br/>
- * A processor is not required to be thread safe.<br/>
- * However, multiple processors of each type MAY be requested by ymer so a plugin may not return the same instance of a non-threadsafe class from multiple calls to a createX method.<br/>
+ * A processor is required to be thread safe.<br/>
+ * Multiple processors of each type MAY be requested by ymer, so if a processor is synchronized or otherwise would benefit from running in multiple instances it is recommended that a new instance is returned per spaceClass<br/>
  * <br/>
  * A processor may manipulate the {@link DBObject}s that are passed to it
  */

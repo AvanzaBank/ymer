@@ -23,7 +23,7 @@ import com.mongodb.DBObject;
 @FunctionalInterface
 public interface PreWriteProcessor {
 	/**
-	 * This method is not required to be thread safe!
+	 * This method is required to be thread safe!
 	 * @param preWrite Object before it is written to persistent storage. This object may be modified
 	 * @return processed object, may be different from preWrite
 	 */

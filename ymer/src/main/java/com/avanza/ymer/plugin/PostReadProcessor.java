@@ -23,7 +23,7 @@ import com.mongodb.DBObject;
 @FunctionalInterface
 public interface PostReadProcessor {
 	/**
-	 * This method is not required to be thread safe
+	 * This method is required to be thread safe
 	 * @param postRead Object after it has been read from persistent storage. This object may be modified
 	 * @return processed object, may be different from postRead
 	 */
