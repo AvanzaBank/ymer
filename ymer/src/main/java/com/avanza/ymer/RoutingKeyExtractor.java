@@ -48,7 +48,11 @@ interface RoutingKeyExtractor {
 				} else if (key.indexOf("^") == -1) {
 					return key;
 				} else {
-					return key.substring(0, key.indexOf("^"));
+					String idPrefix = key.substring(0, key.indexOf("^"));
+					if (idPrefix.indexOf("_") > 0) {
+						idPrefix = idPrefix.substring(0, idPrefix.indexOf('_'));
+					}
+					return idPrefix;
 				}
 			} catch (Exception e) {
 				throw new RuntimeException(e);
