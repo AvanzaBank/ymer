@@ -8,11 +8,6 @@
 	<name>${project.artifactId}</name>
 	<description>${project.artifactId}</description>
 	<url>https://github.com/AvanzaBank/ymer</url>
-	<modules>
-		<module>ymer</module>
-		<module>ymer-test</module>
-		<module>examples</module>
-	</modules>
 	<licenses>
 		<license>
 			<name>The Apache License, Version 2.0</name>
@@ -51,7 +46,22 @@
 	</distributionManagement>
 	<profiles>
 		<profile>
+			<id>default</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<modules>
+				<module>ymer</module>
+				<module>ymer-test</module>
+				<module>examples</module>
+			</modules>
+   		</profile>
+		<profile>
 			<id>release</id>
+			<modules>
+				<module>ymer</module>
+				<module>ymer-test</module>
+			</modules>
 			<build>
 				<!--  javadoc, source and gpg plugin from above -->
 							<!-- All artifacts deployed to the central repository must be signed -->
