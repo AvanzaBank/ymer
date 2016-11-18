@@ -15,13 +15,13 @@
  */
 package com.avanza.ymer;
 
-import java.util.Arrays;
-import java.util.Collection;
-
+import com.mongodb.MongoClientException;
+import com.mongodb.MongoSocketException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mongodb.MongoSocketException;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
@@ -34,7 +34,8 @@ class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExc
 	private Logger log = LoggerFactory.getLogger(RethrowsTransientDocumentWriteExceptionHandler.class);
 
 	public RethrowsTransientDocumentWriteExceptionHandler() {
-		this.transientErrorClasses = Arrays.<Class<? extends Exception>>asList(MongoSocketException.class);
+		this.transientErrorClasses = Arrays.<Class<? extends Exception>>asList(MongoSocketException.class,
+				MongoClientException.class);
 		this.transientErrorMessages = Arrays.asList("No replica set members available for query with", "not master");
 	}
 
@@ -62,12 +63,12 @@ class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExc
 		}
 		return false;
 	}
-	
+
 	private void logRecoverableError(Exception e, String operationDescription) {
 		log.warn(
 				"Recoverable exception when executing mirror command! Attempted operation: " + operationDescription
 						+ " - will propagate error",
-				e);			
+				e);
 	}
 
 	private void logIrrecoverableError(Exception e, String operationDescription) {
