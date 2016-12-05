@@ -42,6 +42,7 @@ public class YmerConverterTestBaseTest {
 	public void testingIfMirroredObjectIsMirrroedPasses() throws Exception {
 		final FakeTestSuite test1 = new FakeTestSuite(new ConverterTest<>(new TestSpaceObject("foo", "message")));
 		assertPasses(new TestRun() {
+			@Override
 			void run() {
 				test1.canMirrorSpaceObject();
 			}
@@ -55,6 +56,7 @@ public class YmerConverterTestBaseTest {
 		}
 		final FakeTestSuite test1 = new FakeTestSuite(new ConverterTest<>(new NonMirroredType()));
 		assertFails(new TestRun() {
+			@Override
 			void run() {
 				test1.canMirrorSpaceObject();
 			}
@@ -75,6 +77,7 @@ public class YmerConverterTestBaseTest {
 					}
 				}));
 		assertPasses(new TestRun() {
+			@Override
 			void run() throws Exception {
 				test1.serializationTest();
 			}
@@ -95,6 +98,7 @@ public class YmerConverterTestBaseTest {
 					}
 				}));
 		assertFails(new TestRun() {
+			@Override
 			void run() throws Exception {
 				test1.serializationTest();
 			}
@@ -102,7 +106,7 @@ public class YmerConverterTestBaseTest {
 	}
 
 	@Test
-	public void spaceObjectWithoutAnnotationTestFails() throws Exception {
+	public void spaceObjectWithoutIdAnnotationTestFails() throws Exception {
 		final FakeTestSuiteWithoutId test1 = new FakeTestSuiteWithoutId(
 				new ConverterTest<>(new TestSpaceObjectWithoutSpringDataIdAnnotation("foo"),
 						new TypeSafeMatcher<TestSpaceObjectWithoutSpringDataIdAnnotation>() {
@@ -116,6 +120,7 @@ public class YmerConverterTestBaseTest {
 							}
 						}));
 		assertFails(new TestRun() {
+			@Override
 			void run() throws Exception {
 				test1.testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject();
 			}
@@ -138,12 +143,13 @@ public class YmerConverterTestBaseTest {
 				}));
 
 		assertFails(new TestRun() {
+			@Override
 			void run() throws Exception {
 				test.testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty();
 			}
 		});
 	}
-	
+
 	@Test
 	public void spaceObjectWithEmptyMapTestFails() throws Exception {
 		final FakeTestSuiteWithEmptyMap test = new FakeTestSuiteWithEmptyMap(
@@ -160,6 +166,7 @@ public class YmerConverterTestBaseTest {
 				}));
 
 		assertFails(new TestRun() {
+			@Override
 			void run() throws Exception {
 				test.testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty();
 			}
@@ -184,7 +191,7 @@ public class YmerConverterTestBaseTest {
 		}
 
 	}
-	
+
 	class FakeTestSuiteWithEmptyMap extends YmerConverterTestBase {
 
 		public FakeTestSuiteWithEmptyMap(ConverterTest<?> testCase) {
@@ -228,7 +235,7 @@ public class YmerConverterTestBaseTest {
 		public FakeTestSuiteWithoutId(ConverterTest<?> testCase) {
 			super(testCase);
 		}
-		
+
 		@Override
 		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			DocumentPatch[] patches = {};
@@ -265,7 +272,7 @@ public class YmerConverterTestBaseTest {
 		}
 
 	}
-	
+
 	public static class TestSpaceObjectWithEmptyMap {
 		@Id
 		String id;
@@ -288,7 +295,7 @@ public class YmerConverterTestBaseTest {
 			this.map = emptyCollection;
 		}
 
-	
+
 	}
 
 	public static class TestSpaceObjectWithoutSpringDataIdAnnotation {
