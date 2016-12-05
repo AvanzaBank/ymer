@@ -34,7 +34,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
@@ -102,19 +101,6 @@ public abstract class YmerConverterTestBase {
         BasicDBObject recreatedBasicDbObject = documentConverter.convertToDBObject(reCreated);
         assertNotNull("No id field defined. @SpaceId annotations are ignored by persistence framework, use @Id for id field (Typically the same as is annotated with @SpaceId)", recreatedBasicDbObject.get("_id"));
         assertEquals("",basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
-    }
-    
-//    @Test
-    public void testFailsIfSpaceClassIsMissingSpringIdAnnotation() throws Exception {
-    	Object spaceObject = testCase.spaceObject;
-    	Field[] fields = spaceObject.getClass().getDeclaredFields();
-    	boolean hasAnnotation = false;
-    	for (Field field : fields) {
-			if (field.isAnnotationPresent(Id.class)){
-				hasAnnotation = true;
-			}
-		}
-    	assertTrue("@Id annotation is missing on class " + spaceObject.getClass().getCanonicalName() ,hasAnnotation);
     }
     
     @Test
