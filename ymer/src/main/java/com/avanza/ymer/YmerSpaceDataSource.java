@@ -28,17 +28,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.openspaces.core.cluster.ClusterInfo;
-import org.openspaces.core.cluster.ClusterInfoAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.util.OptionalUtil;
 import com.gigaspaces.datasource.DataIterator;
-import com.gigaspaces.datasource.SpaceDataSource;
 import com.mongodb.DBObject;
 
-final class YmerSpaceDataSource extends SpaceDataSource implements ClusterInfoAware, SpaceObjectLoader {
+final class YmerSpaceDataSource extends AbstractSpaceDataSource {
 
 	private static final Logger logger = LoggerFactory.getLogger(YmerSpaceDataSource.class);
 
