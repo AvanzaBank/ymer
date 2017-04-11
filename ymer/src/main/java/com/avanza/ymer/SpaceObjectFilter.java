@@ -17,6 +17,9 @@ package com.avanza.ymer;
 
 import java.util.Objects;
 
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBObject;
+
 /**
  * Strategy for filtering out objects during initial load. <p>
  *
@@ -35,13 +38,13 @@ final class SpaceObjectFilter<T> {
 	}
 
 	static <T> SpaceObjectFilter<T> partitionFilter(MirroredObject<T> document, int partitionId, int partitionCount) {
-		return new SpaceObjectFilter<T>(new PartitionFilter<T>(document, partitionId, partitionCount));
+		return new SpaceObjectFilter<>(new PartitionFilter<>(document, partitionId, partitionCount));
 	}
 
 	static <T> SpaceObjectFilter<T> create(Impl<T> impl) {
-		return new SpaceObjectFilter<T>(impl);
+		return new SpaceObjectFilter<>(impl);
 	}
-	
+
 	static <T> SpaceObjectFilter<T> acceptAll() {
 		return new SpaceObjectFilter<>(o -> true);
 	}
@@ -76,6 +79,9 @@ final class SpaceObjectFilter<T> {
 
 		@Override
 		public boolean accept(T spaceObject) {
+			int myVal = 0;
+			DBObject filter = BasicDBObjectBuilder.start("lease", BasicDBObjectBuilder.start("$gt", myVal).get()).get();
+
 			return isRoutedToThisPartition(spaceObject);
 		}
 
