@@ -15,16 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Query;
-
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
@@ -32,6 +22,15 @@ import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import org.junit.Test;
+import org.springframework.data.mongodb.core.query.Query;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -65,7 +64,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	@Test
 	public void canLoadDocumentsRouted() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();
@@ -116,7 +115,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class)
 																			     .loadDocumentsRouted(true)
 																				 .writeBackPatchedDocuments(false)
-																				 .documentPatches(patches).buildMirroredDocument();
+																				 .documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		// Objects WITH routed field
 		BasicDBObject doc1 = new BasicDBObject();

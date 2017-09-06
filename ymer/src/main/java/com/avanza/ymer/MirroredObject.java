@@ -15,11 +15,11 @@
  */
 package com.avanza.ymer;
 
-import java.lang.reflect.Method;
-
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
+
+import java.lang.reflect.Method;
 /**
  * Holds information about one mirrored space object type.
  *
@@ -39,12 +39,12 @@ final class MirroredObject<T> {
     private final String collectionName;
 	private final TemplateFactory customInitialLoadTemplateFactory;
 
-	public MirroredObject(MirroredObjectDefinition<T> definition) {
+	public MirroredObject(MirroredObjectDefinition<T> definition, MirroredObjectDefinitionsOverride override) {
 		this.patchChain = definition.createPatchChain();
 		this.routingKeyExtractor = findRoutingKeyMethod(patchChain.getMirroredType());
-		this.excludeFromInitialLoad = definition.excludeFromInitialLoad();
-        this.writeBackPatchedDocuments = definition.writeBackPatchedDocuments();
-        this.loadDocumentsRouted = definition.loadDocumentsRouted();
+		this.excludeFromInitialLoad = override.excludeFromInitialLoad(definition);
+        this.writeBackPatchedDocuments = override.writeBackPatchedDocuments(definition);
+        this.loadDocumentsRouted = override.loadDocumentsRouted(definition);
         this.keepPersistent = definition.keepPersistent();
         this.collectionName = definition.collectionName();
         this.customInitialLoadTemplateFactory = definition.customInitialLoadTemplateFactory();

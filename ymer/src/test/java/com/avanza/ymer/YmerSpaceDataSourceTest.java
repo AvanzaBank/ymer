@@ -15,19 +15,17 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.*;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Stream;
-
-import org.junit.Test;
-import org.openspaces.core.cluster.ClusterInfo;
-import org.springframework.data.mongodb.core.query.Query;
-
 import com.avanza.ymer.YmerSpaceDataSource.InitialLoadCompleteDispatcher;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.junit.Test;
+import org.openspaces.core.cluster.ClusterInfo;
+import org.springframework.data.mongodb.core.query.Query;
+
+import java.util.stream.Stream;
+
+import static org.junit.Assert.*;
 
 
 public class YmerSpaceDataSourceTest {
@@ -39,7 +37,7 @@ public class YmerSpaceDataSourceTest {
 	@Test
 	public void documentsMustNotBeWrittenToDbBeforeAllElementsAreLoaded() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		DocumentDb fakeDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb);
 		YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
@@ -70,7 +68,7 @@ public class YmerSpaceDataSourceTest {
 	@Test
 	public void loadsAndPatchesASingleDocumentById() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<TestReloadableSpaceObject> mirroredObject = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<TestReloadableSpaceObject> mirroredObject = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		DocumentDb documentDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(
 				new MirroredObjects(mirroredObject),

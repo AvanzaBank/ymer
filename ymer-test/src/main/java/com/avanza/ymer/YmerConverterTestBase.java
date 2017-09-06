@@ -123,7 +123,7 @@ public abstract class YmerConverterTestBase {
     }
 
 	protected MirroredObjects getMirroredObjects() {
-		return new MirroredObjects(getMirroredObjectDefinitions().stream());
+		return new MirroredObjects(getMirroredObjectDefinitions().stream(), MirroredObjectDefinitionsOverride.noOverride());
 	}
 
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();

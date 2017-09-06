@@ -15,18 +15,17 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.mongodb.BasicDBObject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import com.mongodb.BasicDBObject;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 /**
  * Base class for testing that migration of documents is working properly.
  * 
@@ -103,7 +102,7 @@ public abstract class YmerMigrationTestBase {
 	}
 	
 	private MirroredObjects getMirroredObjects() {
-		return new MirroredObjects(getMirroredObjectDefinitions().stream());
+		return new MirroredObjects(getMirroredObjectDefinitions().stream(), MirroredObjectDefinitionsOverride.noOverride());
 	}
 	
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();

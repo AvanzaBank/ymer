@@ -15,18 +15,14 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import com.gigaspaces.annotation.pojo.SpaceRouting;
+import org.junit.Test;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Test;
-
-import com.gigaspaces.annotation.pojo.SpaceRouting;
+import static org.junit.Assert.*;
 
 /**
  * 
@@ -44,7 +40,7 @@ public class MirroredObjectsTest {
 	@Test
 	public void returnsMirroredDocumentForGivenType() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		assertSame(mirroredObject, mirroredObjects.getMirroredObject(FakeMirroredType.class));
 	}
@@ -52,7 +48,7 @@ public class MirroredObjectsTest {
 	@Test
 	public void returnsSetOfMirroredTypes() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
 		Set<Class<?>> expected = new HashSet<>();
@@ -64,7 +60,7 @@ public class MirroredObjectsTest {
 	@Test
 	public void returnsSetOfMirroredTypeNames() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
 		Set<String> expected = new HashSet<String>();
@@ -76,7 +72,7 @@ public class MirroredObjectsTest {
 	@Test
 	public void returnsAllMirroredDocuments() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
 		Collection<MirroredObject<?>> allMirroredDocs = mirroredObjects.getMirroredObjects();
@@ -87,7 +83,7 @@ public class MirroredObjectsTest {
 	@Test
 	public void mirroredTypes() throws Exception {
 		DocumentPatch[] patches = {};
-		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		assertTrue(mirroredObjects.isMirroredType(FakeMirroredType.class));
 		class NonMirroredType {

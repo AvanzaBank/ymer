@@ -15,25 +15,24 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
+import com.avanza.gs.test.PuConfigurers;
+import com.avanza.gs.test.RunningPu;
+import com.mongodb.BasicDBObject;
 import org.junit.After;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-import com.avanza.gs.test.PuConfigurers;
-import com.avanza.gs.test.RunningPu;
-import com.mongodb.BasicDBObject;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class YmerInitialLoadIntegrationTest {
 	
-	static MirroredObject<TestSpaceObject> mirroredObject = MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
+	static MirroredObject<TestSpaceObject> mirroredObject = MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 	static MirroredObject<TestSpaceOtherObject> mirroredOtherDocument = MirroredObjectDefinition.create(TestSpaceOtherObject.class)
 																									.writeBackPatchedDocuments(false)
-																									.documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument();
+																									.documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 	static MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject, mirroredOtherDocument);
 	
 	public static MirrorEnvironment mirrorEnv = new MirrorEnvironment();

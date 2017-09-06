@@ -43,10 +43,10 @@ final class MirroredObjects {
 		});
 	}
 	
-	MirroredObjects(Stream<MirroredObjectDefinition<?>> mirroredObjects) {
-		mirroredObjects.map(MirroredObjectDefinition::buildMirroredDocument).forEach(mirroredObject -> {
-			this.mirroredObjectByType.put(mirroredObject.getMirroredType(), mirroredObject);
-		});
+	MirroredObjects(Stream<MirroredObjectDefinition<?>> mirroredObjects, MirroredObjectDefinitionsOverride override) {
+		mirroredObjects
+				.map(mirroredObjectDefinition -> mirroredObjectDefinition.buildMirroredDocument(override))
+				.forEach(mirroredObject -> this.mirroredObjectByType.put(mirroredObject.getMirroredType(), mirroredObject));
 	}
 	
 	/**

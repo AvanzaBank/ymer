@@ -15,22 +15,19 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Query;
-
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.util.OptionalUtil;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.mongodb.BasicDBObject;
+import org.junit.Test;
+import org.springframework.data.mongodb.core.query.Query;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.*;
 
 public class MirroredObjectLoaderTest {
 
@@ -39,7 +36,7 @@ public class MirroredObjectLoaderTest {
 	@Test
 	public void loadsAllObjectsRoutedToCurrentPartition() {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		BasicDBObject doc1 = new BasicDBObject();
 		doc1.put("_id", 11);
@@ -80,7 +77,7 @@ public class MirroredObjectLoaderTest {
 	@Test
 	public void pendingPatchesDocumentsReturnsAllDocumentsThatWasPatched() {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		BasicDBObject doc1 = new BasicDBObject();
 		doc1.put("_id", 11);
@@ -113,7 +110,7 @@ public class MirroredObjectLoaderTest {
 	@Test
 	public void loadsAndPatchesADocumentById() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		final BasicDBObject doc3 = new BasicDBObject();
 		doc3.put("_id", 33);
@@ -135,7 +132,7 @@ public class MirroredObjectLoaderTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void loadByIdThrowsIllegalArgumentExceptionIfSpaceObjectNotAcceptedByFilter() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		final BasicDBObject doc3 = new BasicDBObject();
 		doc3.put("_id", 33);
@@ -151,7 +148,7 @@ public class MirroredObjectLoaderTest {
 	@Test
 	public void loadByIdReturnsEmptyOptionalIfNoDocumentFoundWithGivenId() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		FakeDocumentCollection fakeDocumentCollection = new FakeDocumentCollection();
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll(), contextProperties, noOpPostReadProcessor());
 		assertFalse(documentLoader.loadById("id_3").isPresent());
@@ -160,7 +157,7 @@ public class MirroredObjectLoaderTest {
 	@Test
 	public void reloadableSpaceObjectsAreMarkedAsRestored() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		final BasicDBObject doc3 = new BasicDBObject();
 		doc3.put("_id", 33);
@@ -183,7 +180,7 @@ public class MirroredObjectLoaderTest {
 	@Test(expected = RuntimeException.class)
 	public void breaksIfConverterThrowsException() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		BasicDBObject doc1 = new BasicDBObject();
 		doc1.put("_id", 11);
@@ -217,7 +214,7 @@ public class MirroredObjectLoaderTest {
 				throw new IllegalArgumentException("My bigest failure");
 			}
 		} };
-		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		final BasicDBObject doc3 = new BasicDBObject();
 		doc3.put("_id", 33);
 		doc3.put("patched", false);

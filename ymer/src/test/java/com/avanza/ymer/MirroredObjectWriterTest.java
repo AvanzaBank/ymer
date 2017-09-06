@@ -15,15 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.List;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Query;
-
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.gigaspaces.document.SpaceDocument;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
@@ -33,6 +24,14 @@ import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SynchronizationSourceDetails;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.data.mongodb.core.query.Query;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 public class MirroredObjectWriterTest {
@@ -50,12 +49,12 @@ public class MirroredObjectWriterTest {
 	@Before
 	public void setup() {
 		DocumentPatch[] patches = { new TestSpaceObjectV1Patch() };
-		mirroredObject = MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument();
+		mirroredObject = MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		DocumentPatch[] patches2 = {};
 		anotherMirroredDocument =
-				MirroredObjectDefinition.create(TestSpaceOtherObject.class).keepPersistent(true).documentPatches(patches2).buildMirroredDocument();
+				MirroredObjectDefinition.create(TestSpaceOtherObject.class).keepPersistent(true).documentPatches(patches2).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		DocumentPatch[] patches1 = {};
-		mirroredReloadableDocument = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches1).buildMirroredDocument();
+		mirroredReloadableDocument = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches1).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		mirroredObjects = new MirroredObjects(mirroredObject, mirroredReloadableDocument, anotherMirroredDocument);
 		documentConverter = TestSpaceObjectFakeConverter.create();
 		documentDb = FakeDocumentDb.create();

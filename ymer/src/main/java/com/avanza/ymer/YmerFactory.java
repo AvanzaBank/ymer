@@ -15,18 +15,17 @@
  */
 package com.avanza.ymer;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
-
-import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-
 import com.avanza.ymer.plugin.Plugin;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.ReadPreference;
+import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 /**
  * @author Elias Lindholm (elilin)
  *
@@ -50,7 +49,7 @@ public final class YmerFactory {
 					   Collection<MirroredObjectDefinition<?>> definitions) {
 		this.mongoDbFactory = mongoDbFactory;
 		this.mongoConverter = mongoConverter;
-		this.mirroredObjects = new MirroredObjects(definitions.stream());
+		this.mirroredObjects = new MirroredObjects(definitions.stream(), MirroredObjectDefinitionsOverride.fromSystemProperties());
 	}
 
 	/**
@@ -78,6 +77,10 @@ public final class YmerFactory {
 
 	public void setPlugins(Set<Plugin> plugins) {
 		this.plugins = plugins;
+	}
+
+	public void setConfigSource() {
+
 	}
 
 	public SpaceDataSource createSpaceDataSource() {

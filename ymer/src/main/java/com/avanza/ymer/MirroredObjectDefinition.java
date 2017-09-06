@@ -30,13 +30,11 @@ o * Copyright 2015 Avanza Bank AB
  */
 package com.avanza.ymer;
 
+import org.springframework.data.mongodb.MongoCollectionUtils;
+
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
-
-import org.springframework.data.mongodb.MongoCollectionUtils;
-
-import com.mongodb.BasicDBObject;
 /**
  * Holds information about one mirrored space object type.
  *
@@ -72,8 +70,8 @@ public final class MirroredObjectDefinition<T> {
     	return this;
 	}
     
-    public MirroredObject<T> buildMirroredDocument() {
-    	return new MirroredObject<T>(this);
+    public MirroredObject<T> buildMirroredDocument(MirroredObjectDefinitionsOverride override) {
+    	return new MirroredObject<T>(this, override);
     }
 
 	DocumentPatchChain<T> createPatchChain() {
