@@ -73,7 +73,7 @@ public interface MirroredObjectDefinitionsOverride {
                     .map(s -> s.equals("true") ? true : false);
         }
 
-        static String getPropertyName(MirroredObjectDefinition<?> definition, String setting) {
+        public static String getPropertyName(MirroredObjectDefinition<?> definition, String setting) {
             return "ymer." + definition.getMirroredType().getCanonicalName() + "." + setting;
         }
     }
