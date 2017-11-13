@@ -68,8 +68,15 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
 		logger.info("Loading all documents for type: {}", document.getMirroredType().getName());
 		MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(document, getPartitionId(), getPartitionCount());
 		initialLoadCompleteDispatcher.onInitialLoadComplete(documentLoader::destroy);
-		Stream<LoadedDocument<T>> loadedDocumentStream = documentLoader.streamAllObjects();
-		return loadedDocumentStream.map(createPatchedDocumentWriteBack(document, initialLoadCompleteDispatcher));
+
+		AtomicInteger counter = new AtomicInteger(0);
+		long start = System.currentTimeMillis();
+
+		return documentLoader.streamAllObjects()
+				.map(createPatchedDocumentWriteBack(document, initialLoadCompleteDispatcher))
+				.peek(d -> counter.incrementAndGet())
+				.onClose(() -> logger.info("Loaded " + counter.get() + " documents from " + document.getCollectionName()
+						+ " in " + (System.currentTimeMillis() - start) + " milliseconds!"));
 	}
 
 	private <T> Function<LoadedDocument<T>, T> createPatchedDocumentWriteBack(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
