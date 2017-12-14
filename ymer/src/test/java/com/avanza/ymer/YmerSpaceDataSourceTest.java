@@ -29,8 +29,6 @@ import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -135,8 +133,9 @@ public class YmerSpaceDataSourceTest {
             documentCollection.insert(doc2);
 
             DataIterator<Object> objectDataIterator = ymerSpaceDataSource.initialDataLoad();
-            // onClose is only called when the iterator.next() is called.
-            objectDataIterator.next();
+            while (objectDataIterator.hasNext()) {
+				objectDataIterator.next();
+			}
             assertTrue(1 == appender.getLog().stream()
                     .filter(e -> e.getMessage().toString().startsWith("Loaded 1 documents from fakeSpaceObject"))
                     .count());
