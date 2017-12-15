@@ -68,7 +68,7 @@ public class YmerSpaceDataSourceTest {
 		documentCollection.insert(doc3);
 
 		
-		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.load(patchedMirroredDocument, doneDistpacher);
+		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.setupObjectStream(patchedMirroredDocument, doneDistpacher);
 		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
 	}
 

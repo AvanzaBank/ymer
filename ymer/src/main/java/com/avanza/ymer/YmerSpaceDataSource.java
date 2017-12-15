@@ -51,72 +51,30 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
                 .collect(Collectors.toList());
 
         ForkJoinPool forkJoinPool = new ForkJoinPool(15);
+        initialLoadCompleteDispatcher.onInitialLoadComplete(() -> forkJoinPool.shutdown());
+
         ConsumerIterator consumerIterator = new ConsumerIterator(documentCollectionsToLoad.size());
-        documentCollectionsToLoad.stream()
-                .forEach(mirroredObject ->
-                        forkJoinPool.submit(() -> {
-                            AtomicInteger counter = new AtomicInteger(0);
-                            long start = System.currentTimeMillis();
-
-                            load((MirroredObject<Object>) mirroredObject, initialLoadCompleteDispatcher)
-                                    .peek(d -> counter.incrementAndGet())
-                                    .forEach(consumerIterator::consume);
-
-                            logger.info("Loaded " + counter.get() + " documents from " + mirroredObject.getCollectionName()
-                                    + " in " + (System.currentTimeMillis() - start) + " milliseconds!");
-                            consumerIterator.onProducerCompleted();
-                        }));
+        documentCollectionsToLoad.forEach(mirroredObject ->
+                forkJoinPool.submit(initiateLoad(initialLoadCompleteDispatcher, consumerIterator, mirroredObject)));
 
         return new IteratorAdapter(consumerIterator, initialLoadCompleteDispatcher::initialLoadComplete);
     }
 
-    private class ConsumerIterator implements Iterator<Object> {
-        private final ConcurrentLinkedQueue<Object> oQueue = new ConcurrentLinkedQueue<>();
-        private final CountDownLatch countDownLatch;
+    private Runnable initiateLoad(
+            InitialLoadCompleteDispatcher initialLoadCompleteDispatcher,
+            ConsumerIterator consumerIterator,
+            MirroredObject<?> mirroredObject) {
+        return () -> {
+            AtomicInteger counter = new AtomicInteger(0);
+            long start = System.currentTimeMillis();
 
-        public ConsumerIterator(int numProducers) {
-            countDownLatch = new CountDownLatch(numProducers);
-        }
+            Stream<Object> objectStream = setupObjectStream((MirroredObject<Object>) mirroredObject, initialLoadCompleteDispatcher)
+                    .peek(d -> counter.incrementAndGet());
+            consumerIterator.consume(objectStream);
 
-        public Object consume(Object o) {
-            oQueue.add(o);
-            return o;
-        }
-
-        public void onProducerCompleted() {
-            countDownLatch.countDown();
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (!oQueue.isEmpty()) {
-                return true;
-            } else if (countDownLatch.getCount() == 0) {    // not awaiting any more producers
-                return !oQueue.isEmpty();            // see if something has come in while we were checking
-            } else {
-                // Await until cDL==0 OR we have new items in queue
-                try {
-                    do {
-                        // If cDL did not go to 0 within 10ms, check if queue has received new items...
-                        if (!oQueue.isEmpty()) {
-                            return true;
-                        }
-                        // ...otherwise await again
-                    } while (!countDownLatch.await(10, TimeUnit.DAYS.MILLISECONDS));
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new RuntimeException("Could not load all data, interrupted!", e);
-                }
-
-                // The cDL is now 0, check if something has come in while we were checking
-                return !oQueue.isEmpty();
-            }
-        }
-
-        @Override
-        public Object next() {
-            return oQueue.poll();
-        }
+            logger.info("Loaded " + counter.get() + " documents from " + mirroredObject.getCollectionName()
+                    + " in " + (System.currentTimeMillis() - start) + " milliseconds!");
+        };
     }
 
     /*
@@ -124,14 +82,14 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
      * to the most recent document format before transforming it to an space object. If the document was changed (patched)
      * during the load it will also be written back to the document source (i.e mongo database).
      */
-    <T> Stream<T> load(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
+
+    <T> Stream<T> setupObjectStream(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
         logger.info("Loading all documents for type: {}", document.getMirroredType().getName());
         MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(document, getPartitionId(), getPartitionCount());
 
         return documentLoader.streamAllObjects()
                 .map(createPatchedDocumentWriteBack(document, initialLoadCompleteDispatcher));
     }
-
     private <T> Function<LoadedDocument<T>, T> createPatchedDocumentWriteBack(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
         AtomicInteger totalWritebackCount = new AtomicInteger(0);
         initialLoadCompleteDispatcher.onInitialLoadComplete(() -> logger.debug("Updated {} documents in db for {}", totalWritebackCount.get(), document.getMirroredType().getName()));
@@ -142,18 +100,6 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
             }
             return loadedDocument.getDocument();
         };
-    }
-
-    private <T> void writeBackPatchedDocuments(MirroredObject<T> document, List<LoadedDocument<T>> loadedDocuments) {
-        if (!document.writeBackPatchedDocuments()) {
-            return;
-        }
-        long patchCount = loadedDocuments.stream()
-                .map(LoadedDocument::getPatchedDocument)
-                .flatMap(OptionalUtil::asStream)
-                .map(patchedDocument -> doWriteBackPatchedDocument(document, patchedDocument))
-                .count();
-        logger.debug("Updated {} documents in db for {}", patchCount, document.getMirroredType().getName());
     }
 
     private <T> PatchedDocument doWriteBackPatchedDocument(MirroredObject<T> document, PatchedDocument patchedDocument) {
@@ -199,8 +145,66 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
                 .collect(Collectors.toList());
     }
 
-    private static class IteratorAdapter implements DataIterator<Object> {
+    private <T> void writeBackPatchedDocuments(MirroredObject<T> document, List<LoadedDocument<T>> loadedDocuments) {
+        if (!document.writeBackPatchedDocuments()) {
+            return;
+        }
+        long patchCount = loadedDocuments.stream()
+                .map(LoadedDocument::getPatchedDocument)
+                .flatMap(OptionalUtil::asStream)
+                .map(patchedDocument -> doWriteBackPatchedDocument(document, patchedDocument))
+                .count();
+        logger.debug("Updated {} documents in db for {}", patchCount, document.getMirroredType().getName());
+    }
 
+    // Helper classes
+
+    private class ConsumerIterator implements Iterator<Object> {
+        private final ConcurrentLinkedQueue<Object> oQueue = new ConcurrentLinkedQueue<>();
+        private final CountDownLatch countDownLatch;
+
+        public ConsumerIterator(int numProducers) {
+            countDownLatch = new CountDownLatch(numProducers);
+        }
+
+        public void consume(Stream<Object> stream) {
+            stream.forEach(oQueue::add);
+            countDownLatch.countDown();
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (!oQueue.isEmpty()) {
+                return true;
+            } else if (countDownLatch.getCount() == 0) {    // not awaiting any more producers
+                return !oQueue.isEmpty();            // see if something has come in while we were checking
+            } else {
+                // Await until cDL==0 OR we have new items in queue
+                try {
+                    do {
+                        // If cDL did not go to 0 within 10ms, check if queue has received new items...
+                        if (!oQueue.isEmpty()) {
+                            return true;
+                        }
+                        // ...otherwise await again
+                    } while (!countDownLatch.await(10, TimeUnit.DAYS.MILLISECONDS));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Could not load all data, interrupted!", e);
+                }
+
+                // The cDL is now 0, check if something has come in while we were checking
+                return !oQueue.isEmpty();
+            }
+        }
+
+        @Override
+        public Object next() {
+            return oQueue.poll();
+        }
+    }
+
+    private static class IteratorAdapter implements DataIterator<Object> {
         private final Iterator<Object> it;
         private final Runnable iterationDone;
 
