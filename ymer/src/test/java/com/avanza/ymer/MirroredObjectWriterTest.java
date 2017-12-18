@@ -59,7 +59,7 @@ public class MirroredObjectWriterTest {
 		documentConverter = TestSpaceObjectFakeConverter.create();
 		documentDb = FakeDocumentDb.create();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
-		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty());
+		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
 		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
 	}
 
@@ -182,7 +182,7 @@ public class MirroredObjectWriterTest {
 	public void notifiesMirrorExceptionListenerOnError() throws Exception {
 		documentDb = throwsOnUpdateDocumentDb();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
-		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty());
+		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
 		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
@@ -197,7 +197,7 @@ public class MirroredObjectWriterTest {
 	public void exceptionFromExceptionHandlerIsPropagated() throws Exception {
 		documentDb = throwsOnUpdateDocumentDb();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
-		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty());
+		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
 		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler(
 				new TransientDocumentWriteException(new Exception())));
 
@@ -230,7 +230,7 @@ public class MirroredObjectWriterTest {
 			}
 		});
 		mirrorExceptionSpy = new MirrorExceptionSpy();
-		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty());
+		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
 		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");

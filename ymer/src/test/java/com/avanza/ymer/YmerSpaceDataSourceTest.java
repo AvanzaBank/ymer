@@ -46,7 +46,7 @@ public class YmerSpaceDataSourceTest {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		DocumentDb fakeDb = FakeDocumentDb.create();
-		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb);
+		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb, SpaceMirrorContext.NO_EXCEPTION_LISTENER, Plugins.empty(), 1);
 		YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
 		ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
@@ -80,7 +80,10 @@ public class YmerSpaceDataSourceTest {
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(
 				new MirroredObjects(mirroredObject),
 				TestSpaceObjectFakeConverter.create(),
-				documentDb);
+				documentDb,
+				SpaceMirrorContext.NO_EXCEPTION_LISTENER,
+				Plugins.empty(),
+				1);
 		YmerSpaceDataSource externalDataSourceForPartition1 = new YmerSpaceDataSource(spaceMirror);
 		externalDataSourceForPartition1.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
@@ -121,7 +124,7 @@ public class YmerSpaceDataSourceTest {
             DocumentPatch[] patches = {new FakeSpaceObjectV1Patch()};
             MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
             DocumentDb fakeDb = FakeDocumentDb.create();
-            SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb);
+            SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb, SpaceMirrorContext.NO_EXCEPTION_LISTENER, Plugins.empty(), 1);
             YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
             ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 

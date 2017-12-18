@@ -39,10 +39,12 @@ public final class YmerFactory {
 	private final ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
 	private Set<Plugin> plugins = Collections.emptySet();
+	private int numParallelCollections = 1;
 
 	private final MirroredObjects mirroredObjects;
 	private final MongoConverter mongoConverter;
 	private final MongoDbFactory mongoDbFactory;
+
 
 	public YmerFactory(MongoDbFactory mongoDbFactory,
 					   MongoConverter mongoConverter,
@@ -79,8 +81,11 @@ public final class YmerFactory {
 		this.plugins = plugins;
 	}
 
-	public void setConfigSource() {
-
+	public void setNumParallelCollections(int numParallelCollections) {
+		if (numParallelCollections < 1) {
+			throw new IllegalArgumentException("numParallelCollections must be a positive integer, was numParallelCollections=" + numParallelCollections + "!");
+		}
+		this.numParallelCollections = numParallelCollections;
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
@@ -102,7 +107,7 @@ public final class YmerFactory {
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
-		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins));
+		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
 		return mirrorContext;
 	}
 

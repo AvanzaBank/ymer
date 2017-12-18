@@ -15,15 +15,14 @@
  */
 package com.avanza.ymer;
 
-import java.util.Collection;
-import java.util.Collections;
-
+import com.gigaspaces.datasource.SpaceDataSource;
+import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
-import com.gigaspaces.datasource.SpaceDataSource;
-import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
+import java.util.Collection;
+import java.util.Collections;
 
 public class TestSpaceMirrorFactory {
 
@@ -43,6 +42,7 @@ public class TestSpaceMirrorFactory {
 		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions());
 		ymerFactory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
 		ymerFactory.setPlugins(Collections.singleton(new TestProcessor.TestPlugin()));
+		ymerFactory.setNumParallelCollections(2);
 		return ymerFactory.createSpaceDataSource();
 	}
 
