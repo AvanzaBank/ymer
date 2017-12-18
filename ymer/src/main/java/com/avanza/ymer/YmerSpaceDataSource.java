@@ -70,7 +70,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
 
             Stream<Object> objectStream = setupObjectStream((MirroredObject<Object>) mirroredObject, initialLoadCompleteDispatcher)
                     .peek(d -> counter.incrementAndGet());
-            consumerIterator.consume(objectStream);
+            consumerIterator.consume(objectStream); // This call blocks until att objects in the stream has been loaded
 
             logger.info("Loaded " + counter.get() + " documents from " + mirroredObject.getCollectionName()
                     + " in " + (System.currentTimeMillis() - start) + " milliseconds!");
@@ -167,6 +167,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
             countDownLatch = new CountDownLatch(numProducers);
         }
 
+        // This method will use the current thread for loading all objects of the incoming stream!
         public void consume(Stream<Object> stream) {
             stream.forEach(oQueue::add);
             countDownLatch.countDown();
