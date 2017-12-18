@@ -188,7 +188,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
                             return true;
                         }
                         // ...otherwise await again
-                    } while (!countDownLatch.await(10, TimeUnit.DAYS.MILLISECONDS));
+                    } while (!countDownLatch.await(10, TimeUnit.MILLISECONDS));
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException("Could not load all data, interrupted!", e);
