@@ -24,6 +24,7 @@ import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
+import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.core.query.Query;
@@ -139,9 +140,12 @@ public class YmerSpaceDataSourceTest {
             while (objectDataIterator.hasNext()) {
 				objectDataIterator.next();
 			}
-            assertTrue(1 == appender.getLog().stream()
-                    .filter(e -> e.getMessage().toString().startsWith("Loaded 1 documents from fakeSpaceObject"))
-                    .count());
+
+			Awaitility.await().until(() ->
+					appender.getLog().stream()
+							.filter(e -> e.getMessage().toString().startsWith("Loaded 1 documents from fakeSpaceObject"))
+									.count()
+							== 1);
         } finally {
             logger.removeAppender(appender);
 		}
