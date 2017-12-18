@@ -50,7 +50,8 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
                 .filter(md -> !md.excludeFromInitialLoad())
                 .collect(Collectors.toList());
 
-        ForkJoinPool forkJoinPool = new ForkJoinPool(spaceMirrorContext.getNamParallelCollections());
+        // We attempt to saturate i/o by running concurrent collection loads (we believe these are singel-threaded "under the hood")
+        ForkJoinPool forkJoinPool = new ForkJoinPool(spaceMirrorContext.getNumParallelCollections());
         initialLoadCompleteDispatcher.onInitialLoadComplete(() -> forkJoinPool.shutdown());
 
         ConsumerIterator consumerIterator = new ConsumerIterator(documentCollectionsToLoad.size());

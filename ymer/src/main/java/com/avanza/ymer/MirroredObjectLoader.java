@@ -68,7 +68,7 @@ final class MirroredObjectLoader<T> {
     Stream<LoadedDocument<T>> streamAllObjects() {
         log.info("Begin loadAllObjects. targetCollection={}", mirroredObject.getCollectionName());
         return loadDocuments()
-                .parallel()
+                .parallel() // We run patching and conversions in parallel as this is a cpu-intensive task
                 .map(this::tryPatchAndConvert)
                 .flatMap(OptionalUtil::asStream);
     }

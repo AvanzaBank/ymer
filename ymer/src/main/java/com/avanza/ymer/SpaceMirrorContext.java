@@ -42,15 +42,15 @@ final class SpaceMirrorContext {
 	private final DocumentDb documentDb;
 	private final MirrorExceptionListener mirrorExceptionListener;
 	private final Plugins plugins;
-	private final int namParallelCollections;
+	private final int numParallelCollections;
 
-	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb, MirrorExceptionListener mirrorExceptionListener, Plugins plugins, int namParallelCollections) {
+	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb, MirrorExceptionListener mirrorExceptionListener, Plugins plugins, int numParallelCollections) {
 		this.documentDb = Objects.requireNonNull(documentDb);
 		this.mirrorExceptionListener = Objects.requireNonNull(mirrorExceptionListener);
 		this.mirroredObjects = Objects.requireNonNull(mirroredObjects);
 		this.documentConverter = Objects.requireNonNull(documentConverter);
 		this.plugins = Objects.requireNonNull(plugins);
-		this.namParallelCollections = namParallelCollections;
+		this.numParallelCollections = numParallelCollections;
 
 		for (MirroredObject<?> mirroredObject : mirroredObjects.getMirroredObjects()) {
 			DocumentCollection documentCollection = documentDb.getCollection(mirroredObject.getCollectionName());
@@ -97,8 +97,8 @@ final class SpaceMirrorContext {
 		return documentDb;
 	}
 
-	public int getNamParallelCollections() {
-		return namParallelCollections;
+	public int getNumParallelCollections() {
+		return numParallelCollections;
 	}
 
 	/**
