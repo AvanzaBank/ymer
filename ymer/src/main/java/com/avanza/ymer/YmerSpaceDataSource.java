@@ -47,6 +47,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         InitialLoadCompleteDispatcher initialLoadCompleteDispatcher = new InitialLoadCompleteDispatcher();
 
         Stream<Object> objectStream = spaceMirrorContext.getMirroredDocuments().stream()
+                .sorted(Comparator.comparing(MirroredObject::getCollectionName)) // Make load order same for all partitions to reduce mongo cache misses
                 .filter(md -> !md.excludeFromInitialLoad())
                 .flatMap(mirroredObject -> load(mirroredObject, initialLoadCompleteDispatcher));
 
