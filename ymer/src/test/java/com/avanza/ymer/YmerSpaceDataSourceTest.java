@@ -69,7 +69,7 @@ public class YmerSpaceDataSourceTest {
 		documentCollection.insert(doc3);
 
 		
-		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.setupObjectStream(patchedMirroredDocument, doneDistpacher);
+		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.load(patchedMirroredDocument, doneDistpacher);
 		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
 	}
 
@@ -140,7 +140,6 @@ public class YmerSpaceDataSourceTest {
             while (objectDataIterator.hasNext()) {
 				objectDataIterator.next();
 			}
-
 			Awaitility.await().until(() ->
 					appender.getLog().stream()
 							.filter(e -> e.getMessage().toString().startsWith("Loaded 1 documents from fakeSpaceObject"))
