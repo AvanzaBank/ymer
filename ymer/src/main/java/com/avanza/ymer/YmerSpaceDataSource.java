@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,6 +48,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
 
         Stream<Object> objectStream = spaceMirrorContext.getMirroredDocuments().stream()
                 .sorted(Comparator.comparing(MirroredObject::getCollectionName)) // Make load order same for all partitions to reduce mongo cache misses
+                .collect(Collectors.toList()).stream() // Pass through a list to make sorting not block the whole stream on iterator.next which will be called later
                 .filter(md -> !md.excludeFromInitialLoad())
                 .flatMap(mirroredObject -> load(mirroredObject, initialLoadCompleteDispatcher));
 
@@ -172,7 +173,6 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         @Override
         public void close() {
         }
-
     }
 
     static class InitialLoadCompleteDispatcher {
