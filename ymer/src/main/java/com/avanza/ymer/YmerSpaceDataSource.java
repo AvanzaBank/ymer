@@ -99,6 +99,11 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
 
     @Override
     public <T extends ReloadableSpaceObject> T reloadObject(Class<T> spaceType, Object documentId) {
+        return loadObject(spaceType, documentId);
+    }
+
+    @Override
+    public <T> T loadObject(Class<T> spaceType, Object documentId) {
         MirroredObject<T> mirroredObject = spaceMirrorContext.getMirroredDocument(spaceType);
         MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getPartitionId(), getPartitionCount());
         Optional<LoadedDocument<T>> loadDocument = documentLoader.loadById(documentId);

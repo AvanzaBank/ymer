@@ -33,8 +33,13 @@ public interface SpaceObjectLoader {
 	 * @param spaceType
 	 * @param documentId
 	 * @return
+	 *
+	 * @deprecated Use {@link SpaceObjectLoader#loadObject(Class, Object)} instead
 	 */
+	@Deprecated
 	<T extends ReloadableSpaceObject> T reloadObject(Class<T> spaceType, Object documentId);
+
+	<T> T loadObject(Class<T> spaceType, Object documentId);
 	
 	<T> Collection<T> loadObjects(Class<T> spaceType, T template);
 
