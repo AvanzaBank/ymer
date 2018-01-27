@@ -15,14 +15,14 @@
  */
 package com.avanza.ymer;
 
-import java.util.Collection;
-
-import org.openspaces.core.cluster.ClusterInfo;
 import com.gigaspaces.datasource.DataIterator;
 import com.gigaspaces.datasource.DataSourceIdQuery;
 import com.gigaspaces.datasource.DataSourceIdsQuery;
 import com.gigaspaces.datasource.DataSourceQuery;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
+import org.openspaces.core.cluster.ClusterInfo;
+
+import java.util.Collection;
 
 public abstract class AbstractSpaceDataSourceDecorator extends AbstractSpaceDataSource {
 
@@ -65,6 +65,11 @@ public abstract class AbstractSpaceDataSourceDecorator extends AbstractSpaceData
 	@Override
 	public void setClusterInfo(ClusterInfo clusterInfo) {
 		abstractSpaceDataSource.setClusterInfo(clusterInfo);
+	}
+
+	@Override
+	public <T> T loadObject(Class<T> spaceType, Object documentId) {
+		return abstractSpaceDataSource.loadObject(spaceType, documentId);
 	}
 
 	@Override

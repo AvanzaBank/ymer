@@ -16,27 +16,31 @@
 package com.avanza.ymer;
 
 import com.mongodb.MongoClientException;
+import com.mongodb.MongoNotPrimaryException;
 import com.mongodb.MongoSocketException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
  */
 class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler {
 
-	private final Collection<Class<? extends Exception>> transientErrorClasses;
-	private final Collection<String> transientErrorMessages;
+	private final Set<Class<? extends Exception>> transientErrorClasses;
+	private final Set<String> transientErrorMessages;
 
 	private Logger log = LoggerFactory.getLogger(RethrowsTransientDocumentWriteExceptionHandler.class);
 
 	public RethrowsTransientDocumentWriteExceptionHandler() {
-		this.transientErrorClasses = Arrays.<Class<? extends Exception>>asList(MongoSocketException.class,
-				MongoClientException.class);
-		this.transientErrorMessages = Arrays.asList("No replica set members available for query with", "not master");
+		this.transientErrorClasses = new HashSet<>(Arrays.asList(
+				MongoSocketException.class,
+				MongoClientException.class,
+				MongoNotPrimaryException.class));
+		this.transientErrorMessages = new HashSet<>(Arrays.asList("No replica set members available for query with", "not master"));
 	}
 
 	@Override

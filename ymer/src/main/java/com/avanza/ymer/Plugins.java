@@ -15,18 +15,14 @@
  */
 package com.avanza.ymer;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.plugin.PreWriteProcessor;
 import com.mongodb.DBObject;
+
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class Plugins {
 	private final Set<Plugin> plugins;
@@ -46,7 +42,7 @@ class Plugins {
 			new PostReadProcessor() {
 				private final Set<PostReadProcessor> postReadProcessors = plugins.stream()
 						.map(p -> p.createPostReadProcessor(dt))
-						.flatMap(o -> o.isPresent() ? Stream.of(o.get()) : Stream.<PostReadProcessor>empty())
+						.flatMap(OptionalHelper::toStream)
 						.collect(Collectors.toSet());
 				@Override
 				public DBObject postRead(DBObject postRead) {
@@ -63,7 +59,7 @@ class Plugins {
 			new PreWriteProcessor() {
 				private final Set<PreWriteProcessor> preWriteProcessors = plugins.stream()
 						.map(p -> p.createPreWriteProcessor(dataType))
-						.flatMap(o -> o.isPresent() ? Stream.of(o.get()) : Stream.<PreWriteProcessor>empty())
+						.flatMap(OptionalHelper::toStream)
 						.collect(Collectors.toSet());
 
 				@Override
@@ -74,6 +70,12 @@ class Plugins {
 					return preWrite;
 				}
 			});
+	}
+
+	private static class OptionalHelper {
+		private static <T> Stream<T> toStream(Optional<T> o) {
+			return o.map(Stream::of).orElse(Stream.empty());
+		}
 	}
 
 }

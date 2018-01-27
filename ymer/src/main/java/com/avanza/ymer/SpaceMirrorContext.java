@@ -15,13 +15,13 @@
  */
 package com.avanza.ymer;
 
+import com.avanza.ymer.plugin.PreWriteProcessor;
+import com.mongodb.BasicDBObject;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.avanza.ymer.plugin.PreWriteProcessor;
-import com.mongodb.BasicDBObject;
 /**
  * Holds the runtime context for a mongo mirror. <p>
  *
@@ -31,7 +31,7 @@ import com.mongodb.BasicDBObject;
  */
 final class SpaceMirrorContext {
 
-	private static MirrorExceptionListener NO_EXCEPTION_LISTENER = new MirrorExceptionListener() {
+	public static final MirrorExceptionListener NO_EXCEPTION_LISTENER = new MirrorExceptionListener() {
 		@Override
 		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {}
 	};
@@ -42,17 +42,16 @@ final class SpaceMirrorContext {
 	private final DocumentDb documentDb;
 	private final MirrorExceptionListener mirrorExceptionListener;
 	private final Plugins plugins;
+	private final int numParallelCollections;
 
-	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb) {
-		this(mirroredObjects, documentConverter, documentDb, NO_EXCEPTION_LISTENER, Plugins.empty());
-	}
-
-	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb, MirrorExceptionListener mirrorExceptionListener, Plugins plugins) {
+	SpaceMirrorContext(MirroredObjects mirroredObjects, DocumentConverter documentConverter, DocumentDb documentDb, MirrorExceptionListener mirrorExceptionListener, Plugins plugins, int numParallelCollections) {
 		this.documentDb = Objects.requireNonNull(documentDb);
 		this.mirrorExceptionListener = Objects.requireNonNull(mirrorExceptionListener);
 		this.mirroredObjects = Objects.requireNonNull(mirroredObjects);
 		this.documentConverter = Objects.requireNonNull(documentConverter);
 		this.plugins = Objects.requireNonNull(plugins);
+		this.numParallelCollections = numParallelCollections;
+
 		for (MirroredObject<?> mirroredObject : mirroredObjects.getMirroredObjects()) {
 			DocumentCollection documentCollection = documentDb.getCollection(mirroredObject.getCollectionName());
 			this.documentCollectionByMirroredType.put(mirroredObject.getMirroredType(), documentCollection);
@@ -96,6 +95,10 @@ final class SpaceMirrorContext {
 
 	DocumentDb getDocumentDb() {
 		return documentDb;
+	}
+
+	public int getNumParallelCollections() {
+		return numParallelCollections;
 	}
 
 	/**

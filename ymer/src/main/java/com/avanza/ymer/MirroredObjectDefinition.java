@@ -112,7 +112,7 @@ public final class MirroredObjectDefinition<T> {
 	
 	/**
 	 * Adds a routing field to documents that are mirrored to the persistent storage. This field allows objects to be selected with the correct
-	 * routing filtering directly in the persistent storage during initial load, drastically reducing the network load since only the correct
+	 * routing filtering directly in the persistent storage during initial setupObjectStream, drastically reducing the network setupObjectStream since only the correct
 	 * subset of data will be transferred to each partition.<br/>
 	 * <br/>
 	 * Requires documents in the persistent storage to be updated before taking effect. Will take (partial) effect on partially updated collections.<br/>
