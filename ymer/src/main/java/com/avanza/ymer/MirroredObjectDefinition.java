@@ -99,7 +99,7 @@ public final class MirroredObjectDefinition<T> {
 	 * <br/>
 	 * When true, persistence-support can utilize several optimizations which reduce system load and memory usage during InitialLoad.
 	 * 
-	 * Default value is false, indicating that documents will be written back to persistent storage.
+	 * Default value is true, indicating that documents will be written back to persistent storage.
 	 */
 	public MirroredObjectDefinition<T> writeBackPatchedDocuments(boolean writeBackPatchedDocuments) {
 		this.writeBackPatchedDocuments = writeBackPatchedDocuments;
