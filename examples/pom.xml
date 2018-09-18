@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.avanza.ymer12</groupId>
 		<artifactId>ymer-parent</artifactId>
-		<version>1.4.0-SNAPSHOT</version>
+		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>examples</artifactId>
 	<packaging>pom</packaging>
