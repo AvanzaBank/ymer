@@ -18,7 +18,7 @@ package com.avanza.ymer;
 import java.util.Collection;
 
 /**
- * Manages 'on demand' reload of a mirrored object from its secondare (persistent) storage, typically
+ * Manages 'on demand' reload of a mirrored object from its secondary (persistent) storage, typically
  * a Mongo database.<p>
  *
  * In order to be reloadable, the space object must implement {@link ReloadableSpaceObject}. <p>
