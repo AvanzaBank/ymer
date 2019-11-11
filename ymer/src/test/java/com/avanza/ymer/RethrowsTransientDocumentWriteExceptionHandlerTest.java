@@ -49,7 +49,8 @@ public class RethrowsTransientDocumentWriteExceptionHandlerTest {
 
 	@Test	
 	public void throwsOnTransientExceptionByErrorMessage() throws Exception {		
-		List<String> transientErrorMessages = Arrays.asList("No replica set members available for query with", "not master");
+		List<String> transientErrorMessages = Arrays.asList("No replica set members available for query with", "not master", 
+				"Command failed with error 13: 'not authorized on dbxyz");
 		for (String message : transientErrorMessages) {
 			try {
 				handler.handleException(new RuntimeException(message), "");
