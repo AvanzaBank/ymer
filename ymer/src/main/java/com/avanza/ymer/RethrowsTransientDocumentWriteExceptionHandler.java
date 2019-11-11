@@ -40,11 +40,13 @@ class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExc
 				MongoSocketException.class,
 				MongoClientException.class,
 				MongoNotPrimaryException.class));
-		this.transientErrorMessages = new HashSet<>(Arrays.asList("No replica set members available for query with", "not master"));
+		this.transientErrorMessages = new HashSet<>(Arrays.asList("No replica set members available for query with",
+				"not master", "Command failed with error 13: 'not authorized on "));
 	}
 
 	@Override
 	public void handleException(Exception exception, String operationDescription) {
+		log.info("handle exception ", exception);
 		if (isTransient(exception)) {
 			logRecoverableError(exception, operationDescription);
 			throw new TransientDocumentWriteException(exception);
