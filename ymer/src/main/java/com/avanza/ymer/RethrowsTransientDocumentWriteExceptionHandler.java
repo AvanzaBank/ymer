@@ -46,7 +46,6 @@ class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExc
 
 	@Override
 	public void handleException(Exception exception, String operationDescription) {
-		log.info("handle exception ", exception);
 		if (isTransient(exception)) {
 			logRecoverableError(exception, operationDescription);
 			throw new TransientDocumentWriteException(exception);
