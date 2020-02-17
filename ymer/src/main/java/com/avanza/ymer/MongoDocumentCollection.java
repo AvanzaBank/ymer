@@ -42,10 +42,18 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public Stream<DBObject> findAll(SpaceObjectFilter<?> objectFilter) {
 		if (MongoPartitionFilter.canCreateFrom(objectFilter)) {
-			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.create(objectFilter);
-			return StreamSupport.stream(dbCollection.find(mongoPartitionFilter.toDBObject()).spliterator(), false);
+			return Stream.concat(getPartitionObjects(objectFilter), getMissingRoutingKeyObjects());
 		}
 		return findAll();
+	}
+
+	private Stream<DBObject> getMissingRoutingKeyObjects() {
+		return StreamSupport.stream(dbCollection.find(MongoPartitionFilter.createMissingRoutingKeyPropertyFilter().toDBObject()).spliterator(), false);
+	}
+
+	private Stream<DBObject> getPartitionObjects(SpaceObjectFilter<?> objectFilter) {
+		return StreamSupport.stream(dbCollection.find(MongoPartitionFilter.createPartitionModPropertyFilter(objectFilter)
+																		  .toDBObject()).spliterator(), false);
 	}
 
 	@Override

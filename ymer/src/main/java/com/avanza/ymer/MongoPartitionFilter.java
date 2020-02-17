@@ -33,6 +33,25 @@ class MongoPartitionFilter {
 		return new MongoPartitionFilter(buildFilter(spaceObjectFilter.getPartitionFilter()));
 	}
 
+	public static MongoPartitionFilter createPartitionModPropertyFilter(SpaceObjectFilter<?> spaceObjectFilter) {
+		PartitionFilter<?> partitionFilter = spaceObjectFilter.getPartitionFilter();
+		return new MongoPartitionFilter(
+				new BasicDBObject("$or", Arrays.asList(
+						new BasicDBObject(MirroredObject.DOCUMENT_ROUTING_KEY,
+										  new BasicDBObject("$mod",
+															Arrays.asList(partitionFilter.getTotalPartitions(),
+																		  partitionFilter.getCurrentPartition() - 1))),
+						new BasicDBObject(MirroredObject.DOCUMENT_ROUTING_KEY,
+										  new BasicDBObject("$mod",
+															Arrays.asList(partitionFilter.getTotalPartitions(),
+																		  -(partitionFilter.getCurrentPartition() - 1))))
+				)));
+	}
+
+	public static MongoPartitionFilter createMissingRoutingKeyPropertyFilter() {
+		return new MongoPartitionFilter(new BasicDBObject(MirroredObject.DOCUMENT_ROUTING_KEY, new BasicDBObject("$exists", false)));
+	}
+
 	public static boolean canCreateFrom(SpaceObjectFilter<?> spaceObjectFilter) {
 		return spaceObjectFilter.hasPartitionFilter();
 	}
