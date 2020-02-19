@@ -159,7 +159,7 @@
 			<dependency>
 				<groupId>org.springframework.data</groupId>
 				<artifactId>spring-data-mongodb</artifactId>
-				<version>1.7.2.RELEASE</version>
+				<version>1.8.6.RELEASE</version>
 			</dependency>
 			<dependency>
 				<groupId>org.slf4j</groupId>
