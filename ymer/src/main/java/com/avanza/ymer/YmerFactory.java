@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 /**
  * @author Elias Lindholm (elilin)
@@ -36,7 +37,7 @@ public final class YmerFactory {
 		@Override
 		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {}
 	};
-	private final ReadPreference readPreference = ReadPreference.primary();
+	private ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
 	private Set<Plugin> plugins = Collections.emptySet();
 	private int numParallelCollections = 1;
@@ -86,6 +87,17 @@ public final class YmerFactory {
 			throw new IllegalArgumentException("numParallelCollections must be a positive integer, was numParallelCollections=" + numParallelCollections + "!");
 		}
 		this.numParallelCollections = numParallelCollections;
+	}
+
+	/**
+	 * Sets the read preference for queries against all document collections.
+	 * Use {@link ReadPreference#secondaryPreferred} or
+	 * {@link ReadPreference#primaryPreferred} to enable reads from mongo
+	 * secondaries. Default is {@link ReadPreference#primary}.
+	 */
+	public YmerFactory withReadPreference(ReadPreference readPreference) {
+		this.readPreference = Objects.requireNonNull(readPreference);
+		return this;
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
