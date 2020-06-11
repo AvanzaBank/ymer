@@ -263,7 +263,7 @@ public class MirroredObjectWriterTest {
 	}
 
 	private DocumentDb throwsOnUpdateDocumentDb() {
-		return DocumentDb.create(name -> new FakeDocumentCollection() {
+		return DocumentDb.create((name, readPreference) -> new FakeDocumentCollection() {
 			@Override
 			public void update(DBObject dbObject) {
 				throw new RuntimeException();

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -49,11 +50,15 @@ final class DocumentDb {
 	}
 	
 	DocumentCollection getCollection(String name) {
-		return provider.get(name);
+		return getCollection(name, null);
+	}
+
+	DocumentCollection getCollection(String name, ReadPreference readPreference) {
+		return provider.get(name, readPreference);
 	}
 	
 	interface Provider {
-		DocumentCollection get(String name);
+		DocumentCollection get(String name, ReadPreference readPreference);
 	}
 	
 	private static final class MongoDocumentDb implements DocumentDb.Provider {
@@ -74,9 +79,9 @@ final class DocumentDb {
 		}
 
 		@Override
-		public DocumentCollection get(String name) {
+		public DocumentCollection get(String name, ReadPreference readPreference) {
 			DBCollection collection = mongoDb.getCollection(name);
-			collection.setReadPreference(readPreference);
+			collection.setReadPreference(Optional.ofNullable(readPreference).orElse(this.readPreference));
 			return new MongoDocumentCollection(collection);
 		}
 	}

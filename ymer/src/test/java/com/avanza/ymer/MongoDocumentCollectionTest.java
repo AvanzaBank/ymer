@@ -159,7 +159,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		assertEquals(2, loadedSpaceObjects.size());
 	}
 
-	private static class FakeSpaceObject {
+	static class FakeSpaceObject {
 		private final Integer id;
 		private final String value;
 		private FakeSpaceObject(Integer id, String value) {
