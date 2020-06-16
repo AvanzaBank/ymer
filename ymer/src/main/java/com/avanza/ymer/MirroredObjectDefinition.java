@@ -35,6 +35,9 @@ import org.springframework.data.mongodb.MongoCollectionUtils;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+
+import com.mongodb.ReadPreference;
+
 /**
  * Holds information about one mirrored space object type.
  *
@@ -51,6 +54,7 @@ public final class MirroredObjectDefinition<T> {
 	private boolean loadDocumentsRouted = false;
 	private boolean keepPersistent = false;
 	private TemplateFactory customInitialLoadTemplateFactory;
+	private ReadPreference readPreference;
 
 	public MirroredObjectDefinition(Class<T> mirroredType) {
 		this.mirroredType = Objects.requireNonNull(mirroredType);
@@ -128,6 +132,14 @@ public final class MirroredObjectDefinition<T> {
 		return this;
 	}
 
+	/**
+	 * Sets the read preference for queries against documents in this collection.
+	 */
+	public MirroredObjectDefinition<T> withReadPreference(ReadPreference readPreference) {
+		this.readPreference = Objects.requireNonNull(readPreference);
+		return this;
+	}
+
 	boolean loadDocumentsRouted() {
 		return this.loadDocumentsRouted;
 	}
@@ -148,6 +160,10 @@ public final class MirroredObjectDefinition<T> {
 	String collectionName() {
 		return Optional.ofNullable(this.collectionName)
 						  .orElseGet(() -> MongoCollectionUtils.getPreferredCollectionName(mirroredType));
+	}
+
+	ReadPreference getReadPreference() {
+		return readPreference;
 	}
 
 	public static <T> MirroredObjectDefinition<T> create(Class<T> mirroredType) {

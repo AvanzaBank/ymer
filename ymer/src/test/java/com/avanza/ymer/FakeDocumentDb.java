@@ -17,12 +17,14 @@ package com.avanza.ymer;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.mongodb.ReadPreference;
+
 public class FakeDocumentDb implements DocumentDb.Provider {
 
-	private ConcurrentHashMap<String, FakeDocumentCollection> collectionByName = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, FakeDocumentCollection> collectionByName = new ConcurrentHashMap<>();
 	
 	@Override
-	public DocumentCollection get(String name) {
+	public DocumentCollection get(String name, ReadPreference readPreference) {
 		FakeDocumentCollection documentCollection = new FakeDocumentCollection();
 		collectionByName.putIfAbsent(name, documentCollection);
 		return collectionByName.get(name);

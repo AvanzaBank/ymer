@@ -18,6 +18,7 @@ package com.avanza.ymer;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
+import com.mongodb.ReadPreference;
 
 import java.lang.reflect.Method;
 /**
@@ -38,6 +39,7 @@ final class MirroredObject<T> {
 	private final boolean keepPersistent;
     private final String collectionName;
 	private final TemplateFactory customInitialLoadTemplateFactory;
+	private final ReadPreference readPreference;
 
 	public MirroredObject(MirroredObjectDefinition<T> definition, MirroredObjectDefinitionsOverride override) {
 		this.patchChain = definition.createPatchChain();
@@ -48,6 +50,7 @@ final class MirroredObject<T> {
         this.keepPersistent = definition.keepPersistent();
         this.collectionName = definition.collectionName();
         this.customInitialLoadTemplateFactory = definition.customInitialLoadTemplateFactory();
+        this.readPreference = definition.getReadPreference();
 	}
 
 	private RoutingKeyExtractor findRoutingKeyMethod(Class<T> mirroredType) {
@@ -192,6 +195,10 @@ final class MirroredObject<T> {
 
 	boolean loadDocumentsRouted() {
 		return loadDocumentsRouted;
+	}
+
+	ReadPreference getReadPreference() {
+		return readPreference;
 	}
 
 	public boolean keepPersistent() {

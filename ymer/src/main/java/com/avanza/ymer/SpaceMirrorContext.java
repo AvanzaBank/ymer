@@ -53,7 +53,10 @@ final class SpaceMirrorContext {
 		this.numParallelCollections = numParallelCollections;
 
 		for (MirroredObject<?> mirroredObject : mirroredObjects.getMirroredObjects()) {
-			DocumentCollection documentCollection = documentDb.getCollection(mirroredObject.getCollectionName());
+			DocumentCollection documentCollection = documentDb.getCollection(
+					mirroredObject.getCollectionName(),
+					mirroredObject.getReadPreference()
+			);
 			this.documentCollectionByMirroredType.put(mirroredObject.getMirroredType(), documentCollection);
 		}
 	}
