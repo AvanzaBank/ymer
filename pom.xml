@@ -139,14 +139,14 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 		<log4j.version>1.2.16</log4j.version>
-		<spring.version>5.2.7.RELEASE</spring.version>
+		<spring.version>4.1.9.RELEASE</spring.version>
 		<spring.groupId>org.springframework</spring.groupId>
-		<slf4j.version>2.0.0-alpha1</slf4j.version>
-		<gigaspaces.version>12.0.6</gigaspaces.version>
+		<slf4j.version>1.7.10</slf4j.version>
+		<gigaspaces.version>10.1.1-12800-RELEASE</gigaspaces.version>
 		<junit.version>4.11</junit.version>
 		<hamcrest.version>1.2.1</hamcrest.version>
 		<mockito.version>1.9.0</mockito.version>
-		<gs-test.version>0.1.8</gs-test.version>
+		<gs-test.version>0.1.0</gs-test.version>
 	</properties>
 	
 	<dependencyManagement>
