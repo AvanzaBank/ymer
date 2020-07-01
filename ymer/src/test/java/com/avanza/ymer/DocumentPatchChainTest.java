@@ -30,8 +30,8 @@ public class DocumentPatchChainTest {
 	public void appliesPatchesInCorrectOrder() throws Exception {
 		DocumentPatch v1ToV2 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch v2ToV3 = Mockito.mock(DocumentPatch.class);
-		Mockito.stub(v1ToV2.patchedVersion()).toReturn(1);
-		Mockito.stub(v2ToV3.patchedVersion()).toReturn(2);
+		Mockito.when(v1ToV2.patchedVersion()).thenReturn(1);
+		Mockito.when(v2ToV3.patchedVersion()).thenReturn(2);
 
 		DocumentPatchChain<Object> patchChain = new DocumentPatchChain<>(Object.class, Arrays.asList(v2ToV3, v1ToV2));
 		
@@ -45,8 +45,8 @@ public class DocumentPatchChainTest {
 	public void doesNotAllowHolesInPatchChain() throws Exception {
 		DocumentPatch v1ToV2 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch v3ToV4 = Mockito.mock(DocumentPatch.class);
-		Mockito.stub(v1ToV2.patchedVersion()).toReturn(1);
-		Mockito.stub(v3ToV4.patchedVersion()).toReturn(3);
+		Mockito.when(v1ToV2.patchedVersion()).thenReturn(1);
+		Mockito.when(v3ToV4.patchedVersion()).thenReturn(3);
 
 		new DocumentPatchChain<>(Object.class, Arrays.asList(v3ToV4, v1ToV2));
 	}
@@ -56,9 +56,9 @@ public class DocumentPatchChainTest {
 		DocumentPatch v1ToV2a = Mockito.mock(DocumentPatch.class);
 		DocumentPatch v1ToV2b = Mockito.mock(DocumentPatch.class);
 		DocumentPatch v3ToV4 = Mockito.mock(DocumentPatch.class);
-		Mockito.stub(v1ToV2a.patchedVersion()).toReturn(1);
-		Mockito.stub(v1ToV2b.patchedVersion()).toReturn(1);
-		Mockito.stub(v3ToV4.patchedVersion()).toReturn(2);
+		Mockito.when(v1ToV2a.patchedVersion()).thenReturn(1);
+		Mockito.when(v1ToV2b.patchedVersion()).thenReturn(1);
+		Mockito.when(v3ToV4.patchedVersion()).thenReturn(2);
 
 		new DocumentPatchChain<>(Object.class, Arrays.asList(v3ToV4, v1ToV2a, v1ToV2b));
 	}
@@ -68,9 +68,9 @@ public class DocumentPatchChainTest {
 		DocumentPatch p1 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch p2 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch p3 = Mockito.mock(DocumentPatch.class);
-		Mockito.stub(p1.patchedVersion()).toReturn(1);
-		Mockito.stub(p2.patchedVersion()).toReturn(2);
-		Mockito.stub(p3.patchedVersion()).toReturn(3);
+		Mockito.when(p1.patchedVersion()).thenReturn(1);
+		Mockito.when(p2.patchedVersion()).thenReturn(2);
+		Mockito.when(p3.patchedVersion()).thenReturn(3);
 
 		new DocumentPatchChain<>(Object.class, Arrays.asList(p3, p1, p2));
 	}
@@ -80,9 +80,9 @@ public class DocumentPatchChainTest {
 		DocumentPatch p2 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch p3 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch p4 = Mockito.mock(DocumentPatch.class);
-		Mockito.stub(p2.patchedVersion()).toReturn(2);
-		Mockito.stub(p3.patchedVersion()).toReturn(3);
-		Mockito.stub(p4.patchedVersion()).toReturn(4);
+		Mockito.when(p2.patchedVersion()).thenReturn(2);
+		Mockito.when(p3.patchedVersion()).thenReturn(3);
+		Mockito.when(p4.patchedVersion()).thenReturn(4);
 
 		DocumentPatchChain<Object> documentPatchChain = new DocumentPatchChain<>(Object.class, Arrays.asList(p2, p3, p4));
 		assertSame(p2, documentPatchChain.getPatch(2));
@@ -95,9 +95,9 @@ public class DocumentPatchChainTest {
 		DocumentPatch p2 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch p3 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch p4 = Mockito.mock(DocumentPatch.class);
-		Mockito.stub(p2.patchedVersion()).toReturn(2);
-		Mockito.stub(p3.patchedVersion()).toReturn(3);
-		Mockito.stub(p4.patchedVersion()).toReturn(4);
+		Mockito.when(p2.patchedVersion()).thenReturn(2);
+		Mockito.when(p3.patchedVersion()).thenReturn(3);
+		Mockito.when(p4.patchedVersion()).thenReturn(4);
 
 		DocumentPatchChain<Object> documentPatchChain = new DocumentPatchChain<>(Object.class, Arrays.asList(p2, p3, p4));
 		assertSame(p2, documentPatchChain.getPatch(5));
@@ -108,9 +108,9 @@ public class DocumentPatchChainTest {
 		DocumentPatch p2 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch p3 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch p4 = Mockito.mock(DocumentPatch.class);
-		Mockito.stub(p2.patchedVersion()).toReturn(2);
-		Mockito.stub(p3.patchedVersion()).toReturn(3);
-		Mockito.stub(p4.patchedVersion()).toReturn(4);
+		Mockito.when(p2.patchedVersion()).thenReturn(2);
+		Mockito.when(p3.patchedVersion()).thenReturn(3);
+		Mockito.when(p4.patchedVersion()).thenReturn(4);
 
 		DocumentPatchChain<Object> documentPatchChain = new DocumentPatchChain<>(Object.class, Arrays.asList(p2, p3, p4));
 		assertSame(p2, documentPatchChain.getPatch(1));
