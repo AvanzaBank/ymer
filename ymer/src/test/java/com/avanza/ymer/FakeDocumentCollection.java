@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,12 +37,12 @@ class FakeDocumentCollection implements DocumentCollection {
 
 	@Override
 	public Stream<DBObject> findAll(SpaceObjectFilter<?> filter) {
-		return collection.stream();
+		return new ArrayList<>(collection).stream();
 	}
 
 	@Override
 	public Stream<DBObject> findAll() {
-		return collection.stream();
+		return new ArrayList<>(collection).stream();
 	}
 
 	@Override
