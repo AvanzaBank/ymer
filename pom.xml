@@ -80,21 +80,6 @@
 						</execution>
 					</executions>
 				</plugin>
-				
-				<!-- This plugin makes sure that a source jar is always built together 
-					with the binary jar -->
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-source-plugin</artifactId>
-					<executions>
-						<execution>
-							<id>attach-sources</id>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
 	
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -435,6 +420,21 @@
 					<execution>
 						<goals>
 							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- This plugin makes sure that a source jar is always built together
+				with the binary jar -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
 						</goals>
 					</execution>
 				</executions>
