@@ -177,7 +177,7 @@
 			<dependency>
 				<groupId>com.avanza.gs14</groupId>
 				<artifactId>gs-test</artifactId>
-				<version>${gs-test.version}</version>
+				<version>14.0.5</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
