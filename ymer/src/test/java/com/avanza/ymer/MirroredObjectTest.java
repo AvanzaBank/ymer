@@ -19,6 +19,7 @@ import com.avanza.gs.test.JVMGlobalLus;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
+import org.bson.Document;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.openspaces.core.GigaSpaceConfigurer;
@@ -132,8 +133,8 @@ public class MirroredObjectTest {
 		DocumentPatch[] patches = { patch2, patch1 };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-		BasicDBObject dbObject = new BasicDBObject();
-		document.patch(dbObject);
+		Document doc = new Document();
+		document.patch(doc);
 		assertEquals(2, appliedPatchesInAppliedOrder.size());
 		assertSame(patch1, appliedPatchesInAppliedOrder.get(0));
 		assertSame(patch2, appliedPatchesInAppliedOrder.get(1));
@@ -201,9 +202,9 @@ public class MirroredObjectTest {
 	public void patchingWhenNoPatchesExistsThrowsIllegalArgumentException() throws Exception {
 		DocumentPatch[] patches = {};
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-		BasicDBObject dbObject = new BasicDBObject();
-		BasicDBObject patched = document.patch(dbObject);
-		assertEquals(dbObject, patched);
+		Document doc = new Document();
+		Document patched = document.patch(doc);
+		assertEquals(doc, patched);
 	}
 
 	@Test
@@ -211,8 +212,8 @@ public class MirroredObjectTest {
 		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-		BasicDBObject dbObject = new BasicDBObject();
-		BasicDBObject patched = document.patch(dbObject);
+		Document dbObject = new Document();
+		Document patched = document.patch(dbObject);
 
 		assertEquals(3, document.getDocumentVersion(patched));
 	}
@@ -223,9 +224,9 @@ public class MirroredObjectTest {
 		FakePatch patch2 = new FakePatch(2);
 		DocumentPatch[] patches = { patch1, patch2 };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-		BasicDBObject dbObject = new BasicDBObject();
+		Document doc = new Document();
 
-		document.patch(dbObject);
+		document.patch(doc);
 		assertTrue(patch1.applied);
 		assertTrue(patch2.applied);
 	}
@@ -236,9 +237,9 @@ public class MirroredObjectTest {
 		FakePatch patch2 = new FakePatch(2);
 		DocumentPatch[] patches = { patch1, patch2 };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-		BasicDBObject dbObject = new BasicDBObject();
-		document.setDocumentVersion(dbObject, 2);
-		document.patch(dbObject);
+		Document doc = new Document();
+		document.setDocumentVersion(doc, 2);
+		document.patch(doc);
 		assertFalse(patch1.applied);
 		assertTrue(patch2.applied);
 	}
@@ -247,10 +248,10 @@ public class MirroredObjectTest {
 	public void throwsUnkownDocumentVersionExceptionIfFormatVersionIsNewerThanCurrentFormatVersion() throws Exception {
 		DocumentPatch[] patches = { new FakePatch(1) };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-		BasicDBObject dbObject = new BasicDBObject();
-		document.setDocumentVersion(dbObject, 3);
+		Document doc = new Document();
+		document.setDocumentVersion(doc, 3);
 
-		document.requiresPatching(dbObject);
+		document.requiresPatching(doc);
 	}
 
 	@Test
@@ -304,10 +305,10 @@ public class MirroredObjectTest {
 		DocumentPatch[] patches = { patch1, patch2, patch3 };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-		BasicDBObject dbObject = new BasicDBObject();
-		document.setDocumentVersion(dbObject, 2);
+		Document doc = new Document();
+		document.setDocumentVersion(doc, 2);
 
-		document.patchToNextVersion(dbObject);
+		document.patchToNextVersion(doc);
 
 		assertFalse(patch1.applied);
 		assertTrue(patch2.applied);
@@ -394,7 +395,7 @@ public class MirroredObjectTest {
 		private final List<FakePatch> appliedPatches;
 
 		public FakePatch(int patchedVersion) {
-			this(patchedVersion, new ArrayList<FakePatch>());
+			this(patchedVersion, new ArrayList<>());
 		}
 
 		public FakePatch(int patchedVersion, List<FakePatch> appliedPatches) {
@@ -404,6 +405,12 @@ public class MirroredObjectTest {
 
 		@Override
 		public void apply(BasicDBObject dbObject) {
+			applied = true;
+			appliedPatches.add(this);
+		}
+
+		@Override
+		public void apply(Document document) {
 			applied = true;
 			appliedPatches.add(this);
 		}

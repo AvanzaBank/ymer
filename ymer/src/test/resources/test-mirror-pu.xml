@@ -14,9 +14,9 @@
 	<os-core:mirror id="mirrorGigaSpace" url="/./mirrortest-space-mirror" space-sync-endpoint="spaceSyncEndpoint">
 		<os-core:source-space name="mirrortest-space" partitions="1" backups="1"/>
 	</os-core:mirror>
-	
+
 	<bean id="mirrorFactory" class="com.avanza.ymer.TestSpaceMirrorFactory">
-		<property name="exportExceptionHandlerMBean" value="${exportExceptionHandlerMBean:false}"/>
+		<property name="exportExceptionHandlerMBean" value="${exportExceptionHandlerMBean}"/>
 	</bean>
 	<bean id="spaceSyncEndpoint" factory-bean="mirrorFactory" factory-method="createSpaceSynchronizationEndpoint"/>
 

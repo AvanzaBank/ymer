@@ -17,6 +17,7 @@ package com.avanza.ymer;
 
 import java.util.Optional;
 
+import org.bson.Document;
 import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.plugin.PreWriteProcessor;
@@ -39,16 +40,16 @@ public class TestProcessor implements PreWriteProcessor, PostReadProcessor {
 	}
 
 	@Override
-	public DBObject postRead(DBObject postRead) {
-		if (postRead.containsField("name")) {
+	public Document postRead(Document postRead) {
+		if (postRead.containsKey("name")) {
 			postRead.put("name", postRead.get("name").toString().substring(1));
 		}
 		return postRead;
 	}
 
 	@Override
-	public DBObject preWrite(DBObject preWrite) {
-		if (preWrite.containsField("name")) {
+	public Document preWrite(Document preWrite) {
+		if (preWrite.containsKey("name")) {
 			preWrite.put("name", "a" + preWrite.get("name"));
 		}
 		return preWrite;

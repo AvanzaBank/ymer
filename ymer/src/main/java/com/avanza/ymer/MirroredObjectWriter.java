@@ -20,6 +20,7 @@ import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,7 @@ final class MirroredObjectWriter {
 	}
 
 	public void executeBulk(OperationsBatchData batch) {
-		List<Object> pendingWrites = new ArrayList<Object>();
+		List<Object> pendingWrites = new ArrayList<>();
 		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
 			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {
 				logger.debug("Ignored {}, not a mirrored class", bulkItem.getDataAsObject().getClass().getName());
@@ -95,7 +96,7 @@ final class MirroredObjectWriter {
 	}
 
 	private void remove(final Object item) {
-		new MongoCommand(MirrorOperation.REMOVE, item) {
+		MongoCommand mongoCommand = new MongoCommand(MirrorOperation.REMOVE, item) {
 			@Override
 			protected void execute(DBObject... dbOBject) {
 				BasicDBObject id = new BasicDBObject();
@@ -103,7 +104,15 @@ final class MirroredObjectWriter {
 				getDocumentCollection(item).delete(id);
 			}
 
-		}.execute(item);
+			@Override
+			protected void execute(Document... documents) {
+				Document id = new Document();
+				id.put("_id", documents[0].get("_id"));
+				getDocumentCollection(item).delete(id);
+			}
+
+		};
+		mongoCommand.execute(item);
 	}
 
 	private void update(final Object item) {
@@ -113,6 +122,10 @@ final class MirroredObjectWriter {
 				getDocumentCollection(item).update(dbOBject[0]);
 			}
 
+			@Override
+			protected void execute(Document... documents) {
+				getDocumentCollection(item).update(documents[0]);
+			}
 		}.execute(item);
 	}
 
@@ -120,11 +133,8 @@ final class MirroredObjectWriter {
 		Map<String, List<Object>> pendingItemsByCollection = new HashMap<>();
 		for (Object item : items) {
 			String collectionName = this.mirror.getCollectionName(item.getClass());
-			List<Object> documentToBeWrittenToCollection = pendingItemsByCollection.get(collectionName);
-			if (null == documentToBeWrittenToCollection) {
-				documentToBeWrittenToCollection = new ArrayList<Object>();
-				pendingItemsByCollection.put(collectionName, documentToBeWrittenToCollection);
-			}
+			List<Object> documentToBeWrittenToCollection =
+					pendingItemsByCollection.computeIfAbsent(collectionName, k -> new ArrayList<>());
 			documentToBeWrittenToCollection.add(item);
 		}
 		for (final List<Object> pendingObjects : pendingItemsByCollection.values()) {
@@ -133,6 +143,12 @@ final class MirroredObjectWriter {
 				protected void execute(DBObject... dbObjects) {
 					DocumentCollection documentCollection = getDocumentCollection(pendingObjects.get(0));
 					documentCollection.insertAll(dbObjects);
+				}
+
+				@Override
+				protected void execute(Document... documents) {
+					DocumentCollection documentCollection = getDocumentCollection(pendingObjects.get(0));
+					documentCollection.insertAll(documents);
 				}
 			}.execute(pendingObjects.toArray());
 		}
@@ -154,11 +170,11 @@ final class MirroredObjectWriter {
 
 		final void execute(Object... items) {
 			try {
-				DBObject[] documents = new DBObject[items.length];
+				Document[] documents = new Document[items.length];
 				for (int i = 0; i < documents.length; i++) {
-					BasicDBObject versionedDbObject = MirroredObjectWriter.this.mirror.toVersionedDbObject(items[i]);
-					MirroredObjectWriter.this.mirror.getPreWriteProcessing(items[i].getClass()).preWrite(versionedDbObject);
-					documents[i] = versionedDbObject;
+					Document versionedDocument = MirroredObjectWriter.this.mirror.toVersionedDocument(items[i]);
+					MirroredObjectWriter.this.mirror.getPreWriteProcessing(items[i].getClass()).preWrite(versionedDocument);
+					documents[i] = versionedDocument;
 				}
 				execute(documents);
 			} catch (Exception e) {
@@ -173,6 +189,8 @@ final class MirroredObjectWriter {
 		}
 
 		protected abstract void execute(DBObject... dbOBject);
+
+		protected abstract void execute(Document... documents);
 
 	}
 

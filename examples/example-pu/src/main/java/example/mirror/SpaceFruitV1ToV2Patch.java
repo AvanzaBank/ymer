@@ -15,6 +15,7 @@
  */
 package example.mirror;
 
+import org.bson.Document;
 import com.avanza.ymer.DocumentPatch;
 import com.mongodb.BasicDBObject;
 
@@ -23,6 +24,11 @@ public class SpaceFruitV1ToV2Patch implements DocumentPatch {
 	@Override
 	public void apply(BasicDBObject dbObject) {
 		dbObject.put("organic", false);
+	}
+
+	@Override
+	public void apply(Document document) {
+		document.put("organic", false);
 	}
 
 	@Override

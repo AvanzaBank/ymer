@@ -16,9 +16,11 @@
 package com.avanza.ymer;
 
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +50,10 @@ final class DocumentDb {
 	static DocumentDb mongoDb(DB db, ReadPreference readPreference) {
 		return new DocumentDb(new MongoDocumentDb(db, readPreference));
 	}
+
+	static DocumentDb mongoDb(MongoDatabase db, ReadPreference readPreference) {
+		return new DocumentDb(new MongoDocumentDb(db, readPreference));
+	}
 	
 	DocumentCollection getCollection(String name) {
 		return getCollection(name, null);
@@ -66,12 +72,24 @@ final class DocumentDb {
 		private static final Logger LOGGER = LoggerFactory.getLogger(MongoDocumentDb.class);
 
 		private final DB mongoDb;
+		private final MongoDatabase mongoDatabase;
 		private final ReadPreference readPreference;
-		
+
+		MongoDocumentDb(MongoDatabase mongoDb, ReadPreference readPreference) {
+			this.readPreference = readPreference;
+			this.mongoDatabase = Objects.requireNonNull(mongoDb);
+			this.mongoDb = null;
+
+			if (!EXPECTED_WRITE_CONCERNS.contains(mongoDb.getWriteConcern())) {
+				LOGGER.error("Expected WriteConcern=" + EXPECTED_WRITE_CONCERNS + " but was " + mongoDb.getWriteConcern() + "!"
+							 + " Ymer is not designed for use with this WriteConcern and using it in production can/will lead to irrevocable data loss!");
+			}
+		}
+
 		MongoDocumentDb(DB mongoDb, ReadPreference readPreference) {
 			this.readPreference = readPreference;
 			this.mongoDb = Objects.requireNonNull(mongoDb);
-
+			this.mongoDatabase = null;
 			if (!EXPECTED_WRITE_CONCERNS.contains(mongoDb.getWriteConcern())) {
 				LOGGER.error("Expected WriteConcern=" + EXPECTED_WRITE_CONCERNS + " but was " + mongoDb.getWriteConcern() + "!"
 						+ " Ymer is not designed for use with this WriteConcern and using it in production can/will lead to irrevocable data loss!");
@@ -80,8 +98,9 @@ final class DocumentDb {
 
 		@Override
 		public DocumentCollection get(String name, ReadPreference readPreference) {
-			DBCollection collection = mongoDb.getCollection(name);
-			collection.setReadPreference(Optional.ofNullable(readPreference).orElse(this.readPreference));
+			MongoCollection<Document> collection = mongoDatabase.getCollection(name);
+			collection.withReadPreference(Optional.ofNullable(readPreference)
+												  .orElse(this.readPreference));
 			return new MongoDocumentCollection(collection);
 		}
 	}

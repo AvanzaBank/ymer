@@ -19,6 +19,7 @@ import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.util.OptionalUtil;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,28 +74,30 @@ final class MirroredObjectLoader<T> {
                 .flatMap(OptionalUtil::asStream);
     }
 
-    private Stream<DBObject> loadDocuments() {
+    private Stream<Document> loadDocuments() {
         if (mirroredObject.hasCustomInitialLoadTemplate()) {
-            BasicDBObject template = mirroredObject.getCustomInitialLoadTemplateFactory().create(contextProperties.getPartitionCount(), contextProperties.getInstanceId());
+            Document template = mirroredObject.getCustomInitialLoadTemplateFactory()
+                                                   .create(contextProperties.getPartitionCount(),
+                                                           contextProperties.getInstanceId());
             return documentCollection.findByTemplate(template);
         }
         if (mirroredObject.loadDocumentsRouted()) {
-            return documentCollection.findAll(spaceObjectFilter);
+            return documentCollection.findAll2(spaceObjectFilter);
         }
-        return documentCollection.findAll();
+        return documentCollection.findAll2();
     }
 
-    private Optional<LoadedDocument<T>> tryPatchAndConvert(DBObject object) {
+    private Optional<LoadedDocument<T>> tryPatchAndConvert(Document document) {
         try {
             Optional<LoadedDocument<T>> result;
             try {
-                result = patchAndConvert(new BasicDBObject(object.toMap()));
+                result = patchAndConvert(new Document(document));
             } catch (RuntimeException e) {
                 // MongoConverter is not thread-safe due to a bug in AbstractMappingContext.addPersistentEntity().
                 // The bug occurs at most once or twice per collection but will produce objects without any properties set
                 // Resolve it temporarily by retrying.
-                log.warn("Failed to load dbObject=" + object + ". Retrying.", e);
-                result = patchAndConvert(new BasicDBObject(object.toMap()));
+                log.warn("Failed to load dbObject=" + document + ". Retrying.", e);
+                result = patchAndConvert(new Document(document));
             }
             long loaded = numLoadedObjects.incrementAndGet();
             if (loaded % 10000 == 0) {
@@ -102,13 +105,13 @@ final class MirroredObjectLoader<T> {
             }
             return result;
         } catch (RuntimeException e) {
-            log.error("Unable to load dbObject=" + object, e);
+            log.error("Unable to load document=" + document, e);
             throw e;
         }
     }
 
     Optional<LoadedDocument<T>> loadById(Object id) {
-        BasicDBObject document = findById(id);
+        Document document = findById(id);
         if (document == null) {
             return Optional.empty();
         }
@@ -118,26 +121,25 @@ final class MirroredObjectLoader<T> {
     }
 
     List<LoadedDocument<T>> loadByQuery(T template) {
-        return documentCollection.findByQuery(documentConverter.toQuery(template))
-                .map(BasicDBObject.class::cast)
+        return documentCollection.findByQuery2(documentConverter.toQuery(template))
                 .map(this::patchAndConvert)
                 .flatMap(OptionalUtil::asStream)
                 .collect(Collectors.toList());
     }
 
-    private BasicDBObject findById(Object id) {
+    private Document findById(Object id) {
         final Object convertedId = documentConverter.convertToMongoObject(id);
-        final DBObject dbObject = documentCollection.findById(convertedId);
-        return dbObject != null ? new BasicDBObject(dbObject.toMap()) : null;
+        final Document document = documentCollection.findById2(convertedId);
+        return document != null ? new Document(document) : null;
     }
 
-    private Optional<LoadedDocument<T>> patchAndConvert(BasicDBObject dbObject) {
-        BasicDBObject currentVersion = dbObject;
+    private Optional<LoadedDocument<T>> patchAndConvert(Document document) {
+        Document currentVersion = document;
         boolean patched = false;
-        if (this.mirroredObject.requiresPatching(dbObject)) {
+        if (this.mirroredObject.requiresPatching(document)) {
             patched = true;
             try {
-                currentVersion = (BasicDBObject) dbObject.copy();
+                currentVersion = new Document(document);
                 postReadProcessor.postRead(currentVersion);
                 currentVersion = this.mirroredObject.patch(currentVersion);
             } catch (RuntimeException e) {
@@ -152,7 +154,7 @@ final class MirroredObjectLoader<T> {
             return Optional.empty();
         }
         if (patched) {
-            return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.of(new PatchedDocument(dbObject, currentVersion))));
+            return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.of(new PatchedDocumentV2(document, currentVersion))));
         }
         return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.empty()));
     }
@@ -171,9 +173,9 @@ final class MirroredObjectLoader<T> {
      */
     static class LoadedDocument<T> {
         private final T document;
-        private final Optional<PatchedDocument> patchedDocument;
+        private final Optional<PatchedDocumentV2> patchedDocument;
 
-        public LoadedDocument(T document, Optional<PatchedDocument> patchedDocument) {
+        public LoadedDocument(T document, Optional<PatchedDocumentV2> patchedDocument) {
             this.document = document;
             this.patchedDocument = patchedDocument;
         }
@@ -182,7 +184,7 @@ final class MirroredObjectLoader<T> {
             return document;
         }
 
-        public Optional<PatchedDocument> getPatchedDocument() {
+        public Optional<PatchedDocumentV2> getPatchedDocument() {
             return patchedDocument;
         }
 

@@ -21,6 +21,9 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.ReadPreference;
 
 import java.lang.reflect.Method;
+
+import org.bson.Document;
+
 /**
  * Holds information about one mirrored space object type.
  *
@@ -111,6 +114,46 @@ final class MirroredObject<T> {
 		}
 	}
 
+	/**
+	 * Checks whether a given document requires patching. <p>
+	 *
+	 * @param document
+	 * @throws UnknownDocumentVersionException if the version of the given document is unknown
+	 *
+	 * @return
+	 */
+	boolean requiresPatching(Document document) {
+		int documentVersion = getDocumentVersion(document);
+		verifyKnownVersion(documentVersion, document);
+		return documentVersion != getCurrentVersion();
+	}
+
+	private void verifyKnownVersion(int documentVersion, Document document) {
+		if (!isKnownVersion(documentVersion)) {
+			throw new UnknownDocumentVersionException(String.format("Unknown document version %s, oldest known version is: %s, current version is : %s. document=%s",
+																	documentVersion, getOldestKnownVersion(), getCurrentVersion(), document));
+		}
+	}
+
+	int getDocumentVersion(Document document) {
+		return document.getInteger(DOCUMENT_FORMAT_VERSION_PROPERTY, 1);
+	}
+
+	void setDocumentVersion(Document document, int version) {
+		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, version);
+	}
+
+	void setDocumentAttributes(Document document, T spaceObject) {
+		setDocumentVersion(document);
+		if (loadDocumentsRouted) {
+			setRoutingKey(document, spaceObject);
+		}
+	}
+
+	private void setDocumentVersion(Document document) {
+		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, getCurrentVersion());
+	}
+
 	private void setDocumentVersion(BasicDBObject dbObject) {
 		dbObject.put(DOCUMENT_FORMAT_VERSION_PROPERTY, getCurrentVersion());
 	}
@@ -119,6 +162,13 @@ final class MirroredObject<T> {
 		Object routingKey = routingKeyExtractor.getRoutingKey(spaceObject);
 		if (routingKey != null) {
 			dbObject.put(DOCUMENT_ROUTING_KEY, routingKey.hashCode());
+		}
+	}
+
+	private void setRoutingKey(Document document, T spaceObject) {
+		Object routingKey = routingKeyExtractor.getRoutingKey(spaceObject);
+		if (routingKey != null) {
+			document.put(DOCUMENT_ROUTING_KEY, routingKey.hashCode());
 		}
 	}
 
@@ -141,31 +191,31 @@ final class MirroredObject<T> {
 	 *
 	 * The argument document will not be mutated. <p>
 	 *
-	 * @param dbObject
+	 * @param document
 	 * @return
 	 */
-	BasicDBObject patch(BasicDBObject dbObject) {
-		if (!requiresPatching(dbObject)) {
-			throw new IllegalArgumentException("Document does not require patching: " + dbObject.toString());
+	Document patch(Document document) {
+		if (!requiresPatching(document)) {
+			throw new IllegalArgumentException("Document does not require patching: " + document.toString());
 		}
-		while (requiresPatching(dbObject)) {
-			patchToNextVersion(dbObject);
+		while (requiresPatching(document)) {
+			patchToNextVersion(document);
 		}
-		return dbObject;
+		return document;
 	}
 
 	/**
 	 * Patches the given document to the next version by writing mutating the passed in document. <p>
 	 *
-	 * @param dbObject
+	 * @param document
 	 */
-	void patchToNextVersion(BasicDBObject dbObject) {
-		if (!requiresPatching(dbObject)) {
-			throw new IllegalArgumentException("Document does not require patching: " + dbObject.toString());
+	void patchToNextVersion(Document document) {
+		if (!requiresPatching(document)) {
+			throw new IllegalArgumentException("Document does not require patching: " + document.toString());
 		}
-		DocumentPatch patch = this.patchChain.getPatch(getDocumentVersion(dbObject));
-		patch.apply(dbObject);
-		setDocumentVersion(dbObject, patch.patchedVersion() + 1);
+		DocumentPatch patch = this.patchChain.getPatch(getDocumentVersion(document));
+		patch.apply(document);
+		setDocumentVersion(document, patch.patchedVersion() + 1);
 	}
 
 	/**

@@ -15,6 +15,9 @@
  */
 package com.avanza.ymer;
 
+import java.util.Optional;
+
+import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.DocumentConverter;
@@ -58,6 +61,11 @@ public class TestSpaceObjectFakeConverter {
 			}
 
 			@Override
+			public Document convertToBsonDocument(Object type) {
+				return null;
+			}
+
+			@Override
 			public <T> T convert(Class<T> toType, BasicDBObject document) {
 				if (toType.equals(TestSpaceObject.class)) {
 					TestSpaceObject testSpaceObject = new TestSpaceObject();
@@ -73,6 +81,29 @@ public class TestSpaceObjectFakeConverter {
 					testSpaceObject.setVersionID(document.getInt("versionID"));
 					if (document.containsField("latestRestoreVersion")) {
 						testSpaceObject.setLatestRestoreVersion(document.getInt("latestRestoreVersion"));
+					}
+					return toType.cast(testSpaceObject);
+				} else {
+					throw new RuntimeException("Unknown object type: " + toType);
+				}
+			}
+
+			@Override
+			public <T> T convert(Class<T> toType, Document document) {
+				if (toType.equals(TestSpaceObject.class)) {
+					TestSpaceObject testSpaceObject = new TestSpaceObject();
+					testSpaceObject.setId(document.getString("_id"));
+					testSpaceObject.setMessage(document.getString("message"));
+					return toType.cast(testSpaceObject);
+				} else if (toType.equals(TestReloadableSpaceObject.class)){
+					TestReloadableSpaceObject testSpaceObject = new TestReloadableSpaceObject();
+					testSpaceObject.setId(Optional.ofNullable(document.getInteger("_id")).orElseThrow(NullPointerException::new));
+					if (document.containsKey("patched")) {
+						testSpaceObject.setPatched(document.getBoolean("patched"));
+					}
+					testSpaceObject.setVersionID(Optional.ofNullable(document.getInteger("versionID")).orElseThrow(NullPointerException::new));
+					if (document.containsKey("latestRestoreVersion")) {
+						testSpaceObject.setLatestRestoreVersion(Optional.ofNullable(document.getInteger("latestRestoreVersion")).orElseThrow(NullPointerException::new));
 					}
 					return toType.cast(testSpaceObject);
 				} else {

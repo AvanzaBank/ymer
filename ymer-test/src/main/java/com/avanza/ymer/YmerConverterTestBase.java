@@ -17,6 +17,7 @@ package com.avanza.ymer;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
+import com.mongodb.client.MongoDatabase;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -53,15 +54,20 @@ public abstract class YmerConverterTestBase {
 		this.dummyMongoDbFactory = new MongoDbFactory() {
 			// The MongoDbFactory is never used during the tests.
 			@Override
-			public DB getDb(String dbName) throws DataAccessException {
+			public MongoDatabase getDb(String dbName) throws DataAccessException {
 				return null;
 			}
 			@Override
-			public DB getDb() throws DataAccessException {
+			public MongoDatabase getDb() throws DataAccessException {
 				return null;
 			}
 			@Override
 			public PersistenceExceptionTranslator getExceptionTranslator() {
+				return null;
+			}
+
+			@Override
+			public DB getLegacyDb() {
 				return null;
 			}
 		};

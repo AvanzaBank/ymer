@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer.plugin;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * Applied just after an object has been read from Mongo
@@ -27,5 +27,5 @@ public interface PostReadProcessor {
 	 * @param postRead Object after it has been read from persistent storage. This object may be modified
 	 * @return processed object, may be different from postRead
 	 */
-	DBObject postRead(DBObject postRead);
+	Document postRead(Document postRead);
 }

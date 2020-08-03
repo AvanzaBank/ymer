@@ -17,6 +17,7 @@ package com.avanza.ymer;
 
 import java.util.Objects;
 
+import org.bson.Document;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
@@ -28,6 +29,12 @@ public class TestSpaceThirdObject {
 		public void apply(BasicDBObject dbObject) {
 			String name = (String) dbObject.get("name");
 			dbObject.put("name", "b" + name);
+		}
+
+		@Override
+		public void apply(Document document) {
+			String name = (String) document.get("name");
+			document.put("name", "b" + name);
 		}
 
 		@Override

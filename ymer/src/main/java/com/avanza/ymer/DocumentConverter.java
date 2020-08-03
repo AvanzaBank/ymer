@@ -17,10 +17,11 @@ package com.avanza.ymer;
 
 import java.util.Objects;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
-
 import com.mongodb.BasicDBObject;
+
 /**
  * Strategy for converting a mongo document into a domain object (ie the object
  * that at some times was mirrored). <p>
@@ -30,120 +31,171 @@ import com.mongodb.BasicDBObject;
  */
 final class DocumentConverter {
 
-	private final Provider provider;
+    private final Provider provider;
 
-	private DocumentConverter(Provider provider) {
-		this.provider = provider;
-	}
+    private DocumentConverter(Provider provider) {
+        this.provider = provider;
+    }
 
-	static DocumentConverter mongoConverter(MongoConverter mongoConverter) {
-		return new DocumentConverter(new MongoConverterDocumentConverter(mongoConverter));
-	}
+    static DocumentConverter mongoConverter(MongoConverter mongoConverter) {
+        return new DocumentConverter(new MongoConverterDocumentConverter(mongoConverter));
+    }
 
-	static DocumentConverter create(Provider provider) {
-		return new DocumentConverter(provider);
-	}
+    static DocumentConverter create(Provider provider) {
+        return new DocumentConverter(provider);
+    }
 
-	/**
-	 * Reads the given DBObject and convert it to the given type. <p>
-	 *
-	 * @param toType
-	 * @param document
-	 * @return
-	 */
-	<T> T convert(Class<T> toType, BasicDBObject document) {
-		return provider.convert(toType, document);
-	}
+    /**
+     * Reads the given DBObject and convert it to the given type. <p>
+     *
+     * @param toType
+     * @param document
+     * @return
+     */
+    <T> T convert(Class<T> toType, BasicDBObject document) {
+        return provider.convert(toType, document);
+    }
 
-	/**
-	 * Converts the given object to a DBObject document. <p>
-	 *
-	 * @param type
-	 * @return
-	 */
-	BasicDBObject convertToDBObject(Object type) {
-		return provider.convertToDBObject(type);
-	}
+    /**
+     * Reads the given Document and convert it to the given type. <p>
+     *
+     * @param toType
+     * @param document
+     * @return
+     */
+    <T> T convert(Class<T> toType, Document document) {
+        return provider.convert(toType, document);
+    }
 
-	/**
-	 * Converts the given object to the corresponding mongo object (may or may not be a DBObject)
-	 * @param type
-	 * @return
-	 */
-	Object convertToMongoObject(Object type) {
-		return provider.convert(type);
-	}
+    /**
+     * Converts the given object to a DBObject document. <p>
+     *
+     * @param type
+     * @return
+     */
+    BasicDBObject convertToDBObject(Object type) {
+        return provider.convertToDBObject(type);
+    }
 
-	Query toQuery(Object template) {
-		return provider.toQuery(template);
-	}
+    /**
+     * Converts the given object to a BSON document. <p>
+     *
+     * @param type
+     * @return
+     */
+    Document convertToBsonDocument(Object type) {
+        return provider.convertToBsonDocument(type);
+    }
 
-	interface Provider {
+    /**
+     * Converts the given object to the corresponding mongo object (may or may not be a DBObject)
+     *
+     * @param type
+     * @return
+     */
+    Object convertToMongoObject(Object type) {
+        return provider.convert(type);
+    }
 
-		/**
-		 * Reads the given DBObject and convert it to the given type. <p>
-		 *
-		 * @param toType
-		 * @param document
-		 * @return
-		 */
-		<T> T convert(Class<T> toType, BasicDBObject document);
+    Query toQuery(Object template) {
+        return provider.toQuery(template);
+    }
 
+    interface Provider {
 
-		/**
-		 * Converts the given object to a DBObject document. <p>
-		 *
-		 * @param type
-		 * @return
-		 */
-		BasicDBObject convertToDBObject(Object type);
+        /**
+         * Reads the given DBObject and convert it to the given type. <p>
+         *
+         * @param toType
+         * @param document
+         * @return
+         */
+        <T> T convert(Class<T> toType, BasicDBObject document);
 
-		/**
-		 * Converts the given object to the corresponding mongo object (may or may not be a DBObject)
-		 * @param type
-		 * @return
-		 */
-		Object convert(Object type);
+        /**
+         * Reads the given Document and convert it to the given type. <p>
+         *
+         * @param toType
+         * @param document
+         * @return
+         */
+        <T> T convert(Class<T> toType, Document document);
 
-		Query toQuery(Object template);
-	}
+        /**
+         * Converts the given object to a DBObject document. <p>
+         *
+         * @param type
+         * @return
+         */
+        BasicDBObject convertToDBObject(Object type);
 
-	/**
-	 *
-	 * @author Elias Lindholm (elilin)
-	 *
-	 */
-	private static final class MongoConverterDocumentConverter implements DocumentConverter.Provider {
+        /**
+         * Converts the given object to a BSON Document. <p>
+         *
+         * @param type
+         * @return
+         */
+        default Document convertToBsonDocument(Object type) {
+            throw new UnsupportedOperationException("Not implemented.");
+        }
 
-		private final MongoConverter mongoConverter;
+        /**
+         * Converts the given object to the corresponding mongo object (may or may not be a DBObject)
+         *
+         * @param type
+         * @return
+         */
+        Object convert(Object type);
 
-		public MongoConverterDocumentConverter(MongoConverter mongoConverter) {
-			Objects.requireNonNull(mongoConverter);
-			this.mongoConverter = mongoConverter;
+        Query toQuery(Object template);
+    }
+
+    /**
+     * @author Elias Lindholm (elilin)
+     */
+    private static final class MongoConverterDocumentConverter implements DocumentConverter.Provider {
+
+        private final MongoConverter mongoConverter;
+
+        public MongoConverterDocumentConverter(MongoConverter mongoConverter) {
+            Objects.requireNonNull(mongoConverter);
+            this.mongoConverter = mongoConverter;
+        }
+
+        @Override
+        public <T> T convert(Class<T> toType, BasicDBObject document) {
+            return mongoConverter.read(toType, document);
+        }
+
+        @Override
+        public <T> T convert(Class<T> toType, Document document) {
+            return mongoConverter.read(toType, document);
+        }
+
+        @Override
+        public BasicDBObject convertToDBObject(Object type) {
+            BasicDBObject result = new BasicDBObject();
+            mongoConverter.write(type, result);
+            return result;
+        }
+
+		@Override
+		public Document convertToBsonDocument(Object type) {
+            Document result = new Document();
+            mongoConverter.write(type, result);
+            return result;
 		}
 
 		@Override
-		public <T> T convert(Class<T> toType, BasicDBObject document) {
-			return mongoConverter.read(toType, document);
-		}
+        public Object convert(Object type) {
+            return mongoConverter.convertToMongoType(type);
+        }
 
-		@Override
-		public BasicDBObject convertToDBObject(Object type) {
-			BasicDBObject result = new BasicDBObject();
-			mongoConverter.write(type, result);
-			return result;
-		}
+        @Override
+        public Query toQuery(Object template) {
+            return new MongoQueryFactory(mongoConverter).createMongoQueryFromTemplate(template);
+        }
 
-		@Override
-		public Object convert(Object type) {
-			return mongoConverter.convertToMongoType(type);
-		}
-
-		@Override
-		public Query toQuery(Object template) {
-			return new MongoQueryFactory(mongoConverter).createMongoQueryFromTemplate(template);
-		}
-
-	}
+    }
 
 }

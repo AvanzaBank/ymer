@@ -15,16 +15,24 @@
  */
 package com.avanza.ymer;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.bson.BsonDocument;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Query;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.MongoWriteException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.UpdateOptions;
 
 /**
  *
@@ -34,9 +42,15 @@ import com.mongodb.DuplicateKeyException;
 final class MongoDocumentCollection implements DocumentCollection {
 
 	private final DBCollection dbCollection;
+	private MongoCollection<Document> collection;
 
 	public MongoDocumentCollection(DBCollection dbCollection) {
 		this.dbCollection = Objects.requireNonNull(dbCollection);
+	}
+
+	public MongoDocumentCollection(MongoCollection<Document> collection) {
+		this.collection = Objects.requireNonNull(collection);
+		this.dbCollection = null;
 	}
 
 	@Override
@@ -49,8 +63,22 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
+	public Stream<Document> findAll2(SpaceObjectFilter<?> objectFilter) {
+		if (MongoPartitionFilter.canCreateFrom(objectFilter)) {
+			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.createBsonFilter(objectFilter);
+			return StreamSupport.stream(collection.find(mongoPartitionFilter.toBson()).spliterator(), false);
+		}
+		return findAll2();
+	}
+
+	@Override
 	public Stream<DBObject> findAll() {
 		return StreamSupport.stream(dbCollection.find().spliterator(), false);
+	}
+
+	@Override
+	public Stream<Document> findAll2() {
+		return StreamSupport.stream(collection.find().spliterator(), false);
 	}
 
 	@Override
@@ -59,13 +87,28 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
+	public Document findById2(Object id) {
+		return collection.find(new Document("_id", id)).first();
+	}
+
+	@Override
 	public Stream<DBObject> findByQuery(Query query) {
-		return  StreamSupport.stream(dbCollection.find(query.getQueryObject()).spliterator(), false);
+		return  StreamSupport.stream(dbCollection.find(new BasicDBObject(query.getQueryObject())).spliterator(), false);
+	}
+
+	@Override
+	public Stream<Document> findByQuery2(Query query) {
+		return StreamSupport.stream(collection.find(query.getQueryObject()).spliterator(), false);
 	}
 
 	@Override
 	public Stream<DBObject> findByTemplate(BasicDBObject query) {
 		return  StreamSupport.stream(dbCollection.find(query).spliterator(), false);
+	}
+
+	@Override
+	public Stream<Document> findByTemplate(Document template) {
+		return StreamSupport.stream(collection.find(template).spliterator(), false);
 	}
 
 	@Override
@@ -79,8 +122,26 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
+	public void replace(Document oldVersion, Document newVersion) {
+		if (!Objects.equals(oldVersion.get("_id"),newVersion.get("_id"))) {
+			collection.insertOne(newVersion);
+			collection.deleteOne(new Document("_id", oldVersion.get("_id")));
+		} else {
+			collection.updateOne(Filters.eq("_id", oldVersion.get("_id")),
+								 new Document("$set", newVersion));
+		}
+	}
+
+	@Override
 	public void update(DBObject newVersion) {
         dbCollection.save(newVersion);
+	}
+
+	@Override
+	public void update(Document newVersion) {
+		collection.updateOne(Filters.eq("_id", newVersion.get("_id")),
+							 new Document("$set", newVersion),
+							 new UpdateOptions().upsert(true));
 	}
 
 	@Override
@@ -93,8 +154,26 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
+	public void insert(Document document) {
+		try {
+			collection.insertOne(document);
+		} catch (MongoWriteException e) {
+			if(e.getMessage().contains("E11000")) { // duplicate key error
+				throw new DuplicateDocumentKeyException(e.getMessage());
+			} else {
+				throw e;
+			}
+		}
+	}
+
+	@Override
 	public void delete(BasicDBObject dbObject) {
         dbCollection.remove(dbObject);
+	}
+
+	@Override
+	public void delete(Document document) {
+		collection.deleteOne(document);
 	}
 
 	@Override
@@ -102,4 +181,8 @@ final class MongoDocumentCollection implements DocumentCollection {
         dbCollection.insert(dbObjects); // TODO: test for this method
 	}
 
+	@Override
+	public void insertAll(Document... documents) {
+		collection.insertMany(Arrays.asList(documents)); // TODO: test for this method
+	}
 }

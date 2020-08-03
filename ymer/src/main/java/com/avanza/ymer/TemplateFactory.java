@@ -15,11 +15,11 @@
  */
 package com.avanza.ymer;
 
-import com.mongodb.BasicDBObject;
+import org.bson.Document;
 
 @FunctionalInterface
 public interface TemplateFactory {
 	
-	BasicDBObject create(int partitionCount, int instanceId);
+	Document create(int partitionCount, int instanceId);
 
 }

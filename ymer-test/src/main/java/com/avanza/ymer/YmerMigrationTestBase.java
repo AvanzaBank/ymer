@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-import com.mongodb.BasicDBObject;
+import org.bson.Document;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -81,7 +81,7 @@ public abstract class YmerMigrationTestBase {
 		
 		MirroredObject<?> mirroredDocument = getMirroredObjects().getMirroredObject(migrationTest.spaceObjectType);
 		
-		BasicDBObject patched = (BasicDBObject) migrationTest.toBePatched.copy();
+		Document patched = new Document(migrationTest.toBePatched);
 		mirroredDocument.patchToNextVersion(patched);
 		
 		mirroredDocument.setDocumentVersion(migrationTest.expectedPatchedVersion, migrationTest.fromVersion + 1);
@@ -118,8 +118,8 @@ public abstract class YmerMigrationTestBase {
 
 	protected static class MigrationTest {
 		
-		final BasicDBObject toBePatched;
-		final BasicDBObject expectedPatchedVersion;
+		final Document toBePatched;
+		final Document expectedPatchedVersion;
 		final int fromVersion;
 		final Class<?> spaceObjectType;
 
@@ -130,7 +130,7 @@ public abstract class YmerMigrationTestBase {
 		 * @param oldVersion
 		 * @param spaceObjectType
 		 */
-		public MigrationTest(BasicDBObject oldVersionDoc, BasicDBObject expectedPatchedVersion, int oldVersion, Class<?> spaceObjectType) {
+		public MigrationTest(Document oldVersionDoc, Document expectedPatchedVersion, int oldVersion, Class<?> spaceObjectType) {
 			this.toBePatched = oldVersionDoc;
 			this.expectedPatchedVersion = expectedPatchedVersion;
 			this.fromVersion = oldVersion;
