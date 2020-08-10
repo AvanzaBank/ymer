@@ -16,12 +16,13 @@
 package com.avanza.ymer.support;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.core.convert.converter.Converter;
 
 public class JavaInstantReadConverter implements Converter<String, Instant> {
     @Override
     public Instant convert(String value) {
-        return Instant.parse(value);
+        return DateTimeFormatter.ISO_INSTANT.parse(value, Instant::from);
     }
 }

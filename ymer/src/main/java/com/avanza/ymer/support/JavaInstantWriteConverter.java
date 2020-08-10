@@ -16,7 +16,6 @@
 package com.avanza.ymer.support;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.core.convert.converter.Converter;
@@ -24,7 +23,6 @@ import org.springframework.core.convert.converter.Converter;
 public class JavaInstantWriteConverter implements Converter<Instant, String> {
     @Override
     public String convert(Instant instant) {
-        return instant.atZone(ZoneId.systemDefault())
-                      .format(DateTimeFormatter.ISO_INSTANT);
+        return DateTimeFormatter.ISO_INSTANT.format(instant);
     }
 }
