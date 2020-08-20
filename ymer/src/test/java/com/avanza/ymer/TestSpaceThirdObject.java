@@ -32,12 +32,6 @@ public class TestSpaceThirdObject {
 		}
 
 		@Override
-		public void apply(Document document) {
-			String name = (String) document.get("name");
-			document.put("name", "b" + name);
-		}
-
-		@Override
 		public int patchedVersion() {
 			return 1;
 		}

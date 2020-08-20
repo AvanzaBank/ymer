@@ -215,7 +215,7 @@ public class MirroredObjectLoaderTest {
 	public void propagatesExceptionsThrownByMigrator() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() {
 			@Override
-			public void apply(Document document) {
+			public void apply(BasicDBObject document) {
 				throw new IllegalArgumentException("My bigest failure");
 			}
 		} };
@@ -302,11 +302,6 @@ public class MirroredObjectLoaderTest {
 		@Override
 		public void apply(BasicDBObject dbObject) {
 			dbObject.put("patched", true);
-		}
-
-		@Override
-		public void apply(Document document) {
-			document.put("patched", true);
 		}
 
 		@Override

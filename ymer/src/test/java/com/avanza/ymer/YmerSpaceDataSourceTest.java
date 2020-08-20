@@ -198,11 +198,6 @@ public class YmerSpaceDataSourceTest {
 		}
 
 		@Override
-		public void apply(Document document) {
-			document.put("patched", true);
-		}
-
-		@Override
 		public int patchedVersion() {
 			return 1;
 		}
