@@ -32,6 +32,10 @@ package example.tests;
 
 import static org.junit.Assert.assertEquals;
 
+import java.net.InetSocketAddress;
+import java.util.stream.StreamSupport;
+
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
@@ -41,22 +45,33 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
-import com.github.fakemongo.Fongo;
-import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.FindIterable;
 
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import example.domain.SpaceFruit;
 
 public class SpaceObjectWriteSynchronizationTest {
-	
-	private Fongo fongo = new Fongo("fongoDb");
+
 	private RunningPu pu;
 	private RunningPu mirrorPu;
+
+	private MongoServer mongoServer;
+	private MongoClient mongoClient;
+
+	public SpaceObjectWriteSynchronizationTest() {
+		mongoServer = new MongoServer(new MemoryBackend());
+		InetSocketAddress serverAddress = mongoServer.bind();
+		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+	}
 
 	@After
 	public void shutdownPus() throws Exception {
 		closeSafe(pu);
 		closeSafe(mirrorPu);
+		mongoClient.close();
 	}
 	
 	@Test
@@ -64,12 +79,12 @@ public class SpaceObjectWriteSynchronizationTest {
 		pu = PuConfigurers.partitionedPu("classpath:example-pu.xml")
 									.numberOfPrimaries(1)
 									.numberOfBackups(1)
-								    .parentContext(createSingleInstanceAppContext(fongo.getMongo()))
+								    .parentContext(createSingleInstanceAppContext(mongoClient))
 								    .configure();
 		pu.start();
 
 		mirrorPu = PuConfigurers.mirrorPu("classpath:example-mirror-pu.xml")
-		   	     				.parentContext(createSingleInstanceAppContext(fongo.getMongo()))
+		   	     				.parentContext(createSingleInstanceAppContext(mongoClient))
 		   	     				.configure();
 		mirrorPu.start();
 		
@@ -79,8 +94,12 @@ public class SpaceObjectWriteSynchronizationTest {
 		gigaSpace.write(new SpaceFruit("apple", "Spain", true));
 		
 		assertEventuallyPasses(() -> {
-			DBCursor cursor = fongo.getDB("exampleDb").getCollection("spaceFruit").find();
-			assertEquals("Expected spaceFruit count in mongodb", 2, cursor.count());
+			FindIterable<Document> documents = mongoClient.getDatabase("exampleDb").getCollection("spaceFruit").find();
+
+			long count = StreamSupport.stream(documents.spliterator(), false)
+									  .count();
+
+			assertEquals("Expected spaceFruit count in mongodb", 2, count);
 		});
 	}
 	

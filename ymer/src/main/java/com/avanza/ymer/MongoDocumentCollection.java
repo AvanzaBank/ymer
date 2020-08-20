@@ -56,7 +56,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public Stream<DBObject> findAll(SpaceObjectFilter<?> objectFilter) {
 		if (MongoPartitionFilter.canCreateFrom(objectFilter)) {
-			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.create(objectFilter);
+			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.createBsonFilter(objectFilter);
 			return StreamSupport.stream(dbCollection.find(mongoPartitionFilter.toDBObject()).spliterator(), false);
 		}
 		return findAll();

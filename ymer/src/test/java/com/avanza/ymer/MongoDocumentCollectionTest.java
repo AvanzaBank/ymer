@@ -18,16 +18,16 @@ package com.avanza.ymer;
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
-import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
+import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -35,6 +35,9 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 
 /**
  *
@@ -46,19 +49,25 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	private static final String DBNAME = "testdb";
 	private static final String COLLECTION_NAME = "testcollection";
 
-	Fongo mongoServer = new Fongo("mongo server 1");
-
 	private MongoDatabase database;
 	private MongoCollection<Document> collection;
+	private MongoServer mongoServer;
+	private MongoClient mongoClient;
+
+	public MongoDocumentCollectionTest() {
+		mongoServer = new MongoServer(new MemoryBackend());
+		InetSocketAddress serverAddress = mongoServer.bind();
+		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+	}
 
 	/* (non-Javadoc)
 	 * @see com.avanza.ymer.DocumentCollectionContract#createEmptyCollection()
 	 */
 	@Override
 	protected DocumentCollection createEmptyCollection() {
-		database = mongoServer.getDatabase(DBNAME);
+		database = mongoClient.getDatabase(DBNAME);
 		database.drop();
-		database = mongoServer.getDatabase(DBNAME);
+		database = mongoClient.getDatabase(DBNAME);
 
 		collection = database.getCollection(COLLECTION_NAME);
 

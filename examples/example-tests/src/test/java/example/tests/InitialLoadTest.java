@@ -32,6 +32,10 @@ package example.tests;
 
 import static org.junit.Assert.assertEquals;
 
+import java.net.InetSocketAddress;
+import java.util.Map;
+
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
@@ -41,36 +45,49 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
-import com.github.fakemongo.Fongo;
-import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoDatabase;
 
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import example.domain.SpaceCar;
 import example.domain.SpaceFruit;
 
 public class InitialLoadTest {
 	
-	private Fongo fongo = new Fongo("fongoDb");
+	private MongoServer mongoServer;
+	private MongoClient mongoClient;
+
+	public InitialLoadTest() {
+		mongoServer = new MongoServer(new MemoryBackend());
+		InetSocketAddress serverAddress = mongoServer.bind();
+		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+	}
+
 	private RunningPu pu;
 
 	@After
 	public void shutdownPus() throws Exception {
 		closeSafe(pu);
+		mongoClient.close();
+	}
+
+	private MongoDatabase getDatabase(String databaseName) {
+		return mongoClient.getDatabase(databaseName);
 	}
 	
 	@Test
 	public void intialLoadDemo() throws Exception {
-		BasicDBObject banana = new BasicDBObject("_id", "banana");
-		banana.put("origin", "Brazil");
-		fongo.getDB("exampleDb").getCollection("spaceFruit").insert(banana);
-		BasicDBObject apple = new BasicDBObject("_id", "apple");
-		apple.put("origin", "France");
-		fongo.getDB("exampleDb").getCollection("spaceFruit").insert(apple);
-		fongo.getDB("exampleDb").getCollection("spaceCar").insert(new BasicDBObject("name", "Volvo")); // SpaceCar is not Mirrored
+		Document banana = new Document(Map.of("_id", "banana", "origin", "Brazil"));
+		getDatabase("exampleDb").getCollection("spaceFruit").insertOne(banana);
+		Document apple = new Document(Map.of("_id", "apple", "origin", "France"));
+		getDatabase("exampleDb").getCollection("spaceFruit").insertOne(apple);
+		getDatabase("exampleDb").getCollection("spaceCar").insertOne(new Document("name", "Volvo")); // SpaceCar is not Mirrored
 		
 		
 		pu = PuConfigurers.partitionedPu("classpath:example-pu.xml")
-								    .parentContext(createSingleInstanceAppContext(fongo.getMongo()))
+								    .parentContext(createSingleInstanceAppContext(mongoClient))
 								    .configure();
 		
 		pu.start();

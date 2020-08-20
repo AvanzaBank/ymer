@@ -38,8 +38,8 @@
 
         <!-- Test dependencies -->
         <dependency>
-            <groupId>com.github.fakemongo</groupId>
-            <artifactId>fongo</artifactId>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

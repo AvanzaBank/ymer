@@ -15,17 +15,26 @@
  */
 package com.avanza.ymer;
 
+import java.net.InetSocketAddress;
+import java.util.function.Consumer;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
-import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoDatabase;
+
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+
 /**
  *
  * @author Elias Lindholm (elilin)
@@ -34,29 +43,40 @@ import com.mongodb.DBObject;
 public class MirrorEnvironment {
 
 	public static final String TEST_MIRROR_DB_NAME = "mirror_test_db";
+	private final MongoServer mongoServer;
+	private final MongoClient mongoClient;
 
-	private final Fongo mongoServer = new Fongo(MirrorEnvironment.class.getSimpleName());
+	public MirrorEnvironment() {
+		mongoServer = new MongoServer(new MemoryBackend());
+		InetSocketAddress serverAddress = mongoServer.bind();
+		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+	}
 
 	public MongoTemplate getMongoTemplate() {
-		SimpleMongoDbFactory simpleMongoDbFactory = new SimpleMongoDbFactory(mongoServer.getMongo(), TEST_MIRROR_DB_NAME);
+		SimpleMongoDbFactory simpleMongoDbFactory = new SimpleMongoDbFactory(mongoClient, TEST_MIRROR_DB_NAME);
 		return new MongoTemplate(simpleMongoDbFactory);
 	}
 
 	private DB getMongoDb() {
-		return this.mongoServer.getMongo().getDB(TEST_MIRROR_DB_NAME);
+		return this.mongoClient.getDB(TEST_MIRROR_DB_NAME);
+	}
+
+	private MongoDatabase getMongoDatabase() {
+		return this.mongoClient.getDatabase(TEST_MIRROR_DB_NAME);
 	}
 
 	public void dropAllMongoCollections() {
-		getMongoDb().getCollectionNames().forEach(this::dropCollection);
+		getMongoDatabase().listCollectionNames()
+						  .forEach((Consumer<? super String>) this::dropCollection);
 	}
 
 	private void dropCollection(String collectionName) {
-		getMongoDb().getCollection(collectionName).drop();
+		getMongoDatabase().getCollection(collectionName).drop();
 	}
 
 	public ApplicationContext getMongoClientContext() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.getBeanFactory().registerSingleton("mongoDbFactory", new SimpleMongoDbFactory(mongoServer.getMongo(), TEST_MIRROR_DB_NAME));
+		context.getBeanFactory().registerSingleton("mongoDbFactory", new SimpleMongoDbFactory(mongoClient, TEST_MIRROR_DB_NAME));
 		context.refresh();
 		return context;
 	}
