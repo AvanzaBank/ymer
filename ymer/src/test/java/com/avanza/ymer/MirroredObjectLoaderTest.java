@@ -15,22 +15,22 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
-import com.avanza.ymer.plugin.PostReadProcessor;
-import com.avanza.ymer.util.OptionalUtil;
-import com.gigaspaces.annotation.pojo.SpaceId;
-import com.mongodb.BasicDBObject;
-import org.bson.Document;
-import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Query;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.*;
+import org.bson.Document;
+import org.junit.Test;
+import org.springframework.data.mongodb.core.query.Query;
+import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
+import com.avanza.ymer.plugin.PostReadProcessor;
+import com.avanza.ymer.util.OptionalUtil;
+import com.gigaspaces.annotation.pojo.SpaceId;
+import com.mongodb.BasicDBObject;
 
 public class MirroredObjectLoaderTest {
 
@@ -100,7 +100,7 @@ public class MirroredObjectLoaderTest {
 							   || spaceObject.getId() == doc3.getInteger("_id", -1);
 
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.create(filterImpl), contextProperties, noOpPostReadProcessor());
-		List<PatchedDocumentV2> patchedDocuments = documentLoader.loadAllObjects().stream()
+		List<PatchedDocument> patchedDocuments = documentLoader.loadAllObjects().stream()
 																 .map(LoadedDocument::getPatchedDocument)
 																 .flatMap(OptionalUtil::asStream)
 																 .collect(Collectors.toList());
@@ -123,7 +123,7 @@ public class MirroredObjectLoaderTest {
 		fakeDocumentCollection.insertAll(doc3);
 
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll(), contextProperties, noOpPostReadProcessor());
-		Optional<PatchedDocumentV2> patchedDocument = documentLoader.loadById(doc3.get("_id"))
+		Optional<PatchedDocument> patchedDocument = documentLoader.loadById(doc3.get("_id"))
 																  .flatMap(LoadedDocument::getPatchedDocument);
 
 		assertTrue(patchedDocument.isPresent());
@@ -312,15 +312,6 @@ public class MirroredObjectLoaderTest {
 	}
 
 	private static class FakeMirroredDocumentConverter implements DocumentConverter.Provider {
-
-		@Override
-		public <T> T convert(Class<T> toType, BasicDBObject document) {
-			FakeSpaceObject spaceObject = new FakeSpaceObject();
-			spaceObject.setPatched(document.getBoolean("patched"));
-			spaceObject.setId(document.getInt("_id"));
-			return toType.cast(spaceObject);
-		}
-
 		@Override
 		public <T> T convert(Class<T> toType, Document document) {
 			FakeSpaceObject spaceObject = new FakeSpaceObject();
@@ -338,11 +329,6 @@ public class MirroredObjectLoaderTest {
 					throw new RuntimeException("This converter always throws exception!");
 				}
 			});
-		}
-
-		@Override
-		public BasicDBObject convertToDBObject(Object type) {
-			throw new UnsupportedOperationException();
 		}
 
 		@Override

@@ -20,7 +20,6 @@ import java.util.Objects;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
-import com.mongodb.BasicDBObject;
 
 /**
  * Strategy for converting a mongo document into a domain object (ie the object
@@ -46,17 +45,6 @@ final class DocumentConverter {
     }
 
     /**
-     * Reads the given DBObject and convert it to the given type. <p>
-     *
-     * @param toType
-     * @param document
-     * @return
-     */
-    <T> T convert(Class<T> toType, BasicDBObject document) {
-        return provider.convert(toType, document);
-    }
-
-    /**
      * Reads the given Document and convert it to the given type. <p>
      *
      * @param toType
@@ -65,16 +53,6 @@ final class DocumentConverter {
      */
     <T> T convert(Class<T> toType, Document document) {
         return provider.convert(toType, document);
-    }
-
-    /**
-     * Converts the given object to a DBObject document. <p>
-     *
-     * @param type
-     * @return
-     */
-    BasicDBObject convertToDBObject(Object type) {
-        return provider.convertToDBObject(type);
     }
 
     /**
@@ -104,15 +82,6 @@ final class DocumentConverter {
     interface Provider {
 
         /**
-         * Reads the given DBObject and convert it to the given type. <p>
-         *
-         * @param toType
-         * @param document
-         * @return
-         */
-        <T> T convert(Class<T> toType, BasicDBObject document);
-
-        /**
          * Reads the given Document and convert it to the given type. <p>
          *
          * @param toType
@@ -122,22 +91,12 @@ final class DocumentConverter {
         <T> T convert(Class<T> toType, Document document);
 
         /**
-         * Converts the given object to a DBObject document. <p>
-         *
-         * @param type
-         * @return
-         */
-        BasicDBObject convertToDBObject(Object type);
-
-        /**
          * Converts the given object to a BSON Document. <p>
          *
          * @param type
          * @return
          */
-        default Document convertToBsonDocument(Object type) {
-            throw new UnsupportedOperationException("Not implemented.");
-        }
+        Document convertToBsonDocument(Object type);
 
         /**
          * Converts the given object to the corresponding mongo object (may or may not be a DBObject)
@@ -163,20 +122,8 @@ final class DocumentConverter {
         }
 
         @Override
-        public <T> T convert(Class<T> toType, BasicDBObject document) {
-            return mongoConverter.read(toType, document);
-        }
-
-        @Override
         public <T> T convert(Class<T> toType, Document document) {
             return mongoConverter.read(toType, document);
-        }
-
-        @Override
-        public BasicDBObject convertToDBObject(Object type) {
-            BasicDBObject result = new BasicDBObject();
-            mongoConverter.write(type, result);
-            return result;
         }
 
 		@Override

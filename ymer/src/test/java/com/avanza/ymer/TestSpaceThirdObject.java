@@ -17,7 +17,6 @@ package com.avanza.ymer;
 
 import java.util.Objects;
 
-import org.bson.Document;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;

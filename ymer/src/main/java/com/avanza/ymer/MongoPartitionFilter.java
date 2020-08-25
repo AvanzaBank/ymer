@@ -25,17 +25,10 @@ import com.mongodb.client.model.Filters;
 
 class MongoPartitionFilter {
 
-	private final BasicDBObject filter;
-	private final Bson filter2;
-
-	public MongoPartitionFilter(BasicDBObject filter) {
-		this.filter = Objects.requireNonNull(filter);
-		this.filter2 = null;
-	}
+	private final Bson filter;
 
 	public MongoPartitionFilter(Bson filter) {
-		this.filter = null;
-		this.filter2 = Objects.requireNonNull(filter);
+		this.filter = Objects.requireNonNull(filter);
 	}
 
 	public static MongoPartitionFilter create(SpaceObjectFilter<?> spaceObjectFilter) {
@@ -58,12 +51,8 @@ class MongoPartitionFilter {
 				));
 	}
 
-	public BasicDBObject toDBObject() {
-		return filter;
-	}
-
 	public Bson toBson() {
-		return filter2;
+		return filter;
 	}
 
 	public static Bson buildBsonFilter(PartitionFilter<?> partitionFilter) {

@@ -15,14 +15,12 @@
  */
 package com.avanza.ymer;
 
-import com.gigaspaces.annotation.pojo.SpaceId;
-import com.gigaspaces.annotation.pojo.SpaceRouting;
-import com.mongodb.BasicDBObject;
-import com.mongodb.ReadPreference;
-
 import java.lang.reflect.Method;
 
 import org.bson.Document;
+import com.gigaspaces.annotation.pojo.SpaceId;
+import com.gigaspaces.annotation.pojo.SpaceRouting;
+import com.mongodb.ReadPreference;
 
 /**
  * Holds information about one mirrored space object type.
@@ -81,42 +79,6 @@ final class MirroredObject<T> {
 	/**
 	 * Checks whether a given document requires patching. <p>
 	 *
-	 * @param dbObject
-	 * @throws UnknownDocumentVersionException if the version of the given document is unknown
-	 *
-	 * @return
-	 */
-	boolean requiresPatching(BasicDBObject dbObject) {
-		int documentVersion = getDocumentVersion(dbObject);
-		verifyKnownVersion(documentVersion, dbObject);
-		return documentVersion != getCurrentVersion();
-	}
-
-	private void verifyKnownVersion(int documentVersion, BasicDBObject dbObject) {
-		if (!isKnownVersion(documentVersion)) {
-			throw new UnknownDocumentVersionException(String.format("Unknown document version %s, oldest known version is: %s, current version is : %s. document=%s",
-					documentVersion, getOldestKnownVersion(), getCurrentVersion(), dbObject));
-		}
-	}
-
-	int getDocumentVersion(BasicDBObject dbObject) {
-		return dbObject.getInt(DOCUMENT_FORMAT_VERSION_PROPERTY, 1);
-	}
-
-	void setDocumentVersion(BasicDBObject dbObject, int version) {
-		dbObject.put(DOCUMENT_FORMAT_VERSION_PROPERTY, version);
-	}
-
-	void setDocumentAttributes(BasicDBObject dbObject, T spaceObject) {
-		setDocumentVersion(dbObject);
-		if (loadDocumentsRouted) {
-			setRoutingKey(dbObject, spaceObject);
-		}
-	}
-
-	/**
-	 * Checks whether a given document requires patching. <p>
-	 *
 	 * @param document
 	 * @throws UnknownDocumentVersionException if the version of the given document is unknown
 	 *
@@ -152,17 +114,6 @@ final class MirroredObject<T> {
 
 	private void setDocumentVersion(Document document) {
 		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, getCurrentVersion());
-	}
-
-	private void setDocumentVersion(BasicDBObject dbObject) {
-		dbObject.put(DOCUMENT_FORMAT_VERSION_PROPERTY, getCurrentVersion());
-	}
-
-	private void setRoutingKey(BasicDBObject dbObject, T spaceObject) {
-		Object routingKey = routingKeyExtractor.getRoutingKey(spaceObject);
-		if (routingKey != null) {
-			dbObject.put(DOCUMENT_ROUTING_KEY, routingKey.hashCode());
-		}
 	}
 
 	private void setRoutingKey(Document document, T spaceObject) {

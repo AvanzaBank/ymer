@@ -55,7 +55,7 @@ public abstract class DocumentCollectionContract {
 		d1.put("count", 21);
 
 		documentCollection.insert(d1);
-		Iterator<Document> allDocs = documentCollection.findAll2().iterator();
+		Iterator<Document> allDocs = documentCollection.findAll().iterator();
 		assertEquals(d1, allDocs.next());
 		assertFalse(allDocs.hasNext());
 	}
@@ -77,10 +77,10 @@ public abstract class DocumentCollectionContract {
 			// Expected 
 		}
 		// Still only one element in the collection
-		assertEquals(1, sizeOf(documentCollection.findAll2()));
+		assertEquals(1, sizeOf(documentCollection.findAll()));
 		
 		// the original version did not change on insert
-		assertEquals(d1, documentCollection.findAll2().iterator().next());
+		assertEquals(d1, documentCollection.findAll().iterator().next());
 	}
 
 	@Test
@@ -92,8 +92,8 @@ public abstract class DocumentCollectionContract {
 		documentCollection.insert(d1);
 
 		assertNotNull("_id should be generated on insert", d1.get("_id"));
-		assertEquals(1, sizeOf(documentCollection.findAll2()));
-		assertEquals(d1, documentCollection.findAll2().iterator().next());
+		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertEquals(d1, documentCollection.findAll().iterator().next());
 	}
 
 	@Test
@@ -109,8 +109,8 @@ public abstract class DocumentCollectionContract {
 
 		documentCollection.replace(document, newVersion);
 
-		assertEquals(1, sizeOf(documentCollection.findAll2()));
-		Document dbVersion = documentCollection.findAll2().iterator().next();
+		assertEquals(1, sizeOf(documentCollection.findAll()));
+		Document dbVersion = documentCollection.findAll().iterator().next();
 		assertEquals(22, dbVersion.get("count"));
 	}
 
@@ -127,8 +127,8 @@ public abstract class DocumentCollectionContract {
 
 		documentCollection.replace(document, newVersion);
 
-		assertEquals(1, sizeOf(documentCollection.findAll2()));
-		Document dbVersion = documentCollection.findAll2().iterator().next();
+		assertEquals(1, sizeOf(documentCollection.findAll()));
+		Document dbVersion = documentCollection.findAll().iterator().next();
 		assertEquals(21, dbVersion.get("count"));
 		assertEquals("id_2", dbVersion.get("_id"));
 	}
@@ -146,7 +146,7 @@ public abstract class DocumentCollectionContract {
 		documentCollection.insert(d1);
 		documentCollection.insert(d2);
 
-		List<Document> all = newArrayList(documentCollection.findAll2());
+		List<Document> all = newArrayList(documentCollection.findAll());
 		assertEquals(2, all.size());
 		assertEquals(d1, firstElementWithId(all, "id_1"));
 		assertEquals(d2, firstElementWithId(all, "id_2"));
@@ -165,13 +165,13 @@ public abstract class DocumentCollectionContract {
 		documentCollection.insert(d1);
 		documentCollection.insert(d2);
 
-		assertEquals(d1, documentCollection.findById2("id_1"));
-		assertEquals(d2, documentCollection.findById2("id_2"));
+		assertEquals(d1, documentCollection.findById("id_1"));
+		assertEquals(d2, documentCollection.findById("id_2"));
 	}
 
 	@Test
 	public void findByIdReturnsNullIfDocumentDoesNotExists() throws Exception {
-		assertNull(documentCollection.findById2("id_1"));
+		assertNull(documentCollection.findById("id_1"));
 	}
 
 	@Test
@@ -189,10 +189,10 @@ public abstract class DocumentCollectionContract {
 
 		documentCollection.insert(d1);
 		documentCollection.insert(d2);
-		assertEquals(2, sizeOf(documentCollection.findAll2()));
+		assertEquals(2, sizeOf(documentCollection.findAll()));
 		documentCollection.delete(d1Template);
-		assertEquals(1, sizeOf(documentCollection.findAll2()));
-		assertEquals(d2, documentCollection.findAll2().iterator().next());
+		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertEquals(d2, documentCollection.findAll().iterator().next());
 	}
 
 	@Test
@@ -201,9 +201,9 @@ public abstract class DocumentCollectionContract {
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
-		assertEquals(0, sizeOf(documentCollection.findAll2()));
+		assertEquals(0, sizeOf(documentCollection.findAll()));
 		documentCollection.delete(d1);
-		assertEquals(0, sizeOf(documentCollection.findAll2()));
+		assertEquals(0, sizeOf(documentCollection.findAll()));
 	}
 
 	@Test
@@ -213,14 +213,14 @@ public abstract class DocumentCollectionContract {
 		d1.put("count", 21);
 
 		documentCollection.insert(d1);
-		assertEquals(1, sizeOf(documentCollection.findAll2()));
+		assertEquals(1, sizeOf(documentCollection.findAll()));
 
 		Document d2 = new Document();
 		d2.put("_id", d1.get("_id"));
 		d2.put("count", 22);
 
 		documentCollection.delete(d2);
-		assertEquals(1, sizeOf(documentCollection.findAll2()));
+		assertEquals(1, sizeOf(documentCollection.findAll()));
 	}
 
 	@Test
@@ -236,10 +236,10 @@ public abstract class DocumentCollectionContract {
 		documentCollection.update(updated);
 
 		// Still only one element in the collection
-		assertEquals(1, documentCollection.findAll2().count());
+		assertEquals(1, documentCollection.findAll().count());
 
 		// the original version is replace by the update
-		assertEquals(updated, documentCollection.findAll2().iterator().next());
+		assertEquals(updated, documentCollection.findAll().iterator().next());
 	}
 
 	@Test
@@ -250,8 +250,8 @@ public abstract class DocumentCollectionContract {
 
 		documentCollection.update(d1);
 
-		assertEquals(1, sizeOf(documentCollection.findAll2()));
-		assertEquals(d1, documentCollection.findAll2().iterator().next());
+		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertEquals(d1, documentCollection.findAll().iterator().next());
 	}
 
 	private Document firstElementWithId(List<Document> all, final String id) {

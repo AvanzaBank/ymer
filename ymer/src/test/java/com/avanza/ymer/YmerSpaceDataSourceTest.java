@@ -15,11 +15,15 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.YmerSpaceDataSource.InitialLoadCompleteDispatcher;
-import com.gigaspaces.annotation.pojo.SpaceRouting;
-import com.gigaspaces.datasource.DataIterator;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -29,14 +33,10 @@ import org.bson.Document;
 import org.junit.Test;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.core.query.Query;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static org.junit.Assert.*;
-
+import com.avanza.ymer.YmerSpaceDataSource.InitialLoadCompleteDispatcher;
+import com.gigaspaces.annotation.pojo.SpaceRouting;
+import com.gigaspaces.datasource.DataIterator;
+import com.mongodb.BasicDBObject;
 
 public class YmerSpaceDataSourceTest {
 
@@ -111,7 +111,7 @@ public class YmerSpaceDataSourceTest {
 		documentCollection.insert(doc3);
 		assertNotNull(externalDataSourceForPartition1.reloadObject(TestReloadableSpaceObject.class, 2));
 
-		Document dbObject = documentDb.getCollection(mirroredObject.getCollectionName()).findById2(2);
+		Document dbObject = documentDb.getCollection(mirroredObject.getCollectionName()).findById(2);
 		assertFalse(mirroredObject.requiresPatching(new Document(dbObject)));
 	}
 
@@ -208,14 +208,6 @@ public class YmerSpaceDataSourceTest {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public <T> T convert(Class<T> toType, BasicDBObject document) {
-			FakeSpaceObject spaceObject = new FakeSpaceObject();
-			spaceObject.setSpaceRouting(document.getInt("spaceRouting"));
-			spaceObject.setId(document.getInt("_id"));
-			return (T) spaceObject;
-		}
-
-		@Override
 		public <T> T convert(Class<T> toType, Document document) {
 			FakeSpaceObject spaceObject = new FakeSpaceObject();
 
@@ -228,11 +220,6 @@ public class YmerSpaceDataSourceTest {
 			spaceObject.setSpaceRouting(spaceRouting);
 			spaceObject.setId(id);
 			return (T) spaceObject;
-		}
-
-		@Override
-		public BasicDBObject convertToDBObject(Object type) {
-			throw new UnsupportedOperationException();
 		}
 
 		@Override

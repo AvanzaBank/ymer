@@ -17,16 +17,12 @@ package com.avanza.ymer;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Query;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 /**
  *
  * @author Elias Lindholm (elilin)
@@ -34,32 +30,21 @@ import com.mongodb.DBObject;
  */
 class FakeDocumentCollection implements DocumentCollection {
 
-	private final ConcurrentLinkedQueue<DBObject> collection = new ConcurrentLinkedQueue<>();
-	private final ConcurrentLinkedQueue<Document> collection2 = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<Document> collection = new ConcurrentLinkedQueue<>();
 	private final AtomicInteger idGenerator = new AtomicInteger(0);
 
 	@Override
-	public Stream<DBObject> findAll(SpaceObjectFilter<?> filter) {
+	public Stream<Document> findAll(SpaceObjectFilter<?> objectFilter)  {
 		return new ArrayList<>(collection).stream();
 	}
 
 	@Override
-	public Stream<Document> findAll2(SpaceObjectFilter<?> objectFilter)  {
-		return new ArrayList<>(collection2).stream();
-	}
-
-	@Override
-	public Stream<DBObject> findAll() {
+	public Stream<Document> findAll()  {
 		return new ArrayList<>(collection).stream();
 	}
 
 	@Override
-	public Stream<Document> findAll2()  {
-		return new ArrayList<>(collection2).stream();
-	}
-
-	@Override
-	public void replace(DBObject oldVersion, DBObject newVersion) {
+	public void replace(Document oldVersion, Document newVersion) {
 		// Note that the Iterator of the list associated with the given collectionName may reflect changes to the
 		// underlying list. This behavior is similar to a database cursor who may returned elements
 		// that are inserted/updated after the cursor is created.
@@ -68,24 +53,11 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void replace(Document oldVersion, Document newVersion) {
-		// Note that the Iterator of the list associated with the given collectionName may reflect changes to the
-		// underlying list. This behavior is similar to a database cursor who may returned elements
-		// that are inserted/updated after the cursor is created.
-		collection2.remove(oldVersion);
-		collection2.add(newVersion);
-	}
-
-	public void addDocument(String collectionName, BasicDBObject doc) {
-		collection.add(doc);
-	}
-
-	@Override
-	public void update(DBObject newVersion) {
-		Iterator<DBObject> it = collection.iterator();
+	public void update(Document newVersion) {
+		Iterator<Document> it = collection.iterator();
 		while (it.hasNext()) {
-			DBObject dbObject = it.next();
-			if (dbObject.get("_id").equals(newVersion.get("_id"))) {
+			Document document = it.next();
+			if (document.get("_id").equals(newVersion.get("_id"))) {
 				it.remove();
 				collection.add(newVersion);
 				return;
@@ -96,36 +68,8 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void update(Document newVersion) {
-		Iterator<Document> it = collection2.iterator();
-		while (it.hasNext()) {
-			Document document = it.next();
-			if (document.get("_id").equals(newVersion.get("_id"))) {
-				it.remove();
-				collection2.add(newVersion);
-				return;
-			}
-		}
-		// No object found, do insert
-		insert(newVersion);
-	}
-
-	@Override
-	public void insert(DBObject dbObject) {
-		for (DBObject object : collection) {
-			if (object.get("_id").equals(dbObject.get("_id"))) {
-				throw new DuplicateDocumentKeyException("_id: " + dbObject.get("_id"));
-			}
-		}
-		if (dbObject.get("_id") == null) {
-			dbObject.put("_id", "testid_" + idGenerator.incrementAndGet());
-		}
-		collection.add(dbObject);
-	}
-
-	@Override
 	public void insert(Document document) {
-		for (Document doc : collection2) {
+		for (Document doc : collection) {
 			if (doc.get("_id").equals(document.get("_id"))) {
 				throw new DuplicateDocumentKeyException("_id: " + document.get("_id"));
 			}
@@ -133,18 +77,7 @@ class FakeDocumentCollection implements DocumentCollection {
 		if (document.get("_id") == null) {
 			document.put("_id", "testid_" + idGenerator.incrementAndGet());
 		}
-		collection2.add(document);
-	}
-
-	@Override
-	public void delete(BasicDBObject dbObject) {
-		BasicDBObject idOBject = new BasicDBObject();
-		idOBject.put("_id", dbObject.get("_id"));
-		if (idOBject.equals(dbObject)) {
-			removeById(idOBject);
-		} else {
-			removeByTemplate(dbObject);
-		}
+		collection.add(document);
 	}
 
 	@Override
@@ -158,30 +91,8 @@ class FakeDocumentCollection implements DocumentCollection {
 		}
 	}
 
-	private void removeByTemplate(BasicDBObject dbObject) {
-		Iterator<DBObject> it = collection.iterator();
-		while (it.hasNext()) {
-			DBObject next = it.next();
-			if (next.equals(dbObject)) {
-				it.remove();
-				return;
-			}
-		}
-	}
-
-	private void removeById(BasicDBObject dbObject) {
-		Iterator<DBObject> it = collection.iterator();
-		while (it.hasNext()) {
-			DBObject next = it.next();
-			if (next.get("_id").equals(dbObject.get("_id"))) {
-				it.remove();
-				return;
-			}
-		}
-	}
-
 	private void removeByTemplate(Document document) {
-		Iterator<Document> it = collection2.iterator();
+		Iterator<Document> it = collection.iterator();
 		while (it.hasNext()) {
 			Document next = it.next();
 			if (next.equals(document)) {
@@ -192,20 +103,13 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	private void removeById(Document document) {
-		Iterator<Document> it = collection2.iterator();
+		Iterator<Document> it = collection.iterator();
 		while (it.hasNext()) {
 			Document next = it.next();
 			if (next.get("_id").equals(document.get("_id"))) {
 				it.remove();
 				return;
 			}
-		}
-	}
-
-	@Override
-	public void insertAll(DBObject... dbObjects) {
-		for (DBObject dbObject : dbObjects) {
-			insert(dbObject);
 		}
 	}
 
@@ -217,8 +121,8 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public DBObject findById(Object id) {
-		for (DBObject next : collection) {
+	public Document findById(Object id) {
+		for (Document next : collection) {
 			if (next.get("_id").equals(id)) {
 				return next;
 			}
@@ -227,27 +131,7 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public Document findById2(Object id) {
-		for (Document next : collection2) {
-			if (next.get("_id").equals(id)) {
-				return next;
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public Stream<DBObject> findByQuery(Query query) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Stream<Document> findByQuery2(Query query) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Stream<DBObject> findByTemplate(BasicDBObject object) {
+	public Stream<Document> findByQuery(Query query) {
 		throw new UnsupportedOperationException();
 	}
 

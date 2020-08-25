@@ -15,17 +15,8 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
-import com.avanza.ymer.plugin.PostReadProcessor;
-import com.gigaspaces.annotation.pojo.SpaceId;
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
-import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Query;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -33,8 +24,16 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.bson.Document;
+import org.junit.Test;
+import org.springframework.data.mongodb.core.query.Query;
+import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
+import com.avanza.ymer.plugin.PostReadProcessor;
+import com.gigaspaces.annotation.pojo.SpaceId;
+import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
@@ -214,22 +213,11 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	private static class FakeMirroredDocumentConverter implements DocumentConverter.Provider {
 		@Override
-		public <T> T convert(Class<T> toType, BasicDBObject document) {
-			FakeSpaceObject spaceObject = new FakeSpaceObject(document.getInt("_id"), document.getString("value"));
-			return toType.cast(spaceObject);
-		}
-
-		@Override
 		public <T> T convert(Class<T> toType, Document document) {
 			Integer id = Optional.ofNullable(document.getInteger("_id"))
 								 .orElseThrow(NullPointerException::new);
 			FakeSpaceObject spaceObject = new FakeSpaceObject(id, document.getString("value"));
 			return toType.cast(spaceObject);
-		}
-
-		@Override
-		public BasicDBObject convertToDBObject(Object type) {
-			throw new UnsupportedOperationException();
 		}
 
 		@Override

@@ -15,16 +15,20 @@
  */
 package com.avanza.ymer;
 
-import com.gigaspaces.sync.DataSyncOperation;
-import com.gigaspaces.sync.DataSyncOperationType;
-import com.gigaspaces.sync.OperationsBatchData;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
+import com.gigaspaces.sync.DataSyncOperation;
+import com.gigaspaces.sync.DataSyncOperationType;
+import com.gigaspaces.sync.OperationsBatchData;
 
 /**
  *
@@ -98,13 +102,6 @@ final class MirroredObjectWriter {
 	private void remove(final Object item) {
 		MongoCommand mongoCommand = new MongoCommand(MirrorOperation.REMOVE, item) {
 			@Override
-			protected void execute(DBObject... dbOBject) {
-				BasicDBObject id = new BasicDBObject();
-				id.put("_id", dbOBject[0].get("_id"));
-				getDocumentCollection(item).delete(id);
-			}
-
-			@Override
 			protected void execute(Document... documents) {
 				Document id = new Document();
 				id.put("_id", documents[0].get("_id"));
@@ -117,11 +114,6 @@ final class MirroredObjectWriter {
 
 	private void update(final Object item) {
 		new MongoCommand(MirrorOperation.UPDATE, item) {
-			@Override
-			protected void execute(DBObject... dbOBject) {
-				getDocumentCollection(item).update(dbOBject[0]);
-			}
-
 			@Override
 			protected void execute(Document... documents) {
 				getDocumentCollection(item).update(documents[0]);
@@ -139,12 +131,6 @@ final class MirroredObjectWriter {
 		}
 		for (final List<Object> pendingObjects : pendingItemsByCollection.values()) {
 			new MongoCommand(MirrorOperation.INSERT, pendingObjects) {
-				@Override
-				protected void execute(DBObject... dbObjects) {
-					DocumentCollection documentCollection = getDocumentCollection(pendingObjects.get(0));
-					documentCollection.insertAll(dbObjects);
-				}
-
 				@Override
 				protected void execute(Document... documents) {
 					DocumentCollection documentCollection = getDocumentCollection(pendingObjects.get(0));
@@ -187,8 +173,6 @@ final class MirroredObjectWriter {
 			exceptionHandler.handleException(exception,
 					"Operation: " + operation + ", objects: " + Arrays.toString(objects));
 		}
-
-		protected abstract void execute(DBObject... dbOBject);
 
 		protected abstract void execute(Document... documents);
 
