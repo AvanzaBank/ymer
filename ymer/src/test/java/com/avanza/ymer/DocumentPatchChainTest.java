@@ -35,7 +35,7 @@ public class DocumentPatchChainTest {
 
 		DocumentPatchChain<Object> patchChain = new DocumentPatchChain<>(Object.class, Arrays.asList(v2ToV3, v1ToV2));
 		
-		Iterator<DocumentPatch> patches = patchChain.iterator();
+		var patches = patchChain.iterator();
 		assertSame(v1ToV2, patches.next());
 		assertSame(v2ToV3, patches.next());
 		assertFalse(patches.hasNext());
@@ -64,10 +64,10 @@ public class DocumentPatchChainTest {
 	}
 	
 	@Test
-	public void chaingWithThreePatches() throws Exception {
+	public void chainWithThreePatches() throws Exception {
 		DocumentPatch p1 = Mockito.mock(DocumentPatch.class);
 		DocumentPatch p2 = Mockito.mock(DocumentPatch.class);
-		DocumentPatch p3 = Mockito.mock(DocumentPatch.class);
+		BsonDocumentPatch p3 = Mockito.mock(BsonDocumentPatch.class);
 		Mockito.when(p1.patchedVersion()).thenReturn(1);
 		Mockito.when(p2.patchedVersion()).thenReturn(2);
 		Mockito.when(p3.patchedVersion()).thenReturn(3);

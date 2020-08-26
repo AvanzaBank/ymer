@@ -213,7 +213,7 @@ final class MirroredObject<T> {
 		if (!requiresPatching(document)) {
 			throw new IllegalArgumentException("Document does not require patching: " + document.toString());
 		}
-		DocumentPatch patch = this.patchChain.getPatch(getDocumentVersion(document));
+		BsonDocumentPatch patch = this.patchChain.getPatch(getDocumentVersion(document));
 		patch.apply(document);
 		setDocumentVersion(document, patch.patchedVersion() + 1);
 	}

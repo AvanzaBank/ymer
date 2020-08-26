@@ -45,11 +45,6 @@ public class YmerMigrationTestBaseTest {
 			}
 
 			@Override
-			public void apply(Document document) {
-				document.put("baz", "baz");
-			}
-
-			@Override
 			public int patchedVersion() {
 				return 1;
 			}
@@ -78,11 +73,6 @@ public class YmerMigrationTestBaseTest {
 			@Override
 			public void apply(BasicDBObject dbObject) {
 				dbObject.put("baz", "baz");
-			}
-
-			@Override
-			public void apply(Document document) {
-				document.put("baz", "baz");
 			}
 
 			@Override
@@ -122,11 +112,6 @@ public class YmerMigrationTestBaseTest {
 			}
 
 			@Override
-			public void apply(Document document) {
-				document.put("bar", "bar");
-			};
-
-			@Override
 			public int patchedVersion() {
 				return 1;
 			}
@@ -134,11 +119,6 @@ public class YmerMigrationTestBaseTest {
 			@Override
 			public void apply(BasicDBObject dbObject) {
 				dbObject.put("baz", "baz");
-			}
-
-			@Override
-			public void apply(Document document) {
-				document.put("baz", "baz");
 			}
 
 			@Override

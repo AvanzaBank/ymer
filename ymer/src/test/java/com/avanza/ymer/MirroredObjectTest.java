@@ -410,12 +410,6 @@ public class MirroredObjectTest {
 		}
 
 		@Override
-		public void apply(Document document) {
-			applied = true;
-			appliedPatches.add(this);
-		}
-
-		@Override
 		public int patchedVersion() {
 			return patchedVersion;
 		}
