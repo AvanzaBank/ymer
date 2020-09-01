@@ -15,15 +15,13 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.plugin.PreWriteProcessor;
-import com.mongodb.BasicDBObject;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bson.Document;
+import com.avanza.ymer.plugin.PreWriteProcessor;
 
 /**
  * Holds the runtime context for a mongo mirror. <p>
@@ -102,18 +100,6 @@ final class SpaceMirrorContext {
 
 	public int getNumParallelCollections() {
 		return numParallelCollections;
-	}
-
-	/**
-	 * Converts the given space object to a mongo document and appends
-	 * the current document version to the created mongo document. <p>
-	 */
-	<T> BasicDBObject toVersionedDbObject(T spaceObject) {
-		@SuppressWarnings("unchecked")
-		MirroredObject<T> mirroredObject = (MirroredObject<T>) this.mirroredObjects.getMirroredObject(spaceObject.getClass());
-		BasicDBObject dbObject = this.documentConverter.convertToDBObject(spaceObject);
-		mirroredObject.setDocumentAttributes(dbObject, spaceObject);
-		return dbObject;
 	}
 
 	/**

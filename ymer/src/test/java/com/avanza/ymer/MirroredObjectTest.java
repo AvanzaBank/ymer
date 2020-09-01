@@ -15,23 +15,26 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.gs.test.JVMGlobalLus;
-import com.gigaspaces.annotation.pojo.SpaceId;
-import com.gigaspaces.annotation.pojo.SpaceRouting;
-import com.mongodb.BasicDBObject;
+import static com.avanza.ymer.MirroredObjectDefinitionsOverride.fromSystemProperties;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.bson.Document;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.openspaces.core.GigaSpaceConfigurer;
 import org.openspaces.core.space.EmbeddedSpaceConfigurer;
 import org.springframework.data.mongodb.MongoCollectionUtils;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.avanza.ymer.MirroredObjectDefinitionsOverride.fromSystemProperties;
-import static org.junit.Assert.*;
+import com.avanza.gs.test.JVMGlobalLus;
+import com.gigaspaces.annotation.pojo.SpaceId;
+import com.gigaspaces.annotation.pojo.SpaceRouting;
+import com.mongodb.BasicDBObject;
 
 /**
  *
@@ -160,7 +163,7 @@ public class MirroredObjectTest {
 		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-		BasicDBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 		document.setDocumentVersion(dbObject, document.getCurrentVersion() - 1);
 
 		assertTrue(document.requiresPatching(dbObject));
@@ -171,7 +174,7 @@ public class MirroredObjectTest {
 		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-		BasicDBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 		document.setDocumentVersion(dbObject, document.getCurrentVersion());
 
 		assertFalse(document.requiresPatching(dbObject));
@@ -182,7 +185,7 @@ public class MirroredObjectTest {
 		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-		BasicDBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 		document.setDocumentVersion(dbObject, document.getCurrentVersion() + 1);
 		document.requiresPatching(dbObject);
 	}
@@ -192,7 +195,7 @@ public class MirroredObjectTest {
 		DocumentPatch[] patches = { new FakePatch(2), new FakePatch(3) };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-		BasicDBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 		document.setDocumentVersion(dbObject, 1);
 
 		document.requiresPatching(dbObject);
@@ -319,7 +322,7 @@ public class MirroredObjectTest {
 	public void setsRoutingFieldForRoutedDocumentLoad() throws Exception {
 		DocumentPatch[] patches = {};
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-		BasicDBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 
 		document.setDocumentAttributes(dbObject, new MirroredType(23));
 		assertEquals(23, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
@@ -329,7 +332,7 @@ public class MirroredObjectTest {
 	public void canDetermineRoutingKeyFromStringRoutingValue() throws Exception {
 		DocumentPatch[] patches = {};
 		MirroredObject<RoutedType> document = MirroredObjectDefinition.create(RoutedType.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-		BasicDBObject dbObject = new BasicDBObject();
+		Document dbObject = new Document();
 
 		document.setDocumentAttributes(dbObject, new RoutedType(23, "bananskal"));
 		assertEquals("bananskal".hashCode(), dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));

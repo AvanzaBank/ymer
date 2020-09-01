@@ -15,6 +15,15 @@
  */
 package com.avanza.ymer;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
+
+import org.bson.Document;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.data.mongodb.core.query.Query;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.gigaspaces.document.SpaceDocument;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
@@ -22,17 +31,6 @@ import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SynchronizationSourceDetails;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Query;
-
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 
 public class MirroredObjectWriterTest {
@@ -82,7 +80,7 @@ public class MirroredObjectWriterTest {
 		Document expected = documentConverter.convertToBsonDocument(item1);
 		mirroredObject.setDocumentVersion(expected, mirroredObject.getCurrentVersion());
 
-		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll2());
+		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll());
 		assertEquals(1, persisted.size());
 		assertEquals(expected, persisted.get(0));
 	}
@@ -96,14 +94,14 @@ public class MirroredObjectWriterTest {
 															  new FakeBulkItem(item2, DataSyncOperationType.WRITE),
 															  new FakeBulkItem(item3, DataSyncOperationType.WRITE)));
 
-		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll2());
+		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll());
 		assertEquals(3, persisted.size());
 	}
 
 	@Test
 	public void partialUpdatesAreUpdatedInDb() throws Exception {
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
-		documentDb.getCollection(mirroredObject.getCollectionName()).insert(documentConverter.convertToDBObject(item1));
+		documentDb.getCollection(mirroredObject.getCollectionName()).insert(documentConverter.convertToBsonDocument(item1));
 		item1.setMessage("updated");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.PARTIAL_UPDATE);
 		mirroredObjectWriter.executeBulk(FakeBatchData.create(bulkItem));
@@ -111,7 +109,7 @@ public class MirroredObjectWriterTest {
 		Document expected = documentConverter.convertToBsonDocument(item1);
 		mirroredObject.setDocumentVersion(expected, mirroredObject.getCurrentVersion());
 
-		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll2());
+		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll());
 		assertEquals(1, persisted.size());
 		assertEquals(expected, persisted.get(0));
 	}
@@ -119,7 +117,7 @@ public class MirroredObjectWriterTest {
 	@Test
 	public void udatesAreUpdatedInDb() throws Exception {
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
-		documentDb.getCollection(mirroredObject.getCollectionName()).insert(documentConverter.convertToDBObject(item1));
+		documentDb.getCollection(mirroredObject.getCollectionName()).insert(documentConverter.convertToBsonDocument(item1));
 		item1.setMessage("updated");
 
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -128,7 +126,7 @@ public class MirroredObjectWriterTest {
 		Document expected = documentConverter.convertToBsonDocument(item1);
 		mirroredObject.setDocumentVersion(expected, mirroredObject.getCurrentVersion());
 
-		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll2());
+		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll());
 		assertEquals(1, persisted.size());
 		assertEquals(expected, persisted.get(0));
 	}
@@ -143,7 +141,7 @@ public class MirroredObjectWriterTest {
 		FakeBulkItem bulkItem = new FakeBulkItem(bulkItemOBject, DataSyncOperationType.REMOVE);
 		mirroredObjectWriter.executeBulk(FakeBatchData.create(bulkItem));
 
-		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll2());
+		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll());
 		assertEquals(0, persisted.size());
 	}
 
@@ -159,7 +157,7 @@ public class MirroredObjectWriterTest {
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.REMOVE);
 		mirroredObjectWriter.executeBulk(FakeBatchData.create(bulkItem));
 
-		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll2());
+		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll());
 		assertEquals(0, persisted.size());
 	}
 
@@ -172,7 +170,7 @@ public class MirroredObjectWriterTest {
 		mirroredObjectWriter.executeBulk(FakeBatchData.create(bulkItem));
 		Document expected = documentConverter.convertToBsonDocument(item1);
 
-		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll2());
+		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll());
 		assertEquals(1, persisted.size());
 		assertEquals(expected, persisted.get(0));
 	}
@@ -184,7 +182,7 @@ public class MirroredObjectWriterTest {
 		FakeBulkItem bulkItem = new FakeBulkItem(new NonMirroredType(), DataSyncOperationType.WRITE);
 		mirroredObjectWriter.executeBulk(FakeBatchData.create(bulkItem));
 
-		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll2());
+		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredObject.getCollectionName()).findAll());
 		assertEquals(0, persisted.size());
 	}
 
@@ -220,17 +218,7 @@ public class MirroredObjectWriterTest {
 	public void exceptionThrownDuringConvertionToMongoDbObjectAreNotPropagated() throws Exception {
 		documentConverter = DocumentConverter.create(new DocumentConverter.Provider() {
 			@Override
-			public BasicDBObject convertToDBObject(Object type) {
-				throw new RuntimeException("");
-			}
-
-			@Override
 			public Document convertToBsonDocument(Object type) {
-				throw new RuntimeException("");
-			}
-
-			@Override
-			public <T> T convert(Class<T> toType, BasicDBObject document) {
 				throw new RuntimeException("");
 			}
 
@@ -276,7 +264,7 @@ public class MirroredObjectWriterTest {
 		Document expected = documentConverter.convertToBsonDocument(spaceObject);
 		mirroredReloadableDocument.setDocumentVersion(expected, mirroredReloadableDocument.getCurrentVersion());
 
-		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredReloadableDocument.getCollectionName()).findAll2());
+		List<Document> persisted = Iterables.newArrayList(documentDb.getCollection(mirroredReloadableDocument.getCollectionName()).findAll());
 		assertEquals(2, persisted.size());
 		assertEquals(2, persisted.get(0).get("_id"));
 		assertEquals(3, persisted.get(1).get("_id"));
