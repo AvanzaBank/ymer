@@ -16,10 +16,10 @@
 package com.avanza.ymer;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
 /**
  * Utility class for holding all DocumentPatches associated with a given type. <p>
  * 
@@ -27,40 +27,35 @@ import java.util.List;
  *
  * @param <T>
  */
-final class DocumentPatchChain<T> implements Iterable<DocumentPatch> {
+final class DocumentPatchChain<T> implements Iterable<BsonDocumentPatch> {
 
 	// TODO: remove mirroredType field and info from DocumentPatchChain
 	
 	private Class<T> mirroredType;
-	private DocumentPatch[] patchChain;
+	private BsonDocumentPatch[] patchChain;
 
-	DocumentPatchChain(Class<T> mirroredType, List<DocumentPatch> patches) {
+	DocumentPatchChain(Class<T> mirroredType, List<BsonDocumentPatch> patches) {
 		this.mirroredType = mirroredType;
-		this.patchChain = new DocumentPatch[patches.size()];
+		this.patchChain = new BsonDocumentPatch[patches.size()];
 		sortPatchChain(patches);
 		for (int i = 0; i < patches.size(); i++) {
 			patchChain[i] = patches.get(i);
 			if (i == 0) {
 				continue;
 			}
-			DocumentPatch previousPatchInChain = patchChain[i - 1];
-			DocumentPatch currentPatchInChain = patchChain[i];
+			BsonDocumentPatch previousPatchInChain = patchChain[i - 1];
+			BsonDocumentPatch currentPatchInChain = patchChain[i];
 			if (previousPatchInChain.patchedVersion() == currentPatchInChain.patchedVersion()) {
 				throw new IllegalArgumentException(String.format("Chain of patches must not contain duplicates of patches for: [%s]", currentPatchInChain));
 			}
 			if (previousPatchInChain.patchedVersion() + 1 != currentPatchInChain.patchedVersion()) {
-				throw new IllegalArgumentException(String.format("Chain of patches must be continious with no holes, whole found between patches for version [%s] and [%s]", previousPatchInChain.patchedVersion(), currentPatchInChain.patchedVersion()));
+				throw new IllegalArgumentException(String.format("Chain of patches must be continuous with no holes, hole found between patches for version [%s] and [%s]", previousPatchInChain.patchedVersion(), currentPatchInChain.patchedVersion()));
 			}
 		}
 	}
 	
-	private void sortPatchChain(List<DocumentPatch> patches) {
-		Collections.sort(patches, new Comparator<DocumentPatch>() {
-			@Override
-			public int compare(DocumentPatch o1, DocumentPatch o2) {
-				return ((Integer)o1.patchedVersion()).compareTo(o2.patchedVersion());
-			}
-		});
+	private void sortPatchChain(List<BsonDocumentPatch> patches) {
+		patches.sort(Comparator.comparingInt(BsonDocumentPatch::patchedVersion));
 	}
 	
 	Class<T> getMirroredType() {
@@ -68,7 +63,7 @@ final class DocumentPatchChain<T> implements Iterable<DocumentPatch> {
 	}
 
 	@Override
-	public Iterator<DocumentPatch> iterator() {
+	public Iterator<BsonDocumentPatch> iterator() {
 		return Arrays.asList(this.patchChain).iterator();
 	}
 	
@@ -76,11 +71,11 @@ final class DocumentPatchChain<T> implements Iterable<DocumentPatch> {
 		return this.patchChain.length == 0;
 	}
 
-	DocumentPatch getLastPatchInChain() {
+	BsonDocumentPatch getLastPatchInChain() {
 		return this.patchChain[this.patchChain.length - 1];
 	}
-	
-	DocumentPatch getFirstPatchInChain() {
+
+	BsonDocumentPatch getFirstPatchInChain() {
 		return this.patchChain[0];
 	}
 
@@ -90,7 +85,7 @@ final class DocumentPatchChain<T> implements Iterable<DocumentPatch> {
 	 * @param version
 	 * @return
 	 */
-	DocumentPatch getPatch(int version) {
+	BsonDocumentPatch getPatch(int version) {
 		if (version > getLastPatchInChain().patchedVersion() || version < getFirstPatchInChain().patchedVersion()) {
 			throw new IllegalArgumentException("No such patch: " + version);
 		}

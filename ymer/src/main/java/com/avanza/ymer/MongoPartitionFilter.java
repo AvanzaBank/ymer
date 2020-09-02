@@ -18,19 +18,25 @@ package com.avanza.ymer;
 import java.util.Arrays;
 import java.util.Objects;
 
+import org.bson.conversions.Bson;
 import com.avanza.ymer.SpaceObjectFilter.PartitionFilter;
 import com.mongodb.BasicDBObject;
+import com.mongodb.client.model.Filters;
 
 class MongoPartitionFilter {
 
-	private final BasicDBObject filter;
+	private final Bson filter;
 
-	public MongoPartitionFilter(BasicDBObject filter) {
+	public MongoPartitionFilter(Bson filter) {
 		this.filter = Objects.requireNonNull(filter);
 	}
 
 	public static MongoPartitionFilter create(SpaceObjectFilter<?> spaceObjectFilter) {
 		return new MongoPartitionFilter(buildFilter(spaceObjectFilter.getPartitionFilter()));
+	}
+
+	public static MongoPartitionFilter createBsonFilter(SpaceObjectFilter<?> spaceObjectFilter) {
+		return new MongoPartitionFilter(buildBsonFilter(spaceObjectFilter.getPartitionFilter()));
 	}
 
 	public static boolean canCreateFrom(SpaceObjectFilter<?> spaceObjectFilter) {
@@ -45,8 +51,18 @@ class MongoPartitionFilter {
 				));
 	}
 
-	public BasicDBObject toDBObject() {
+	public Bson toBson() {
 		return filter;
+	}
+
+	public static Bson buildBsonFilter(PartitionFilter<?> partitionFilter) {
+		return Filters.or(Filters.mod(MirroredObject.DOCUMENT_ROUTING_KEY,
+									  partitionFilter.getTotalPartitions(),
+									  partitionFilter.getCurrentPartition() - 1),
+						  Filters.mod(MirroredObject.DOCUMENT_ROUTING_KEY,
+									  partitionFilter.getTotalPartitions(),
+									  -(partitionFilter.getCurrentPartition() - 1)),
+						  Filters.exists(MirroredObject.DOCUMENT_ROUTING_KEY, false));
 	}
 
 	@Override

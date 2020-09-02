@@ -15,22 +15,28 @@
  */
 package com.avanza.ymer;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.bson.Document;
+import org.junit.Test;
+import org.springframework.data.mongodb.core.query.Query;
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
-import com.github.fakemongo.Fongo;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Query;
+import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 
 /**
  *
@@ -42,23 +48,29 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	private static final String DBNAME = "testdb";
 	private static final String COLLECTION_NAME = "testcollection";
 
-	Fongo mongoServer = new Fongo("mongo server 1");
+	private MongoDatabase database;
+	private MongoCollection<Document> collection;
+	private MongoServer mongoServer;
+	private MongoClient mongoClient;
 
-
-	private DB db;
-	private DBCollection mongoDbCollection;
+	public MongoDocumentCollectionTest() {
+		mongoServer = new MongoServer(new MemoryBackend());
+		InetSocketAddress serverAddress = mongoServer.bind();
+		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+	}
 
 	/* (non-Javadoc)
 	 * @see com.avanza.ymer.DocumentCollectionContract#createEmptyCollection()
 	 */
 	@Override
 	protected DocumentCollection createEmptyCollection() {
-		db = mongoServer.getDB(DBNAME);
-		db.dropDatabase();
-		db = mongoServer.getDB(DBNAME);
+		database = mongoClient.getDatabase(DBNAME);
+		database.drop();
+		database = mongoClient.getDatabase(DBNAME);
 
-		mongoDbCollection = db.getCollection(COLLECTION_NAME);
-		return new MongoDocumentCollection(mongoDbCollection);
+		collection = database.getCollection(COLLECTION_NAME);
+
+		return new MongoDocumentCollection(collection);
 	}
 
 	@Test
@@ -67,22 +79,22 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		// Objects WITH routed field
-		BasicDBObject doc1 = new BasicDBObject();
+		Document doc1 = new Document();
 		doc1.put("_id", 1);
 		doc1.put("value", "a");
 		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"));
 
-		final BasicDBObject doc2 = new BasicDBObject();
+		final Document doc2 = new Document();
 		doc2.put("_id", 2);
 		doc2.put("value", "b");
 		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"));
 
 		// Objects WITHOUT routed field
-		final BasicDBObject doc3 = new BasicDBObject();
+		final Document doc3 = new Document();
 		doc3.put("_id", 3);
 		doc3.put("value", "c");
 
-		final BasicDBObject doc4 = new BasicDBObject();
+		final Document doc4 = new Document();
 		doc4.put("_id", 4);
 		doc4.put("value", "d");
 
@@ -118,22 +130,22 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 																				 .documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		// Objects WITH routed field
-		BasicDBObject doc1 = new BasicDBObject();
+		Document doc1 = new Document();
 		doc1.put("_id", 1);
 		doc1.put("value", "a");
 		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"));
 
-		final BasicDBObject doc2 = new BasicDBObject();
+		final Document doc2 = new Document();
 		doc2.put("_id", 2);
 		doc2.put("value", "b");
 		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"));
 
 		// Objects WITHOUT routed field
-		final BasicDBObject doc3 = new BasicDBObject();
+		final Document doc3 = new Document();
 		doc3.put("_id", 3);
 		doc3.put("value", "c");
 
-		final BasicDBObject doc4 = new BasicDBObject();
+		final Document doc4 = new Document();
 		doc4.put("_id", 4);
 		doc4.put("value", "d");
 
@@ -201,14 +213,16 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	private static class FakeMirroredDocumentConverter implements DocumentConverter.Provider {
 		@Override
-		public <T> T convert(Class<T> toType, BasicDBObject document) {
-			FakeSpaceObject spaceObject = new FakeSpaceObject(document.getInt("_id"), document.getString("value"));
+		public <T> T convert(Class<T> toType, Document document) {
+			Integer id = Optional.ofNullable(document.getInteger("_id"))
+								 .orElseThrow(NullPointerException::new);
+			FakeSpaceObject spaceObject = new FakeSpaceObject(id, document.getString("value"));
 			return toType.cast(spaceObject);
 		}
 
 		@Override
-		public BasicDBObject convertToDBObject(Object type) {
-			throw new UnsupportedOperationException();
+		public Document convertToBsonDocument(Object type) {
+			return null;
 		}
 
 		public static DocumentConverter create() {

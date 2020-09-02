@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.bson.Document;
 import org.junit.Test;
 
 import com.avanza.ymer.YmerMigrationTestBase.MigrationTest;
@@ -31,10 +32,10 @@ public class YmerMigrationTestBaseTest {
 	
 	@Test
 	public void migratesTheOldDocumentToTheNextDocumentVersion_OnePatch_PassesIfNextVersionMatchesExpectedVersion() throws Exception {
-		BasicDBObject v1 = new BasicDBObject();
+		Document v1 = new Document();
 		v1.put("foo", "bar");
-		
-		BasicDBObject v2 = new BasicDBObject();
+
+		Document v2 = new Document();
 		v2.put("foo", "bar");
 		v2.put("baz", "baz");
 		DocumentPatch[] patches = { new DocumentPatch() {
@@ -42,6 +43,7 @@ public class YmerMigrationTestBaseTest {
 			public void apply(BasicDBObject dbObject) {
 				dbObject.put("baz", "baz");
 			}
+
 			@Override
 			public int patchedVersion() {
 				return 1;
@@ -61,10 +63,10 @@ public class YmerMigrationTestBaseTest {
 	
 	@Test
 	public void migratesTheOldDocumentToTheNextDocumentVersion_OnePatch_FailsIfNextVersionDoesNotMatchExpectedVersion() throws Exception {
-		BasicDBObject v1 = new BasicDBObject();
+		Document v1 = new Document();
 		v1.put("foo", "bar");
-		
-		BasicDBObject v2 = new BasicDBObject();
+
+		Document v2 = new Document();
 		v2.put("foo", "bar");
 		v2.put("baz", "baz<");
 		DocumentPatch[] patches = { new DocumentPatch() {
@@ -72,6 +74,7 @@ public class YmerMigrationTestBaseTest {
 			public void apply(BasicDBObject dbObject) {
 				dbObject.put("baz", "baz");
 			}
+
 			@Override
 			public int patchedVersion() {
 				return 1;
@@ -91,14 +94,14 @@ public class YmerMigrationTestBaseTest {
 	
 	@Test
 	public void migratesTheOldDocumentToTheNextDocumentVersion_TwoPatch_PassesIfDocumentMatchesTheNextVersion() throws Exception {
-		BasicDBObject v1 = new BasicDBObject();
+		Document v1 = new Document();
 		v1.put("foo", "foo");
-		
-		BasicDBObject v2 = new BasicDBObject();
+
+		Document v2 = new Document();
 		v2.put("foo", "foo");
 		v2.put("bar", "bar");
-		
-		BasicDBObject v3 = new BasicDBObject();
+
+		Document v3 = new Document();
 		v3.put("foo", "bar");
 		v3.put("bar", "bar");
 		v3.put("baz", "baz");
@@ -107,6 +110,7 @@ public class YmerMigrationTestBaseTest {
 			public void apply(BasicDBObject dbObject) {
 				dbObject.put("bar", "bar");
 			}
+
 			@Override
 			public int patchedVersion() {
 				return 1;
@@ -116,6 +120,7 @@ public class YmerMigrationTestBaseTest {
 			public void apply(BasicDBObject dbObject) {
 				dbObject.put("baz", "baz");
 			}
+
 			@Override
 			public int patchedVersion() {
 				return 2;

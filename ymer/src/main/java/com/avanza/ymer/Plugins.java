@@ -18,11 +18,12 @@ package com.avanza.ymer;
 import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.plugin.PreWriteProcessor;
-import com.mongodb.DBObject;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.bson.Document;
 
 class Plugins {
 	private final Set<Plugin> plugins;
@@ -45,7 +46,7 @@ class Plugins {
 						.flatMap(OptionalHelper::toStream)
 						.collect(Collectors.toSet());
 				@Override
-				public DBObject postRead(DBObject postRead) {
+				public Document postRead(Document postRead) {
 					for (PostReadProcessor processor : postReadProcessors) {
 						postRead = processor.postRead(postRead);
 					}
@@ -63,7 +64,7 @@ class Plugins {
 						.collect(Collectors.toSet());
 
 				@Override
-				public DBObject preWrite(DBObject preWrite) {
+				public Document preWrite(Document preWrite) {
 					for (PreWriteProcessor processor : preWriteProcessors) {
 						preWrite = processor.preWrite(preWrite);
 					}

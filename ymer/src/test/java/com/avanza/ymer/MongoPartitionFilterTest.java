@@ -15,20 +15,24 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
-import com.github.fakemongo.Fongo;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import org.junit.Test;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import static org.junit.Assert.assertTrue;
+
+import java.net.InetSocketAddress;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+
+import org.bson.Document;
+import org.junit.Test;
+import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
+import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 
 
 public class MongoPartitionFilterTest {
@@ -36,7 +40,14 @@ public class MongoPartitionFilterTest {
 	private final MirroredObject<TestSpaceObject> mirroredObject = 
 		MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-	public final Fongo mongoRule = new Fongo("db");
+	private final MongoServer mongoServer;
+	private final MongoClient mongoClient;
+
+	public MongoPartitionFilterTest() {
+		mongoServer = new MongoServer(new MemoryBackend());
+		InetSocketAddress serverAddress = mongoServer.bind();
+		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+	}
 
 	@Test
 	public void canQueryAllNumbers() throws Exception {
@@ -44,28 +55,29 @@ public class MongoPartitionFilterTest {
 		final int ID_LOWER_BOUND = -100;
 		final int ID_UPPER_BOUND = 100;
 
-		DBCollection collection = mongoRule.getMongo().getDB("_test").getCollection("testCollection");
+		MongoCollection<Document> collection = mongoClient.getDatabase("_test")
+														  .getCollection("testCollection");
 		for (int i = ID_LOWER_BOUND; i < ID_UPPER_BOUND; i++) {
-			collection.insert(BasicDBObjectBuilder.start("_id", i).add("_routingKey", ((Integer)i).hashCode()).get());
+			collection.insertOne(new Document(Map.of("_id", i,
+													 "_routingKey", ((Integer)i).hashCode())));
 		}
 
 		Set<Integer> found = new HashSet<>();
 		for (int i = 1; i <= NUM_PARTITIONS; i++) {
-			DBCursor cur = collection.find(MongoPartitionFilter.create(SpaceObjectFilter.partitionFilter(mirroredObject, i, NUM_PARTITIONS)).toDBObject());
-			found.addAll(extractIds(cur.toArray()));
+
+			FindIterable<Document> documents =
+					collection.find(MongoPartitionFilter
+											.createBsonFilter(SpaceObjectFilter
+																	  .partitionFilter(mirroredObject, i, NUM_PARTITIONS))
+											.toBson());
+			documents.forEach((Consumer<? super Document>)doc -> {
+				Integer id = (Integer) doc.get("_id");
+				found.add(id);
+			});
 		}
 
 		for (int i = ID_LOWER_BOUND; i < ID_UPPER_BOUND; i++) {
 			assertTrue(i + " not found!", found.contains(i));
 		}
 	}
-
-	private Collection<? extends Integer> extractIds(List<DBObject> array) {
-		Collection<Integer> result = new HashSet<>();
-		for (DBObject e : array) {
-			result.add((Integer)e.get("_id"));
-		}
-		return result;
-	}
-
 }

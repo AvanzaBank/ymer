@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer.plugin;
 
-import com.mongodb.DBObject;
+import org.bson.Document;
 
 /**
  * Applied just before an object is written to Mongo
@@ -27,5 +27,5 @@ public interface PreWriteProcessor {
 	 * @param preWrite Object before it is written to persistent storage. This object may be modified
 	 * @return processed object, may be different from preWrite
 	 */
-	DBObject preWrite(DBObject preWrite);
+	Document preWrite(Document preWrite);
 }

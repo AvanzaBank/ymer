@@ -48,7 +48,7 @@ public final class MirroredObjectDefinition<T> {
 
 	private final Class<T> mirroredType;
 	private String collectionName;
-	private DocumentPatch[] patches = new DocumentPatch[0];
+	private BsonDocumentPatch[] patches = new BsonDocumentPatch[0];
 	private boolean excludeFromInitialLoad = false;
 	private boolean writeBackPatchedDocuments = true;
 	private boolean loadDocumentsRouted = false;
@@ -69,7 +69,7 @@ public final class MirroredObjectDefinition<T> {
 		return this;
     }
 
-    public MirroredObjectDefinition<T> documentPatches(DocumentPatch... patches) {
+    public MirroredObjectDefinition<T> documentPatches(BsonDocumentPatch... patches) {
     	this.patches = patches;
     	return this;
 	}

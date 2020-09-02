@@ -15,13 +15,14 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.plugin.PreWriteProcessor;
-import com.mongodb.BasicDBObject;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.bson.Document;
+import com.avanza.ymer.plugin.PreWriteProcessor;
+
 /**
  * Holds the runtime context for a mongo mirror. <p>
  *
@@ -31,10 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 final class SpaceMirrorContext {
 
-	public static final MirrorExceptionListener NO_EXCEPTION_LISTENER = new MirrorExceptionListener() {
-		@Override
-		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {}
-	};
+	public static final MirrorExceptionListener NO_EXCEPTION_LISTENER = (e, failedOperation, failedObjects) -> {};
 
 	private final MirroredObjects mirroredObjects;
 	private final DocumentConverter documentConverter;
@@ -108,12 +106,12 @@ final class SpaceMirrorContext {
 	 * Converts the given space object to a mongo document and appends
 	 * the current document version to the created mongo document. <p>
 	 */
-	<T> BasicDBObject toVersionedDbObject(T spaceObject) {
+	<T> Document toVersionedDocument(T spaceObject) {
 		@SuppressWarnings("unchecked")
 		MirroredObject<T> mirroredObject = (MirroredObject<T>) this.mirroredObjects.getMirroredObject(spaceObject.getClass());
-		BasicDBObject dbObject = this.documentConverter.convertToDBObject(spaceObject);
-		mirroredObject.setDocumentAttributes(dbObject, spaceObject);
-		return dbObject;
+		Document document = this.documentConverter.convertToBsonDocument(spaceObject);
+		mirroredObject.setDocumentAttributes(document, spaceObject);
+		return document;
 	}
 
 	<T> MirroredObject<T> getMirroredDocument(Class<T> type) {

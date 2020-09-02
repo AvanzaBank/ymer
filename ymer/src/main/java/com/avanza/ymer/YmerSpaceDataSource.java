@@ -18,7 +18,7 @@ package com.avanza.ymer;
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.util.OptionalUtil;
 import com.gigaspaces.datasource.DataIterator;
-import com.mongodb.DBObject;
+import org.bson.Document;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +87,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
 
     private <T> PatchedDocument doWriteBackPatchedDocument(MirroredObject<T> document, PatchedDocument patchedDocument) {
         DocumentCollection documentCollection = spaceMirrorContext.getDocumentCollection(document);
-        DBObject newVersion = spaceMirrorContext.getPreWriteProcessing(document.getMirroredType()).preWrite(patchedDocument.getNewVersion());
+        Document newVersion = spaceMirrorContext.getPreWriteProcessing(document.getMirroredType()).preWrite(patchedDocument.getNewVersion());
         documentCollection.replace(patchedDocument.getOldVersion(), newVersion);
         return patchedDocument;
     }

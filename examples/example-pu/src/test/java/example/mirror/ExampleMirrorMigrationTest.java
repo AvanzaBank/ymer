@@ -18,11 +18,11 @@ package example.mirror;
 import java.util.Collection;
 import java.util.List;
 
+import org.bson.Document;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.avanza.ymer.MirroredObjectDefinition;
 import com.avanza.ymer.YmerMigrationTestBase;
-import com.mongodb.BasicDBObject;
 
 import example.domain.SpaceFruit;
 
@@ -45,12 +45,12 @@ public class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
 	}
 	
 	private static MigrationTest spaceFruitV1ToV2MigrationTest() {
-		BasicDBObject v1Doc = new BasicDBObject();
+		Document v1Doc = new Document();
 		v1Doc.put("_id", "apple");
 		v1Doc.put("_class", "examples.domain.SpaceFruit");
 		v1Doc.put("origin", "Spain");
-		
-		BasicDBObject v2Doc = new BasicDBObject();
+
+		Document v2Doc = new Document();
 		v2Doc.put("_id", "apple");
 		v2Doc.put("_class", "examples.domain.SpaceFruit");
 		v2Doc.put("origin", "Spain");

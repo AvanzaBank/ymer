@@ -114,10 +114,10 @@ public class SpaceFruit {
 
 
 // A DocumentPatch is applied by ymer to the raw bson (mongo) document during initial load
-class SpaceFruitV1ToV2Patch implements DocumentPatch {
+class SpaceFruitV1ToV2Patch implements BsonDocumentPatch {
 
 	@Override
-	public void apply(BasicDBObject dbObject) {
+	public void apply(Document dbObject) {
 		// We add a default value for the "organic" property to all existing SpaceFruit's
 		dbObject.put("organic", false);
 	}
@@ -189,12 +189,12 @@ public class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
 	}
 	
 	private static MigrationTest spaceFruitV1ToV2MigrationTest() {
-		BasicDBObject v1Doc = new BasicDBObject();
+		Document v1Doc = new Document();
 		v1Doc.put("_id", "apple");
 		v1Doc.put("_class", "examples.domain.SpaceFruit");
 		v1Doc.put("origin", "Spain");
 		
-		BasicDBObject v2Doc = new BasicDBObject();
+		Document v2Doc = new Document();
 		v2Doc.put("_id", "apple");
 		v2Doc.put("_class", "examples.domain.SpaceFruit");
 		v2Doc.put("origin", "Spain");

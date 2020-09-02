@@ -15,8 +15,22 @@
  */
 package com.avanza.ymer;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import org.bson.Document;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -26,13 +40,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.stream.Stream;
-
-import static org.junit.Assert.*;
+import com.mongodb.DB;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Base class for testing that objects may be marshalled to a mongo document and
@@ -53,15 +62,20 @@ public abstract class YmerConverterTestBase {
 		this.dummyMongoDbFactory = new MongoDbFactory() {
 			// The MongoDbFactory is never used during the tests.
 			@Override
-			public DB getDb(String dbName) throws DataAccessException {
+			public MongoDatabase getDb(String dbName) throws DataAccessException {
 				return null;
 			}
 			@Override
-			public DB getDb() throws DataAccessException {
+			public MongoDatabase getDb() throws DataAccessException {
 				return null;
 			}
 			@Override
 			public PersistenceExceptionTranslator getExceptionTranslator() {
+				return null;
+			}
+
+			@Override
+			public DB getLegacyDb() {
 				return null;
 			}
 		};
@@ -74,7 +88,7 @@ public abstract class YmerConverterTestBase {
 		MirroredObject<?> mirroredDocument = getMirroredObjects().getMirroredObject(spaceObject.getClass());
 
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
-		BasicDBObject basicDBObject = documentConverter.convertToDBObject(spaceObject);
+		Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
 		Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
 		assertThat(reCreated, testCase.matcher);
 	}
@@ -90,9 +104,9 @@ public abstract class YmerConverterTestBase {
         MirroredObject<?> mirroredDocument = getMirroredObjects().getMirroredObject(spaceObject.getClass());
 
         DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
-        BasicDBObject basicDBObject = documentConverter.convertToDBObject(spaceObject);
+        Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
         Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
-        BasicDBObject recreatedBasicDbObject = documentConverter.convertToDBObject(reCreated);
+        Document recreatedBasicDbObject = documentConverter.convertToBsonDocument(reCreated);
         assertNotNull("No id field defined. @SpaceId annotations are ignored by persistence framework, use @Id for id field (Typically the same as is annotated with @SpaceId)", recreatedBasicDbObject.get("_id"));
         assertEquals("",basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
     }

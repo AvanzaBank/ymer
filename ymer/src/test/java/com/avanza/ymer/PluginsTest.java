@@ -25,12 +25,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 
+import org.bson.Document;
 import org.junit.Test;
 
 import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.plugin.PreWriteProcessor;
-import com.mongodb.BasicDBObjectBuilder;
 
 public class PluginsTest {
 
@@ -62,8 +62,8 @@ public class PluginsTest {
 	@Test
 	public void processorsAreRegistered() throws Exception {
 		Plugins plugins = new Plugins(Collections.singleton(new MyPlugin("A", "B")));
-		assertEquals("|A", plugins.getPostReadProcessing(Object.class).postRead(BasicDBObjectBuilder.start("name", "|").get()).get("name"));
-		assertEquals("|B", plugins.getPreWriteProcessing(Object.class).preWrite(BasicDBObjectBuilder.start("name", "|").get()).get("name"));
+		assertEquals("|A", plugins.getPostReadProcessing(Object.class).postRead(new Document("name", "|")).get("name"));
+		assertEquals("|B", plugins.getPreWriteProcessing(Object.class).preWrite(new Document("name", "|")).get("name"));
 	}
 
 	@Test
@@ -81,10 +81,10 @@ public class PluginsTest {
 	@Test
 	public void allProcessorsAreRegistered() throws Exception {
 		Plugins plugins = new Plugins(new HashSet<>(Arrays.asList(new MyPlugin("A", "B"), new MyPlugin("C", "D"))));
-		assertTrue(plugins.getPostReadProcessing(Object.class).postRead(BasicDBObjectBuilder.start("name", "|").get()).get("name").toString().contains("A"));
-		assertTrue(plugins.getPostReadProcessing(Object.class).postRead(BasicDBObjectBuilder.start("name", "|").get()).get("name").toString().contains("C"));
-		assertTrue(plugins.getPreWriteProcessing(Object.class).preWrite(BasicDBObjectBuilder.start("name", "|").get()).get("name").toString().contains("B"));
-		assertTrue(plugins.getPreWriteProcessing(Object.class).preWrite(BasicDBObjectBuilder.start("name", "|").get()).get("name").toString().contains("D"));
+		assertTrue(plugins.getPostReadProcessing(Object.class).postRead(new Document("name", "|")).get("name").toString().contains("A"));
+		assertTrue(plugins.getPostReadProcessing(Object.class).postRead(new Document("name", "|")).get("name").toString().contains("C"));
+		assertTrue(plugins.getPreWriteProcessing(Object.class).preWrite(new Document("name", "|")).get("name").toString().contains("B"));
+		assertTrue(plugins.getPreWriteProcessing(Object.class).preWrite(new Document("name", "|")).get("name").toString().contains("D"));
 	}
 
 }

@@ -17,11 +17,9 @@ package com.avanza.ymer;
 
 import java.util.stream.Stream;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Query;
-
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 /**
  * Abstraction over {@link DBCollection}. <p>
  *
@@ -33,19 +31,19 @@ interface DocumentCollection {
 	/**
 	 * Reads all documents from the underlying mongo collection. <p>
 	 */
-	Stream<DBObject> findAll();
+	Stream<Document> findAll();
 
-	Stream<DBObject> findAll(SpaceObjectFilter<?> objectFilter);
+	Stream<Document> findAll(SpaceObjectFilter<?> objectFilter);
 
-	Stream<DBObject> findByTemplate(BasicDBObject template);
+	Stream<Document> findByTemplate(Document template);
 
 	/**
 	 * Returns a document with a given id. <p>
 	 *
 	 */
-	DBObject findById(Object id);
+	Document findById(Object id);
 
-	Stream<DBObject> findByQuery(Query query);
+	Stream<Document> findByQuery(Query query);
 
 	/**
 	 * Replaces a given document in the underlying mongo collection with a new
@@ -55,23 +53,23 @@ interface DocumentCollection {
 	 * have changed from the id of the oldVersion.
 	 *
 	 */
-	void replace(DBObject oldVersion, DBObject newVersion);
+	void replace(Document oldVersion, Document newVersion);
 
 	/**
-	 * Updates a given object (identified by id) in the underlying mongo collection. <p>
+	 * Updates a given document (identified by id) in the underlying mongo collection. <p>
 	 */
-	void update(DBObject newVersion);
+	void update(Document document);
 
 	/**
 	 * Inserts the given object into the underlying mongo collection. <p>
 	 */
-	void insert(DBObject dbObject);
+	void insert(Document dbObject);
 
-	void delete(BasicDBObject dbObject);
+	void delete(Document document);
 
 	/**
 	 * Inserts all documents in a single batch to the underlying mongo collection. <p>
 	 */
-	void insertAll(DBObject... dbObjects);
+	void insertAll(Document... documents);
 
 }
