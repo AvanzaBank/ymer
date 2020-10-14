@@ -19,10 +19,10 @@ import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
@@ -31,8 +31,8 @@ import com.mongodb.DBObject;
 
 class Plugins {
 	private final Set<Plugin> plugins;
-	private final Map<Class<?>, PostReadProcessor> postReadProcessors = new ConcurrentHashMap<>();
-	private final Map<Class<?>, PreWriteProcessor> preWriteProcessors = new ConcurrentHashMap<>();
+	private final Map<Class<?>, PostReadProcessor> postReadProcessors = new HashMap<>();
+	private final Map<Class<?>, PreWriteProcessor> preWriteProcessors = new HashMap<>();
 
 	public static Plugins empty() {
 		return new Plugins(emptySet());
@@ -43,12 +43,17 @@ class Plugins {
 	}
 
 	public PostReadProcessor getPostReadProcessing(Class<?> dataType) {
-		return postReadProcessors.computeIfAbsent(dataType, dt ->
-			new PostReadProcessor() {
-				private final Set<PostReadProcessor> postReadProcessors = plugins.stream()
-						.map(p -> p.createPostReadProcessor(dt))
-						.flatMap(Optional::stream)
-						.collect(toSet());
+
+		PostReadProcessor processor = postReadProcessors.get(dataType);
+
+		if(processor == null) {
+			PostReadProcessor postReadProcessor = new PostReadProcessor() {
+				private final Set<PostReadProcessor> postReadProcessors =
+						plugins.stream()
+							   .map(p -> p.createPostReadProcessor(dataType))
+							   .flatMap(Optional::stream)
+							   .collect(toSet());
+
 				@Override
 				public DBObject postRead(DBObject postRead) {
 					for (PostReadProcessor processor : postReadProcessors) {
@@ -56,16 +61,23 @@ class Plugins {
 					}
 					return postRead;
 				}
-			});
+			};
+			postReadProcessors.put(dataType, postReadProcessor);
+			return postReadProcessor;
+		}
+		return processor;
 	}
 
 	public PreWriteProcessor getPreWriteProcessing(Class<?> dataType) {
-		return preWriteProcessors.computeIfAbsent(dataType, dt ->
-			new PreWriteProcessor() {
-				private final Set<PreWriteProcessor> preWriteProcessors = plugins.stream()
-						.map(p -> p.createPreWriteProcessor(dataType))
-						.flatMap(Optional::stream)
-						.collect(toSet());
+
+		PreWriteProcessor processor = preWriteProcessors.get(dataType);
+		if(processor == null) {
+			PreWriteProcessor preWriteProcessor = new PreWriteProcessor() {
+				private final Set<PreWriteProcessor> preWriteProcessors =
+						plugins.stream()
+							   .map(p -> p.createPreWriteProcessor(dataType))
+							   .flatMap(Optional::stream)
+							   .collect(toSet());
 
 				@Override
 				public DBObject preWrite(DBObject preWrite) {
@@ -74,6 +86,10 @@ class Plugins {
 					}
 					return preWrite;
 				}
-			});
+			};
+			preWriteProcessors.put(dataType, processor);
+			return preWriteProcessor;
+		}
+		return processor;
 	}
 }
