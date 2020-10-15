@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
@@ -47,7 +48,7 @@ class Plugins {
 			new PostReadProcessor() {
 				private final Set<PostReadProcessor> postReadProcessors = plugins.stream()
 						.map(p -> p.createPostReadProcessor(dt))
-						.flatMap(Optional::stream)
+						.flatMap(OptionalHelper::toStream)
 						.collect(toSet());
 				@Override
 				public DBObject postRead(DBObject postRead) {
@@ -64,7 +65,7 @@ class Plugins {
 			new PreWriteProcessor() {
 				private final Set<PreWriteProcessor> preWriteProcessors = plugins.stream()
 						.map(p -> p.createPreWriteProcessor(dataType))
-						.flatMap(Optional::stream)
+						.flatMap(OptionalHelper::toStream)
 						.collect(toSet());
 
 				@Override
@@ -75,5 +76,11 @@ class Plugins {
 					return preWrite;
 				}
 			});
+	}
+
+	private static class OptionalHelper {
+		private static <T> Stream<T> toStream(Optional<T> o) {
+			return o.map(Stream::of).orElse(Stream.empty());
+		}
 	}
 }
