@@ -91,17 +91,10 @@ public class YmerFactoryTest {
 
 	private DBCollection createMockedEmptyCollection() {
 		final DBCollection collection = mock(DBCollection.class);
-		doReturn(new DBCursor(collection, new BasicDBList(), null, null) {
-			@Override
-			public boolean hasNext() {
-				return false;
-			}
-
-			@Override
-			public Spliterator<DBObject> spliterator() {
-				return Stream.<DBObject>empty().spliterator();
-			}
-		}).when(collection).find();
+		final DBCursor cursor = mock(DBCursor.class);
+		doReturn(false).when(cursor).hasNext();
+		doReturn(Stream.<DBObject>empty().spliterator()).when(cursor).spliterator();
+		doReturn(cursor).when(collection).find();
 		return collection;
 	}
 }
