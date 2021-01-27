@@ -92,7 +92,6 @@ public class YmerFactoryTest {
 	}
 
 	private MongoCollection createMockedEmptyCollection() {
-
 		MongoCollection collection = mock(MongoCollection.class);
 		MongoCursor mongoCursor = mock(MongoCursor.class);
 		FindIterable findIterable = mock(FindIterable.class);
