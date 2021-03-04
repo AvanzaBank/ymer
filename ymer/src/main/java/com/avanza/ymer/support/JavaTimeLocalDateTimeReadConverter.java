@@ -16,11 +16,13 @@
 package com.avanza.ymer.support;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+@ReadingConverter
 public class JavaTimeLocalDateTimeReadConverter implements Converter<Long, LocalDateTime> {
 
     @Override
