@@ -16,10 +16,12 @@
 package com.avanza.ymer.support;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.WritingConverter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+@WritingConverter
 public class JavaLocalDateWriteConverter implements Converter<LocalDate, String> {
 
 	@Override

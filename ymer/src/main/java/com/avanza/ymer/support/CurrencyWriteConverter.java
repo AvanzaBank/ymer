@@ -16,9 +16,11 @@
 package com.avanza.ymer.support;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.WritingConverter;
 
 import java.util.Currency;
 
+@WritingConverter
 public class CurrencyWriteConverter implements Converter<Currency, String> {
 
 	@Override
