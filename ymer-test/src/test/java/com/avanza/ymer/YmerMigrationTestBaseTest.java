@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -136,6 +137,41 @@ public class YmerMigrationTestBaseTest {
 				new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion();
 			}
 		});
+	}
+
+	@Test
+	public void alsoAcceptsDeprecatedBasicDbObjectInMigrationTest() throws Exception {
+		// Arrange
+		final BasicDBObject v1 = new BasicDBObject();
+		v1.put("foo", "bar");
+
+		final BasicDBObject expectedV2 = new BasicDBObject();
+		expectedV2.put("foo", "bar");
+		expectedV2.put("baz", "baz");
+
+		final DocumentPatch patch = new DocumentPatch() {
+			@Override
+			public void apply(BasicDBObject dbObject) {
+				dbObject.put("baz", "baz");
+			}
+
+			@Override
+			public int patchedVersion() {
+				return 1;
+			}
+		};
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Collections.singletonList(
+				MirroredObjectDefinition.create(TestSpaceObject.class)
+						.documentPatches(patch)
+		);
+
+		// Act
+		new FakeTestSuite(
+				new MigrationTest(v1, expectedV2, 1, TestSpaceObject.class),
+				mirroredObjects
+		).migratesTheOldDocumentToTheNextDocumentVersion();
+
+		// Assert that no exceptions were thrown
 	}
 
 	class FakeTestSuite extends YmerMigrationTestBase {
