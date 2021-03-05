@@ -26,6 +26,9 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import com.mongodb.BasicDBObject;
+
 /**
  * Base class for testing that migration of documents is working properly.
  * 
@@ -136,7 +139,18 @@ public abstract class YmerMigrationTestBase {
 			this.fromVersion = oldVersion;
 			this.spaceObjectType = spaceObjectType;
 		}
-		
-	}
 
+		/**
+		 * @deprecated Please use {@link #MigrationTest(Document, Document, int, Class)} instead.
+		 */
+		@Deprecated
+		public MigrationTest(BasicDBObject oldVersionDoc, BasicDBObject expectedPatchedVersion, int oldVersion, Class<?> spaceObjectType) {
+			this(
+					new Document(oldVersionDoc),
+					new Document(expectedPatchedVersion),
+					oldVersion,
+					spaceObjectType
+			);
+		}
+	}
 }
