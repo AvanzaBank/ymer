@@ -15,21 +15,20 @@
  */
 package com.avanza.ymer;
 
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.unset;
+
 import java.net.InetSocketAddress;
 import java.util.function.Consumer;
 
+import org.bson.Document;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 import de.bwaldvogel.mongo.MongoServer;
@@ -57,10 +56,6 @@ public class MirrorEnvironment {
 		return new MongoTemplate(simpleMongoDbFactory);
 	}
 
-	private DB getMongoDb() {
-		return this.mongoClient.getDB(TEST_MIRROR_DB_NAME);
-	}
-
 	private MongoDatabase getMongoDatabase() {
 		return this.mongoClient.getDatabase(TEST_MIRROR_DB_NAME);
 	}
@@ -83,17 +78,8 @@ public class MirrorEnvironment {
 
 	public void removeFormatVersion(Class<?> dataType, Object id) {
 		String collectionName = dataType.getSimpleName().substring(0, 1).toLowerCase() + dataType.getSimpleName().substring(1);
-		DBCollection collection = getMongoDb().getCollection(collectionName);
-		DBObject idQuery = BasicDBObjectBuilder.start("_id", id).get();
-		DBCursor cursor = collection
-			.find(idQuery);
-
-		cursor.next();
-		DBObject obj = cursor.curr();
-		cursor.close();
-
-		obj.removeField("_formatVersion");
-		collection.update(idQuery, obj);
+		MongoCollection<Document> collection = getMongoDatabase().getCollection(collectionName);
+		collection.findOneAndUpdate(eq("_id", id), unset("_formatVersion"));
 	}
 
 }

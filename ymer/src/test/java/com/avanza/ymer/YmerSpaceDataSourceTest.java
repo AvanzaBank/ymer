@@ -127,7 +127,7 @@ public class YmerSpaceDataSourceTest {
 		documentCollection.insert(doc1);
 		documentCollection.insert(doc2);
 		documentCollection.insert(doc3);
-		assertNotNull(externalDataSourceForPartition1.reloadObject(TestReloadableSpaceObject.class, 2));
+		assertNotNull(externalDataSourceForPartition1.loadObject(TestReloadableSpaceObject.class, 2));
 
 		Document dbObject = documentDb.getCollection(mirroredObject.getCollectionName()).findById(2);
 		assertFalse(mirroredObject.requiresPatching(new Document(dbObject)));

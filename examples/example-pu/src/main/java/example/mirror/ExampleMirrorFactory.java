@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.MirroredObjectDefinition;
@@ -62,7 +63,7 @@ public class ExampleMirrorFactory {
 		List<Converter<?, ?>> converters = new ArrayList<>();
 		converters.add(new FruitToBson());
 		converters.add(new BsonToFruit());
-		converter.setCustomConversions(new CustomConversions(converters));
+		converter.setCustomConversions(new MongoCustomConversions(converters));
 		converter.afterPropertiesSet();
 		return converter;
 	}
