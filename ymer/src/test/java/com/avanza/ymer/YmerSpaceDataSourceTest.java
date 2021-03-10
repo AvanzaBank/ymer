@@ -15,21 +15,25 @@
  */
 package com.avanza.ymer;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.message.Message;
+import org.apache.logging.log4j.test.appender.ListAppender;
 import org.awaitility.Awaitility;
 import org.bson.Document;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,6 +43,20 @@ import com.gigaspaces.datasource.DataIterator;
 import com.mongodb.BasicDBObject;
 
 public class YmerSpaceDataSourceTest {
+
+	private static ListAppender appender;
+
+	@BeforeClass
+	public static void setupLogging() {
+		LoggerContext context = LoggerContext.getContext(false);
+		Logger logger = context.getLogger(YmerSpaceDataSource.class.getName());
+		appender = (ListAppender) logger.getAppenders().get("List");
+	}
+
+	@Before
+	public void clearAppender() {
+		appender.clear();
+	}
 
 	private final Integer partitionId = 1;
 	private final int numberOfInstances = 2;
@@ -70,7 +88,7 @@ public class YmerSpaceDataSourceTest {
 		documentCollection.insert(doc2);
 		documentCollection.insert(doc3);
 
-		
+
 		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.load(patchedMirroredDocument, doneDistpacher);
 		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
 	}
@@ -118,13 +136,7 @@ public class YmerSpaceDataSourceTest {
 
 	@Test
 	public void testLoggning(){
-        final TestAppender appender = new TestAppender();
-        final Logger logger = Logger.getLogger(YmerSpaceDataSource.class);
-		try{
-		    logger.setLevel(Level.INFO);
-            logger.addAppender(appender);
-
-            DocumentPatch[] patches = {new FakeSpaceObjectV1Patch()};
+			DocumentPatch[] patches = {new FakeSpaceObjectV1Patch()};
             MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
             DocumentDb fakeDb = FakeDocumentDb.create();
             SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb, SpaceMirrorContext.NO_EXCEPTION_LISTENER, Plugins.empty(), 1);
@@ -142,14 +154,17 @@ public class YmerSpaceDataSourceTest {
             while (objectDataIterator.hasNext()) {
 				objectDataIterator.next();
 			}
-			Awaitility.await().until(() ->
-					appender.getLog().stream()
-							.filter(e -> e.getMessage().toString().startsWith("Loaded 1 documents from fakeSpaceObject"))
-									.count()
-							== 1);
-        } finally {
-            logger.removeAppender(appender);
-		}
+            Awaitility.await()
+                      .until(() -> appender.getEvents()
+                                           .stream()
+                                           .filter(event -> Objects.equals(event.getLevel(), Level.INFO))
+                                           .filter(event -> Objects.equals(event.getLoggerName(),
+                                                                           YmerSpaceDataSource.class.getName()))
+                                           .map(LogEvent::getMessage)
+                                           .map(Message::getFormattedMessage)
+                                           .anyMatch(message -> message.startsWith(
+                                                   "Loaded 1 documents from fakeSpaceObject")),
+                             is(true));
 	}
 
 	private static class FakeSpaceObject {
@@ -239,29 +254,6 @@ public class YmerSpaceDataSourceTest {
 		@Override
 		public Query toQuery(Object template) {
 			throw new UnsupportedOperationException();
-		}
-	}
-
-	class TestAppender extends AppenderSkeleton {
-
-		private final List<LoggingEvent> log = new ArrayList<>();
-
-		@Override
-		public boolean requiresLayout() {
-			return false;
-		}
-
-		@Override
-		protected void append(final LoggingEvent loggingEvent) {
-			log.add(loggingEvent);
-		}
-
-		@Override
-		public void close() {
-		}
-
-		List<LoggingEvent> getLog() {
-			return new ArrayList<>(log);
 		}
 	}
 
