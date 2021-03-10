@@ -31,7 +31,7 @@
 		<repository>
 			<id>gigaspaces</id>
 			<name>GigaSpaces</name>
-			<url>http://maven-repository.openspaces.org/</url>
+			<url>https://gigaspaces-maven-repository-eu.s3.amazonaws.com/</url>
 		</repository>
 	</repositories>
 	<distributionManagement>
