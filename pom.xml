@@ -474,9 +474,9 @@
 				</executions>
 				<configuration>
 					<rules>
-						<!-- Require Maven to be v2.2.1 or later -->
+						<!-- Require Maven to be v3.5.3 or later -->
 						<requireMavenVersion>
-							<version>[2.2.1,)</version>
+							<version>[3.5.3,)</version>
 						</requireMavenVersion>
 					</rules>
 				</configuration>
