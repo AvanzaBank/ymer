@@ -2,8 +2,8 @@
 [![][travis img]][travis]
 [![][maven img]][maven]
 [![][license img]][license]
-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/AvanzaBank/ymer.svg)](http://isitmaintained.com/project/AvanzaBank/Ymer "Average time to resolve an issue")
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/AvanzaBank/ymer.svg)](http://isitmaintained.com/project/AvanzaBank/Ymer "Percentage of issues still open")
+[![Average time to resolve an issue](https://isitmaintained.com/badge/resolution/AvanzaBank/ymer.svg)](https://isitmaintained.com/project/AvanzaBank/Ymer "Average time to resolve an issue")
+[![Percentage of issues still open](https://isitmaintained.com/badge/open/AvanzaBank/ymer.svg)](https://isitmaintained.com/project/AvanzaBank/Ymer "Percentage of issues still open")
 
 
 __Ymer__ is a __MongoDB__ based [SpaceDataSource and SpaceSynchronizationEndpoint](http://docs.gigaspaces.com/xap101/space-persistency.html) for __GigaSpaces__ with support to apply data migrations during initial load.
@@ -215,7 +215,7 @@ Ymer is packed as a single jar file. Maven users can get Ymer using the followin
 <dependency>
   <groupId>com.avanza.ymer</groupId>
   <artifactId>ymer</artifactId>
-  <version>1.1.1</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
@@ -224,12 +224,12 @@ The test support is packed in a distinct jar using the following coordinates:
 <dependency>
   <groupId>com.avanza.ymer</groupId>
   <artifactId>ymer-test</artifactId>
-  <version>1.1.1</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
 ## License
-The Ymer Framework is released under version 2.0 of the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
+The Ymer Framework is released under version 2.0 of the [Apache License](https://www.apache.org/licenses/LICENSE-2.0).
 
 [travis]:https://travis-ci.org/AvanzaBank/ymer
 [travis img]:https://api.travis-ci.org/AvanzaBank/ymer.svg
@@ -240,5 +240,5 @@ The Ymer Framework is released under version 2.0 of the [Apache License](http://
 [license]:LICENSE
 [license img]:https://img.shields.io/badge/License-Apache%202-blue.svg
 
-[maven]:http://search.maven.org/#search|gav|1|g:"com.avanza.ymer"
+[maven]:https://search.maven.org/#search|gav|1|g:"com.avanza.ymer"
 [maven img]:https://maven-badges.herokuapp.com/maven-central/com.avanza.ymer/ymer/badge.svg
