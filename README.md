@@ -10,7 +10,7 @@ __Ymer__ is a __MongoDB__ based [SpaceDataSource and SpaceSynchronizationEndpoin
 
 ## Previous verisons
 
-[v1.0.x](https://github.com/AvanzaBank/ymer/tree/v1.0.x) - Based on GigaSpaces 10.1.1 and Java 8
+[v1.4.x](https://github.com/AvanzaBank/ymer/tree/v1.4.x) - Based on GigaSpaces 10.1.1 and Java 8
 
 
 ## Usage
