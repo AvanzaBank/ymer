@@ -27,18 +27,6 @@ import java.util.Collection;
  */
 public interface SpaceObjectLoader {
 
-	/**
-	 * Triggers reload of a given space object from the secondary storage. <p>
-	 *
-	 * @param spaceType
-	 * @param documentId
-	 * @return
-	 *
-	 * @deprecated Use {@link SpaceObjectLoader#loadObject(Class, Object)} instead
-	 */
-	@Deprecated
-	<T extends ReloadableSpaceObject> T reloadObject(Class<T> spaceType, Object documentId);
-
 	<T> T loadObject(Class<T> spaceType, Object documentId);
 	
 	<T> Collection<T> loadObjects(Class<T> spaceType, T template);

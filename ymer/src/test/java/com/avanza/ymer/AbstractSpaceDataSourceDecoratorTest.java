@@ -91,14 +91,6 @@ public class AbstractSpaceDataSourceDecoratorTest {
 	}
 
 	@Test
-	public void testReloadObject() throws Exception {
-		ReloadableSpaceObject reloadableSpaceObject = mock(ReloadableSpaceObject.class);
-		target.reloadObject(reloadableSpaceObject.getClass(), reloadableSpaceObject);
-
-		verify(this.mock, times(1)).reloadObject(reloadableSpaceObject.getClass(), reloadableSpaceObject);
-	}
-
-	@Test
 	public void testLoadObjects() throws Exception {
 		String string = "test";
 		target.loadObjects(String.class, string);
