@@ -18,6 +18,7 @@ package com.avanza.ymer;
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
 import com.mongodb.BasicDBObject;
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
@@ -29,12 +30,11 @@ import static org.junit.Assert.assertEquals;
 
 public class YmerInitialLoadIntegrationTest {
 	
-	static MirroredObject<TestSpaceObject> mirroredObject = MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-	static MirroredObject<TestSpaceOtherObject> mirroredOtherDocument = MirroredObjectDefinition.create(TestSpaceOtherObject.class)
-																									.writeBackPatchedDocuments(false)
-																									.documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-	static MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject, mirroredOtherDocument);
-	
+	private static final MirroredObject<TestSpaceObject> mirroredObject = TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT
+			.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+	private static final MirroredObject<TestSpaceOtherObject> mirroredOtherDocument = TestSpaceMirrorObjectDefinitions.TEST_SPACE_OTHER_OBJECT
+			.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+
 	public static MirrorEnvironment mirrorEnv = new MirrorEnvironment();
 	
 	public RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
@@ -50,23 +50,23 @@ public class YmerInitialLoadIntegrationTest {
 
 	@Test
 	public void migratesOldDocumentOnInitialLoad() throws Exception {
-		BasicDBObject spaceObjectV1 = new BasicDBObject();
+		Document spaceObjectV1 = new Document();
 		spaceObjectV1.put("_id", "id_v1");
 		spaceObjectV1.put("message", "Msg_V1");
 		
-		BasicDBObject spaceObjectV2 = new BasicDBObject();
+		Document spaceObjectV2 = new Document();
 		spaceObjectV2.put("_id", "id_v2");
 		spaceObjectV2.put("message", "Msg_V2");
-		spaceObjectV2.put(MirroredObject.DOCUMENT_FORMAT_VERSION_PROPERTY, 2);
+		spaceObjectV2.put(MirroredObject.DOCUMENT_FORMAT_VERSION_PROPERTY, 3);
 		
-		BasicDBObject spaceOtherObject = new BasicDBObject();
+		Document spaceOtherObject = new Document();
 		spaceOtherObject.put("_id", "otherId");
 		spaceOtherObject.put("message", "Msg_V1");
 		
 		MongoTemplate mongoTemplate = mirrorEnv.getMongoTemplate();
-		mongoTemplate.getCollection(mirroredObject.getCollectionName()).insert(spaceObjectV1);
-		mongoTemplate.getCollection(mirroredObject.getCollectionName()).insert(spaceObjectV2);
-		mongoTemplate.getCollection(mirroredOtherDocument.getCollectionName()).insert(spaceOtherObject);
+		mongoTemplate.getCollection(mirroredObject.getCollectionName()).insertOne(spaceObjectV1);
+		mongoTemplate.getCollection(mirroredObject.getCollectionName()).insertOne(spaceObjectV2);
+		mongoTemplate.getCollection(mirroredOtherDocument.getCollectionName()).insertOne(spaceOtherObject);
 
 		pu.start();
 		
@@ -74,23 +74,25 @@ public class YmerInitialLoadIntegrationTest {
 		GigaSpace gigaSpace = pu.getClusteredGigaSpace();
 		assertEquals(2, gigaSpace.count(new TestSpaceObject()));
 		TestSpaceObject testSpaceObject = gigaSpace.readById(TestSpaceObject.class, "id_v1");
-		assertEquals("patched_Msg_V1", testSpaceObject.getMessage());
+		assertEquals("patch2_patched_Msg_V1", testSpaceObject.getMessage());
+		TestSpaceObject testSpaceObject2 = gigaSpace.readById(TestSpaceObject.class, "id_v2");
+		assertEquals("Msg_V2", testSpaceObject2.getMessage());
 		
-		List<BasicDBObject> allDocs = mongoTemplate.findAll(BasicDBObject.class, mirroredObject.getCollectionName());
+		List<Document> allDocs = mongoTemplate.findAll(Document.class, mirroredObject.getCollectionName());
 		assertEquals(2, allDocs.size());
-		assertEquals(2, mirroredObject.getDocumentVersion(allDocs.get(0)));
-		assertEquals(2, mirroredObject.getDocumentVersion(allDocs.get(1)));
+		assertEquals(3, mirroredObject.getDocumentVersion(allDocs.get(0)));
+		assertEquals(3, mirroredObject.getDocumentVersion(allDocs.get(1)));
 		
 		// Verify SpaceOtherObject
 		assertEquals(1, gigaSpace.count(new TestSpaceOtherObject()));
 		TestSpaceOtherObject testSpaceOtherObject = gigaSpace.readById(TestSpaceOtherObject.class, "otherId");
 		assertEquals("patched_Msg_V1", testSpaceOtherObject.getMessage());
 		
-		List<BasicDBObject> allOtherDocs = mongoTemplate.findAll(BasicDBObject.class, mirroredOtherDocument.getCollectionName());
+		List<Document> allOtherDocs = mongoTemplate.findAll(Document.class, mirroredOtherDocument.getCollectionName());
 		assertEquals(1, allOtherDocs.size());
 		assertEquals(1, mirroredOtherDocument.getDocumentVersion(allOtherDocs.get(0)));
 	}
-	
+
 	public static class TestSpaceObjectV1Patch implements DocumentPatch {
 		@Override
 		public void apply(BasicDBObject dbObject) {
@@ -101,7 +103,17 @@ public class YmerInitialLoadIntegrationTest {
 		public int patchedVersion() {
 			return 1;
 		}
-		
 	}
-	
+
+	public static class TestSpaceObjectV2Patch implements BsonDocumentPatch {
+		@Override
+		public void apply(Document document) {
+			document.put("message", "patch2_" + document.getString("message"));
+		}
+
+		@Override
+		public int patchedVersion() {
+			return 2;
+		}
+	}
 }

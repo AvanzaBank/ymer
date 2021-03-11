@@ -19,7 +19,9 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.WritingConverter;
 
+@WritingConverter
 public class JavaInstantWriteConverter implements Converter<Instant, String> {
     @Override
     public String convert(Instant instant) {

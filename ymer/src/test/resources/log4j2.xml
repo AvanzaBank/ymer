@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="60" shutdownHook="disable">
+<Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+        <PatternLayout pattern="%-4r [%t] %-5p %c %x - %m%n" />
+    </Console>
+    <!-- Needs for YmerSpaceDataSourceTest#testLogging to verify logging -->
+    <List name="List">
+    </List>
+</Appenders>
+<Loggers>
+    <Logger name="com.avanza.ymer.YmerSpaceDataSource" level="info" additivity="false">
+        <AppenderRef ref="Console" />
+        <!-- Needs for YmerSpaceDataSourceTest#testLogging to verify logging -->
+        <AppenderRef ref="List" />
+    </Logger>
+    <Root level="warn">
+        <AppenderRef ref="Console" />
+    </Root>
+</Loggers>
+</Configuration>

@@ -23,12 +23,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.plugin.PreWriteProcessor;
-import com.mongodb.DBObject;
+
+import org.bson.Document;
 
 class Plugins {
 	private final Set<Plugin> plugins;
@@ -48,10 +48,10 @@ class Plugins {
 			new PostReadProcessor() {
 				private final Set<PostReadProcessor> postReadProcessors = plugins.stream()
 						.map(p -> p.createPostReadProcessor(dt))
-						.flatMap(OptionalHelper::toStream)
+						.flatMap(Optional::stream)
 						.collect(toSet());
 				@Override
-				public DBObject postRead(DBObject postRead) {
+				public Document postRead(Document postRead) {
 					for (PostReadProcessor processor : postReadProcessors) {
 						postRead = processor.postRead(postRead);
 					}
@@ -65,22 +65,16 @@ class Plugins {
 			new PreWriteProcessor() {
 				private final Set<PreWriteProcessor> preWriteProcessors = plugins.stream()
 						.map(p -> p.createPreWriteProcessor(dataType))
-						.flatMap(OptionalHelper::toStream)
+						.flatMap(Optional::stream)
 						.collect(toSet());
 
 				@Override
-				public DBObject preWrite(DBObject preWrite) {
+				public Document preWrite(Document preWrite) {
 					for (PreWriteProcessor processor : preWriteProcessors) {
 						preWrite = processor.preWrite(preWrite);
 					}
 					return preWrite;
 				}
 			});
-	}
-
-	private static class OptionalHelper {
-		private static <T> Stream<T> toStream(Optional<T> o) {
-			return o.map(Stream::of).orElse(Stream.empty());
-		}
 	}
 }

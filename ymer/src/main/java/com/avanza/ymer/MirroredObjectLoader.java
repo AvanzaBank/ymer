@@ -15,18 +15,17 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.plugin.PostReadProcessor;
-import com.avanza.ymer.util.OptionalUtil;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.avanza.ymer.plugin.PostReadProcessor;
+import com.avanza.ymer.util.OptionalUtil;
 
 /**
  * Loads mirrored objects from an external (persistent) source.
@@ -73,9 +72,11 @@ final class MirroredObjectLoader<T> {
                 .flatMap(OptionalUtil::asStream);
     }
 
-    private Stream<DBObject> loadDocuments() {
+    private Stream<Document> loadDocuments() {
         if (mirroredObject.hasCustomInitialLoadTemplate()) {
-            BasicDBObject template = mirroredObject.getCustomInitialLoadTemplateFactory().create(contextProperties.getPartitionCount(), contextProperties.getInstanceId());
+            Document template = mirroredObject.getCustomInitialLoadTemplateFactory()
+                                                   .create(contextProperties.getPartitionCount(),
+                                                           contextProperties.getInstanceId());
             return documentCollection.findByTemplate(template);
         }
         if (mirroredObject.loadDocumentsRouted()) {
@@ -84,17 +85,17 @@ final class MirroredObjectLoader<T> {
         return documentCollection.findAll();
     }
 
-    private Optional<LoadedDocument<T>> tryPatchAndConvert(DBObject object) {
+    private Optional<LoadedDocument<T>> tryPatchAndConvert(Document document) {
         try {
             Optional<LoadedDocument<T>> result;
             try {
-                result = patchAndConvert(new BasicDBObject(object.toMap()));
+                result = patchAndConvert(new Document(document));
             } catch (RuntimeException e) {
                 // MongoConverter is not thread-safe due to a bug in AbstractMappingContext.addPersistentEntity().
                 // The bug occurs at most once or twice per collection but will produce objects without any properties set
                 // Resolve it temporarily by retrying.
-                log.warn("Failed to load dbObject=" + object + ". Retrying.", e);
-                result = patchAndConvert(new BasicDBObject(object.toMap()));
+                log.warn("Failed to load dbObject=" + document + ". Retrying.", e);
+                result = patchAndConvert(new Document(document));
             }
             long loaded = numLoadedObjects.incrementAndGet();
             if (loaded % 10000 == 0) {
@@ -102,13 +103,13 @@ final class MirroredObjectLoader<T> {
             }
             return result;
         } catch (RuntimeException e) {
-            log.error("Unable to load dbObject=" + object, e);
+            log.error("Unable to load document=" + document, e);
             throw e;
         }
     }
 
     Optional<LoadedDocument<T>> loadById(Object id) {
-        BasicDBObject document = findById(id);
+        Document document = findById(id);
         if (document == null) {
             return Optional.empty();
         }
@@ -119,25 +120,24 @@ final class MirroredObjectLoader<T> {
 
     List<LoadedDocument<T>> loadByQuery(T template) {
         return documentCollection.findByQuery(documentConverter.toQuery(template))
-                .map(BasicDBObject.class::cast)
                 .map(this::patchAndConvert)
                 .flatMap(OptionalUtil::asStream)
                 .collect(Collectors.toList());
     }
 
-    private BasicDBObject findById(Object id) {
+    private Document findById(Object id) {
         final Object convertedId = documentConverter.convertToMongoObject(id);
-        final DBObject dbObject = documentCollection.findById(convertedId);
-        return dbObject != null ? new BasicDBObject(dbObject.toMap()) : null;
+        final Document document = documentCollection.findById(convertedId);
+        return document != null ? new Document(document) : null;
     }
 
-    private Optional<LoadedDocument<T>> patchAndConvert(BasicDBObject dbObject) {
-        BasicDBObject currentVersion = dbObject;
+    private Optional<LoadedDocument<T>> patchAndConvert(Document document) {
+        Document currentVersion = document;
         boolean patched = false;
-        if (this.mirroredObject.requiresPatching(dbObject)) {
+        if (this.mirroredObject.requiresPatching(document)) {
             patched = true;
             try {
-                currentVersion = (BasicDBObject) dbObject.copy();
+                currentVersion = new Document(document);
                 postReadProcessor.postRead(currentVersion);
                 currentVersion = this.mirroredObject.patch(currentVersion);
             } catch (RuntimeException e) {
@@ -152,7 +152,7 @@ final class MirroredObjectLoader<T> {
             return Optional.empty();
         }
         if (patched) {
-            return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.of(new PatchedDocument(dbObject, currentVersion))));
+            return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.of(new PatchedDocument(document, currentVersion))));
         }
         return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.empty()));
     }

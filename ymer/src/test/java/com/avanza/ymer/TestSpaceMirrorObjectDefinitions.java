@@ -19,14 +19,28 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
+import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV2Patch;
 
 public class TestSpaceMirrorObjectDefinitions  {
 
+	public static final MirroredObjectDefinition<TestSpaceObject> TEST_SPACE_OBJECT =
+			MirroredObjectDefinition.create(TestSpaceObject.class)
+					.documentPatches(new TestSpaceObjectV1Patch(), new TestSpaceObjectV2Patch());
+
+	public static final MirroredObjectDefinition<TestSpaceOtherObject> TEST_SPACE_OTHER_OBJECT =
+			MirroredObjectDefinition.create(TestSpaceOtherObject.class)
+					.writeBackPatchedDocuments(false)
+					.documentPatches(new TestSpaceObjectV1Patch());
+
+	public static final MirroredObjectDefinition<TestSpaceThirdObject> TEST_SPACE_THIRD_OBJECT =
+			MirroredObjectDefinition.create(TestSpaceThirdObject.class)
+					.documentPatches(new TestSpaceThirdObject.TestSpaceThirdObjectPatchV1());
+
 	public Collection<MirroredObjectDefinition<?>> getDefinitions() {
 		return Arrays.asList(
-				MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()),
-				MirroredObjectDefinition.create(TestSpaceOtherObject.class).writeBackPatchedDocuments(false).documentPatches(new TestSpaceObjectV1Patch()),
-				MirroredObjectDefinition.create(TestSpaceThirdObject.class).documentPatches(new TestSpaceThirdObject.TestSpaceThirdObjectPatchV1())
+				TEST_SPACE_OBJECT,
+				TEST_SPACE_OTHER_OBJECT,
+				TEST_SPACE_THIRD_OBJECT
 		);
 	}
 

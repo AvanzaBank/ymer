@@ -17,6 +17,7 @@ package com.avanza.ymer;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -25,9 +26,8 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Spliterator;
-import java.util.stream.Stream;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -35,17 +35,16 @@ import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import com.avanza.ymer.MongoDocumentCollectionTest.FakeSpaceObject;
-import com.mongodb.BasicDBList;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
 
 public class YmerFactoryTest {
-	private final DB db = mock(DB.class);
-	private final DBCollection fakeSpaceObjectCollection = createMockedEmptyCollection();
-	private final DBCollection testSpaceObjectCollection = createMockedEmptyCollection();
+	private final MongoDatabase db = mock(MongoDatabase.class);
+	private final MongoCollection<Document> fakeSpaceObjectCollection = createMockedEmptyCollection();
+	private final MongoCollection<Document> testSpaceObjectCollection = createMockedEmptyCollection();
 
 	@Before
 	public void beforeEachTest() {
@@ -61,8 +60,11 @@ public class YmerFactoryTest {
 				MirroredObjectDefinition.create(FakeSpaceObject.class)
 						.withReadPreference(ReadPreference.secondaryPreferred())
 		);
-		final YmerFactory factory = new YmerFactory(createMockedFactory(db), mock(MongoConverter.class), definitions)
+		final YmerFactory factory = new YmerFactory(createMockedFactory(db),
+													mock(MongoConverter.class),
+													definitions)
 				.withReadPreference(ReadPreference.primaryPreferred());
+
 		final YmerSpaceDataSource ysds = (YmerSpaceDataSource) factory.createSpaceDataSource();
 		ysds.setClusterInfo(new ClusterInfo("schema", 1, 1, 1, 1));
 
@@ -72,8 +74,8 @@ public class YmerFactoryTest {
 		// Assert
 		final ArgumentCaptor<ReadPreference> testSpaceReadPreferenceCaptor = ArgumentCaptor.forClass(ReadPreference.class);
 		final ArgumentCaptor<ReadPreference> fakeSpaceReadPreferenceCaptor = ArgumentCaptor.forClass(ReadPreference.class);
-		verify(testSpaceObjectCollection).setReadPreference(testSpaceReadPreferenceCaptor.capture());
-		verify(fakeSpaceObjectCollection).setReadPreference(fakeSpaceReadPreferenceCaptor.capture());
+		verify(testSpaceObjectCollection).withReadPreference(testSpaceReadPreferenceCaptor.capture());
+		verify(fakeSpaceObjectCollection).withReadPreference(fakeSpaceReadPreferenceCaptor.capture());
 
 		// We have explicitly set the readPreference on the "FakeSpaceObject" collection,
 		// so this should have been used for that:
@@ -83,18 +85,21 @@ public class YmerFactoryTest {
 		assertThat(testSpaceReadPreferenceCaptor.getValue(), equalTo(ReadPreference.primaryPreferred()));
 	}
 
-	private MongoDbFactory createMockedFactory(DB db) {
-		final MongoDbFactory mongoDbFactory = mock(MongoDbFactory.class);
+	private MongoDbFactory createMockedFactory(MongoDatabase db) {
+		MongoDbFactory mongoDbFactory = mock(MongoDbFactory.class);
 		when(mongoDbFactory.getDb()).thenReturn(db);
 		return mongoDbFactory;
 	}
 
-	private DBCollection createMockedEmptyCollection() {
-		final DBCollection collection = mock(DBCollection.class);
-		final DBCursor cursor = mock(DBCursor.class);
-		doReturn(false).when(cursor).hasNext();
-		doReturn(Stream.<DBObject>empty().spliterator()).when(cursor).spliterator();
-		doReturn(cursor).when(collection).find();
+	private MongoCollection createMockedEmptyCollection() {
+		MongoCollection collection = mock(MongoCollection.class);
+		MongoCursor mongoCursor = mock(MongoCursor.class);
+		FindIterable findIterable = mock(FindIterable.class);
+
+		doReturn(false).when(mongoCursor).hasNext();
+		doReturn(mongoCursor).when(findIterable).iterator();
+		doCallRealMethod().when(findIterable).spliterator();
+		doReturn(findIterable).when(collection).find();
 		return collection;
 	}
 }

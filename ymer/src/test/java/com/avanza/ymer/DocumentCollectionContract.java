@@ -29,11 +29,9 @@ import static org.junit.Assert.fail;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * @author Elias Lindholm (elilin)
@@ -52,29 +50,29 @@ public abstract class DocumentCollectionContract {
 
 	@Test
 	public void insertAddsAnElement() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
 		documentCollection.insert(d1);
-		Iterator<DBObject> allDocs = documentCollection.findAll().iterator();
+		Iterator<Document> allDocs = documentCollection.findAll().iterator();
 		assertEquals(d1, allDocs.next());
 		assertFalse(allDocs.hasNext());
 	}
 	
 	@Test
 	public void insertExistingDocumentDoesNothing() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
 		documentCollection.insert(d1);
 
-		BasicDBObject copy = (BasicDBObject) d1.copy();
+		Document copy = new Document(d1);
 		copy.put("count", 22); // copy has another count
 		try {
 			documentCollection.insert(copy);
-			fail("Expected exeption of type: " + DuplicateDocumentKeyException.class.getName());
+			fail("Expected exception of type: " + DuplicateDocumentKeyException.class.getName());
 		} catch (DuplicateDocumentKeyException e) {
 			// Expected 
 		}
@@ -87,7 +85,7 @@ public abstract class DocumentCollectionContract {
 
 	@Test
 	public void insertGeneratesIdIfNotSet() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("count", 21);
 		assertNull(d1.get("_id"));
 
@@ -100,55 +98,55 @@ public abstract class DocumentCollectionContract {
 
 	@Test
 	public void replaceUpdatesAnExistingObjectIfIdHasNotChanged() throws Exception {
-		BasicDBObject dbObject = new BasicDBObject();
-		dbObject.put("_id", "id_1");
-		dbObject.put("count", 21);
+		Document document = new Document();
+		document.put("_id", "id_1");
+		document.put("count", 21);
 
-		documentCollection.insert(dbObject);
+		documentCollection.insert(document);
 
-		BasicDBObject newVersion = (BasicDBObject) dbObject.copy();
+		Document newVersion = new Document(document);
 		newVersion.put("count", 22);
 
-		documentCollection.replace(dbObject, newVersion);
+		documentCollection.replace(document, newVersion);
 
 		assertEquals(1, sizeOf(documentCollection.findAll()));
-		BasicDBObject dbVersion = (BasicDBObject) documentCollection.findAll().iterator().next();
+		Document dbVersion = documentCollection.findAll().iterator().next();
 		assertEquals(22, dbVersion.get("count"));
 	}
 
 	@Test
 	public void replaceWithNewIdRemovesOldDocumentAndInsertsNew() throws Exception {
-		BasicDBObject dbObject = new BasicDBObject();
-		dbObject.put("_id", "id_1");
-		dbObject.put("count", 21);
+		Document document = new Document();
+		document.put("_id", "id_1");
+		document.put("count", 21);
 
-		documentCollection.insert(dbObject);
+		documentCollection.insert(document);
 
-		BasicDBObject newVersion = (BasicDBObject) dbObject.copy();
+		Document newVersion = new Document(document);
 		newVersion.put("_id", "id_2");
 
-		documentCollection.replace(dbObject, newVersion);
+		documentCollection.replace(document, newVersion);
 
 		assertEquals(1, sizeOf(documentCollection.findAll()));
-		BasicDBObject dbVersion = (BasicDBObject) documentCollection.findAll().iterator().next();
+		Document dbVersion = documentCollection.findAll().iterator().next();
 		assertEquals(21, dbVersion.get("count"));
 		assertEquals("id_2", dbVersion.get("_id"));
 	}
 
 	@Test
 	public void findAllReturnsAllDocuments() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
-		BasicDBObject d2 = new BasicDBObject();
+		Document d2 = new Document();
 		d2.put("_id", "id_2");
 		d2.put("count", 55);
 
 		documentCollection.insert(d1);
 		documentCollection.insert(d2);
 
-		List<DBObject> all = newArrayList(documentCollection.findAll());
+		List<Document> all = newArrayList(documentCollection.findAll());
 		assertEquals(2, all.size());
 		assertEquals(d1, firstElementWithId(all, "id_1"));
 		assertEquals(d2, firstElementWithId(all, "id_2"));
@@ -156,11 +154,11 @@ public abstract class DocumentCollectionContract {
 
 	@Test
 	public void findByIdReturnsAGivenDocument() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
-		BasicDBObject d2 = new BasicDBObject();
+		Document d2 = new Document();
 		d2.put("_id", "id_2");
 		d2.put("count", 55);
 
@@ -178,15 +176,15 @@ public abstract class DocumentCollectionContract {
 
 	@Test
 	public void deleteOnlyRequiresIdFieldToBeSet() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
-		BasicDBObject d2 = new BasicDBObject();
+		Document d2 = new Document();
 		d2.put("_id", "id_2");
 		d2.put("count", 55);
 
-		BasicDBObject d1Template = new BasicDBObject();
+		Document d1Template = new Document();
 		d1Template.put("_id", "id_1");
 
 		documentCollection.insert(d1);
@@ -199,7 +197,7 @@ public abstract class DocumentCollectionContract {
 
 	@Test
 	public void deleteNonExistingDocumentDoesNothing() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
@@ -210,14 +208,14 @@ public abstract class DocumentCollectionContract {
 
 	@Test
 	public void deleteDoesFullTemplateMatchIfAnotherElementThanIdFieldIsSet() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
 		documentCollection.insert(d1);
 		assertEquals(1, sizeOf(documentCollection.findAll()));
 
-		BasicDBObject d2 = new BasicDBObject();
+		Document d2 = new Document();
 		d2.put("_id", d1.get("_id"));
 		d2.put("count", 22);
 
@@ -227,13 +225,13 @@ public abstract class DocumentCollectionContract {
 
 	@Test
 	public void updateReplacesAnExistingDocument() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
 		documentCollection.insert(d1);
 
-		BasicDBObject updated = (BasicDBObject) d1.copy();
+		Document updated = new Document(d1);
 		updated.put("count", 22); // copy has another count
 		documentCollection.update(updated);
 
@@ -246,7 +244,7 @@ public abstract class DocumentCollectionContract {
 
 	@Test
 	public void updateInsertAGivenDocumentIfItDoesNotExists() throws Exception {
-		BasicDBObject d1 = new BasicDBObject();
+		Document d1 = new Document();
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
@@ -256,9 +254,7 @@ public abstract class DocumentCollectionContract {
 		assertEquals(d1, documentCollection.findAll().iterator().next());
 	}
 
-	private DBObject firstElementWithId(List<DBObject> all, final String id) {
+	private Document firstElementWithId(List<Document> all, final String id) {
 		return all.stream().filter(input -> input.get("_id").equals(id)).findFirst().get();
 	}
-
-
 }

@@ -15,20 +15,20 @@
  */
 package com.avanza.ymer;
 
-import org.springframework.data.mongodb.core.query.Query;
+import java.util.Optional;
 
-import com.avanza.ymer.DocumentConverter;
-import com.mongodb.BasicDBObject;
+import org.bson.Document;
+import org.springframework.data.mongodb.core.query.Query;
 
 public class TestSpaceObjectFakeConverter {
 
 	static DocumentConverter create() {
 		return DocumentConverter.create(new DocumentConverter.Provider() {
 			@Override
-			public BasicDBObject convertToDBObject(Object type) {
+			public Document convertToBsonDocument(Object type) {
 				if (type instanceof TestSpaceObject) {
 					TestSpaceObject testSpaceObject = (TestSpaceObject) type;
-					BasicDBObject dbObject = new BasicDBObject();
+					Document dbObject = new Document();
 					dbObject.put("_id", testSpaceObject.getId());
 					if (testSpaceObject.getMessage() != null) {
 						dbObject.put("message", testSpaceObject.getMessage());
@@ -36,7 +36,7 @@ public class TestSpaceObjectFakeConverter {
 					return dbObject;
 				} else if (type instanceof TestSpaceOtherObject) {
 					TestSpaceOtherObject testSpaceOtherObject = (TestSpaceOtherObject) type;
-					BasicDBObject dbObject = new BasicDBObject();
+					Document dbObject = new Document();
 					dbObject.put("_id", testSpaceOtherObject.getId());
 					if (testSpaceOtherObject.getMessage() != null) {
 						dbObject.put("message", testSpaceOtherObject.getMessage());
@@ -44,7 +44,7 @@ public class TestSpaceObjectFakeConverter {
 					return dbObject;
 				} else if (type instanceof TestReloadableSpaceObject) {
 					TestReloadableSpaceObject testSpaceObject = (TestReloadableSpaceObject) type;
-					BasicDBObject dbObject = new BasicDBObject();
+					Document dbObject = new Document();
 					dbObject.put("_id", testSpaceObject.getId());
 					dbObject.put("patched", testSpaceObject.isPatched());
 					dbObject.put("versionID", testSpaceObject.getVersionID());
@@ -58,7 +58,7 @@ public class TestSpaceObjectFakeConverter {
 			}
 
 			@Override
-			public <T> T convert(Class<T> toType, BasicDBObject document) {
+			public <T> T convert(Class<T> toType, Document document) {
 				if (toType.equals(TestSpaceObject.class)) {
 					TestSpaceObject testSpaceObject = new TestSpaceObject();
 					testSpaceObject.setId(document.getString("_id"));
@@ -66,13 +66,13 @@ public class TestSpaceObjectFakeConverter {
 					return toType.cast(testSpaceObject);
 				} else if (toType.equals(TestReloadableSpaceObject.class)){
 					TestReloadableSpaceObject testSpaceObject = new TestReloadableSpaceObject();
-					testSpaceObject.setId(document.getInt("_id"));
-					if (document.containsField("patched")) {
+					testSpaceObject.setId(Optional.ofNullable(document.getInteger("_id")).orElseThrow(NullPointerException::new));
+					if (document.containsKey("patched")) {
 						testSpaceObject.setPatched(document.getBoolean("patched"));
 					}
-					testSpaceObject.setVersionID(document.getInt("versionID"));
-					if (document.containsField("latestRestoreVersion")) {
-						testSpaceObject.setLatestRestoreVersion(document.getInt("latestRestoreVersion"));
+					testSpaceObject.setVersionID(Optional.ofNullable(document.getInteger("versionID")).orElseThrow(NullPointerException::new));
+					if (document.containsKey("latestRestoreVersion")) {
+						testSpaceObject.setLatestRestoreVersion(Optional.ofNullable(document.getInteger("latestRestoreVersion")).orElseThrow(NullPointerException::new));
 					}
 					return toType.cast(testSpaceObject);
 				} else {

@@ -15,28 +15,48 @@
  */
 package com.avanza.ymer;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.message.Message;
+import org.apache.logging.log4j.test.appender.ListAppender;
+import org.awaitility.Awaitility;
+import org.bson.Document;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.openspaces.core.cluster.ClusterInfo;
+import org.springframework.data.mongodb.core.query.Query;
 import com.avanza.ymer.YmerSpaceDataSource.InitialLoadCompleteDispatcher;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.gigaspaces.datasource.DataIterator;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
-import org.awaitility.Awaitility;
-import org.junit.Test;
-import org.openspaces.core.cluster.ClusterInfo;
-import org.springframework.data.mongodb.core.query.Query;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
-import static org.junit.Assert.*;
-
 
 public class YmerSpaceDataSourceTest {
+
+	private static ListAppender appender;
+
+	@BeforeClass
+	public static void setupLogging() {
+		LoggerContext context = LoggerContext.getContext(false);
+		Logger logger = context.getLogger(YmerSpaceDataSource.class.getName());
+		appender = (ListAppender) logger.getAppenders().get("List");
+	}
+
+	@Before
+	public void clearAppender() {
+		appender.clear();
+	}
 
 	private final Integer partitionId = 1;
 	private final int numberOfInstances = 2;
@@ -52,15 +72,15 @@ public class YmerSpaceDataSourceTest {
 		ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
 		DocumentCollection documentCollection = fakeDb.getCollection(patchedMirroredDocument.getCollectionName());
-		BasicDBObject doc1 = new BasicDBObject();
+		Document doc1 = new Document();
 		doc1.put("_id", 1);
 		doc1.put("spaceRouting", 1);
 
-		BasicDBObject doc2 = new BasicDBObject();
+		Document doc2 = new Document();
 		doc2.put("_id", 2);
 		doc2.put("spaceRouting", 2);
 
-		BasicDBObject doc3 = new BasicDBObject();
+		Document doc3 = new Document();
 		doc3.put("_id", 3);
 		doc3.put("spaceRouting", 3);
 
@@ -68,7 +88,7 @@ public class YmerSpaceDataSourceTest {
 		documentCollection.insert(doc2);
 		documentCollection.insert(doc3);
 
-		
+
 		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.load(patchedMirroredDocument, doneDistpacher);
 		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
 	}
@@ -89,17 +109,17 @@ public class YmerSpaceDataSourceTest {
 		externalDataSourceForPartition1.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
 		DocumentCollection documentCollection = documentDb.getCollection(mirroredObject.getCollectionName());
-		BasicDBObject doc1 = new BasicDBObject();
+		Document doc1 = new Document();
 		doc1.put("_id", 1);
 		doc1.put("spaceRouting", 1);
 		doc1.put("versionID", 1);
 
-		BasicDBObject doc2 = new BasicDBObject();
+		Document doc2 = new Document();
 		doc2.put("_id", 2);
 		doc2.put("spaceRouting", 2);
 		doc2.put("versionID", 1);
 
-		BasicDBObject doc3 = new BasicDBObject();
+		Document doc3 = new Document();
 		doc3.put("_id", 3);
 		doc3.put("spaceRouting", 3);
 		doc3.put("versionID", 1);
@@ -107,22 +127,16 @@ public class YmerSpaceDataSourceTest {
 		documentCollection.insert(doc1);
 		documentCollection.insert(doc2);
 		documentCollection.insert(doc3);
-		assertNotNull(externalDataSourceForPartition1.reloadObject(TestReloadableSpaceObject.class, 2));
+		assertNotNull(externalDataSourceForPartition1.loadObject(TestReloadableSpaceObject.class, 2));
 
-		DBObject dbObject = documentDb.getCollection(mirroredObject.getCollectionName()).findById(2);
-		assertFalse(mirroredObject.requiresPatching(new BasicDBObject(dbObject.toMap())));
+		Document dbObject = documentDb.getCollection(mirroredObject.getCollectionName()).findById(2);
+		assertFalse(mirroredObject.requiresPatching(new Document(dbObject)));
 	}
 
 
 	@Test
 	public void testLoggning(){
-        final TestAppender appender = new TestAppender();
-        final Logger logger = Logger.getLogger(YmerSpaceDataSource.class);
-		try{
-		    logger.setLevel(Level.INFO);
-            logger.addAppender(appender);
-
-            DocumentPatch[] patches = {new FakeSpaceObjectV1Patch()};
+			DocumentPatch[] patches = {new FakeSpaceObjectV1Patch()};
             MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
             DocumentDb fakeDb = FakeDocumentDb.create();
             SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb, SpaceMirrorContext.NO_EXCEPTION_LISTENER, Plugins.empty(), 1);
@@ -130,7 +144,7 @@ public class YmerSpaceDataSourceTest {
             ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
 
             DocumentCollection documentCollection = fakeDb.getCollection(patchedMirroredDocument.getCollectionName());
-            BasicDBObject doc2 = new BasicDBObject();
+			Document doc2 = new Document();
             doc2.put("_id", 2);
             doc2.put("spaceRouting", 2);
 
@@ -140,14 +154,17 @@ public class YmerSpaceDataSourceTest {
             while (objectDataIterator.hasNext()) {
 				objectDataIterator.next();
 			}
-			Awaitility.await().until(() ->
-					appender.getLog().stream()
-							.filter(e -> e.getMessage().toString().startsWith("Loaded 1 documents from fakeSpaceObject"))
-									.count()
-							== 1);
-        } finally {
-            logger.removeAppender(appender);
-		}
+            Awaitility.await()
+                      .until(() -> appender.getEvents()
+                                           .stream()
+                                           .filter(event -> Objects.equals(event.getLevel(), Level.INFO))
+                                           .filter(event -> Objects.equals(event.getLoggerName(),
+                                                                           YmerSpaceDataSource.class.getName()))
+                                           .map(LogEvent::getMessage)
+                                           .map(Message::getFormattedMessage)
+                                           .anyMatch(message -> message.startsWith(
+                                                   "Loaded 1 documents from fakeSpaceObject")),
+                             is(true));
 	}
 
 	private static class FakeSpaceObject {
@@ -206,16 +223,23 @@ public class YmerSpaceDataSourceTest {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public <T> T convert(Class<T> toType, BasicDBObject document) {
+		public <T> T convert(Class<T> toType, Document document) {
 			FakeSpaceObject spaceObject = new FakeSpaceObject();
-			spaceObject.setSpaceRouting(document.getInt("spaceRouting"));
-			spaceObject.setId(document.getInt("_id"));
+
+			Integer spaceRouting = Optional.ofNullable(document.getInteger("spaceRouting"))
+										   .orElseThrow(() -> new NullPointerException("no value for: spaceRouting"));
+
+			Integer id = Optional.ofNullable(document.getInteger("_id"))
+								 .orElseThrow(() -> new NullPointerException("no value for: _id"));
+								 ;
+			spaceObject.setSpaceRouting(spaceRouting);
+			spaceObject.setId(id);
 			return (T) spaceObject;
 		}
 
 		@Override
-		public BasicDBObject convertToDBObject(Object type) {
-			throw new UnsupportedOperationException();
+		public Document convertToBsonDocument(Object type) {
+			return null;
 		}
 
 		public static DocumentConverter create() {
@@ -230,29 +254,6 @@ public class YmerSpaceDataSourceTest {
 		@Override
 		public Query toQuery(Object template) {
 			throw new UnsupportedOperationException();
-		}
-	}
-
-	class TestAppender extends AppenderSkeleton {
-
-		private final List<LoggingEvent> log = new ArrayList<>();
-
-		@Override
-		public boolean requiresLayout() {
-			return false;
-		}
-
-		@Override
-		protected void append(final LoggingEvent loggingEvent) {
-			log.add(loggingEvent);
-		}
-
-		@Override
-		public void close() {
-		}
-
-		List<LoggingEvent> getLog() {
-			return new ArrayList<>(log);
 		}
 	}
 

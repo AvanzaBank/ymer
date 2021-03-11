@@ -17,7 +17,8 @@ package com.avanza.ymer;
 
 import java.util.Objects;
 
-import com.mongodb.BasicDBObject;
+import org.bson.Document;
+
 /**
  * Data structure to hold a patched document. <p>
  * 
@@ -25,11 +26,11 @@ import com.mongodb.BasicDBObject;
  *
  */
 final class PatchedDocument {
-	private final BasicDBObject oldVersion;
-	private final BasicDBObject newVersion;
+	private final Document oldVersion;
+	private final Document newVersion;
 
-	public PatchedDocument(BasicDBObject oldVersion,
-						   BasicDBObject newVersion) {
+	public PatchedDocument(Document oldVersion,
+                             Document newVersion) {
 		this.oldVersion = Objects.requireNonNull(oldVersion);
 		this.newVersion = Objects.requireNonNull(newVersion);
 	}
@@ -38,7 +39,7 @@ final class PatchedDocument {
 	 * The current version of the document in the database. <p>
 	 * @return
 	 */
-	BasicDBObject getOldVersion() {
+	Document getOldVersion() {
 		return oldVersion;
 	}
 	
@@ -47,7 +48,7 @@ final class PatchedDocument {
 	 * 
 	 * @return
 	 */
-	BasicDBObject getNewVersion() {
+	Document getNewVersion() {
 		return newVersion;
 	}
 	

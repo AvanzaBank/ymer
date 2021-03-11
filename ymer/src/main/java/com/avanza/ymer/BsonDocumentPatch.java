@@ -16,38 +16,25 @@
 package com.avanza.ymer;
 
 import org.bson.Document;
-import com.mongodb.BasicDBObject;
-/**
- * A DocumentPatch patches a given document from one version to the next. <p>
- * 
- * @author Elias Lindholm (elilin)
- *
- */
-public interface DocumentPatch extends BsonDocumentPatch {
-	
+
+public interface BsonDocumentPatch {
+
 	/**
 	 * Applies this patch to the given document. <p>
-	 * 
-	 * The patch should read the object for current state, and mutate it 
-	 * to reflect the patch. 
-	 * 
-	 * @param dbObject
+	 *
+	 * The patch should read the object for current state, and mutate it
+	 * to reflect the patch.
+	 *
+	 * @param document
 	 */
-	void apply(BasicDBObject dbObject);
-
-	default void apply(Document document) {
-		BasicDBObject dbo = new BasicDBObject(document);
-		apply(dbo);
-		document.putAll(dbo);
-	}
+	void apply(Document document);
 
 	/**
-	 * Returns the version that this patch applies to. A DocumentPatch only applies 
+	 * Returns the version that this patch applies to. A DocumentPatch only applies
 	 * to a single version. A DocumentPatch is expected to patch the document
 	 * to the next version. <p>
-	 * 
+	 *
 	 * @return
 	 */
 	int patchedVersion();
-	
 }

@@ -73,11 +73,6 @@ public abstract class AbstractSpaceDataSourceDecorator extends AbstractSpaceData
 	}
 
 	@Override
-	public <T extends ReloadableSpaceObject> T reloadObject(Class<T> aClass, Object o) {
-		return abstractSpaceDataSource.reloadObject(aClass, o);
-	}
-
-	@Override
 	public <T> Collection<T> loadObjects(Class<T> aClass, T t) {
 		return abstractSpaceDataSource.loadObjects(aClass, t);
 	}
