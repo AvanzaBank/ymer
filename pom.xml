@@ -126,12 +126,12 @@
 		<spring.groupId>org.springframework</spring.groupId>
 		<spring-data-mongodb.version>2.0.14.RELEASE</spring-data-mongodb.version>
 
-		<slf4j.version>1.7.26</slf4j.version>
-		<log4j.version>2.13.3</log4j.version>
+		<slf4j.version>1.7.30</slf4j.version>
+		<log4j.version>2.14.0</log4j.version>
 		<gigaspaces.version>14.5.0</gigaspaces.version>
 		<junit.version>4.13.1</junit.version>
 		<hamcrest.version>1.3</hamcrest.version>
-		<mockito.version>2.23.0</mockito.version>
+		<mockito.version>3.8.0</mockito.version>
 		<gs-test.version>1.0.0</gs-test.version>
 		<mongo-java-driver.version>3.4.3</mongo-java-driver.version>
 		<mongo-java-server.version>1.34.0</mongo-java-server.version>
