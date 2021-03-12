@@ -40,13 +40,13 @@ import com.mongodb.BasicDBObject;
  *		super(testCase);
  *	}
  *
- *	@Override
+ *	&#64;Override
  *	protected MirroredObjects getMirroredObjectDefinitions() {
  *		return AuthenticationSpaceMirrorFactory.getMirroredObjectDefinitions();
  *	}
  *
- *	@Parameters
- *	public static List<Object[]> testCases() {
+ *	&#64;Parameters
+ *	public static List&#60;Object[]&#62; testCases() {
  *		return buildTestCases(
  *			spaceActivationV1ToV2MigrationTest()
  *		);
