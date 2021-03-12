@@ -18,7 +18,7 @@ package com.avanza.ymer;
 import org.bson.Document;
 import com.mongodb.BasicDBObject;
 /**
- * A DocumentPatch patches a given document from one version to the next. <p>
+ * A DocumentPatch patches a given document from one version to the next.
  * 
  * @author Elias Lindholm (elilin)
  *
@@ -44,7 +44,7 @@ public interface DocumentPatch extends BsonDocumentPatch {
 	/**
 	 * Returns the version that this patch applies to. A DocumentPatch only applies 
 	 * to a single version. A DocumentPatch is expected to patch the document
-	 * to the next version. <p>
+	 * to the next version.
 	 * 
 	 * @return
 	 */

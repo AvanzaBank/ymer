@@ -84,9 +84,11 @@ public final class MirroredObjectDefinition<T> {
 	
 	/**
 	 * Indicates that a MirroredObject should not be loaded from the persistent store during InitialLoad. 
-	 * In other words no data for this MirroredObject will be present if not loaded through other means.<br/>
-	 * <br/>
+	 * In other words no data for this MirroredObject will be present if not loaded through other means.<br>
+	 * <br>
 	 * Can be used for collections that are loaded via lazy load. See {@link ReloadableSpaceObject}.
+	 *
+	 * @param excludeFromInitialLoad
 	 */
 	public MirroredObjectDefinition<T> excludeFromInitialLoad(boolean excludeFromInitialLoad) {
 		this.excludeFromInitialLoad = excludeFromInitialLoad;
@@ -99,11 +101,13 @@ public final class MirroredObjectDefinition<T> {
 
 	/**
 	 * Objects that has been patched (and thus modified) by Ymer during InitialLoad will not be written back to persistent storage
-	 * during the last stage of InitialLoad. <br/>
-	 * <br/>
+	 * during the last stage of InitialLoad. <br>
+	 * <br>
 	 * When true, persistence-support can utilize several optimizations which reduce system load and memory usage during InitialLoad.
 	 * 
 	 * Default value is true, indicating that documents will be written back to persistent storage.
+	 *
+	 * @param writeBackPatchedDocuments
 	 */
 	public MirroredObjectDefinition<T> writeBackPatchedDocuments(boolean writeBackPatchedDocuments) {
 		this.writeBackPatchedDocuments = writeBackPatchedDocuments;
@@ -117,14 +121,16 @@ public final class MirroredObjectDefinition<T> {
 	/**
 	 * Adds a routing field to documents that are mirrored to the persistent storage. This field allows objects to be selected with the correct
 	 * routing filtering directly in the persistent storage during initial setupObjectStream, drastically reducing the network setupObjectStream since only the correct
-	 * subset of data will be transferred to each partition.<br/>
-	 * <br/>
-	 * Requires documents in the persistent storage to be updated before taking effect. Will take (partial) effect on partially updated collections.<br/>
-	 * <br/>
+	 * subset of data will be transferred to each partition.<br>
+	 * <br>
+	 * Requires documents in the persistent storage to be updated before taking effect. Will take (partial) effect on partially updated collections.<br>
+	 * <br>
 	 * <b>WARNING!</b> Don't activate loadedDocumentRouting if the routing field of a space object is changed, as such changes will not be reflected in the
 	 * persistent storage. Make sure to rewrite all space objects before turning routed document loading back on.
 	 * 
 	 * Default value is false.
+	 *
+	 * @param loadDocumentsRouted
 	 * 
 	 */
 	public MirroredObjectDefinition<T> loadDocumentsRouted(boolean loadDocumentsRouted) {
@@ -134,6 +140,8 @@ public final class MirroredObjectDefinition<T> {
 
 	/**
 	 * Sets the read preference for queries against documents in this collection.
+	 *
+	 * @param readPreference
 	 */
 	public MirroredObjectDefinition<T> withReadPreference(ReadPreference readPreference) {
 		this.readPreference = Objects.requireNonNull(readPreference);
@@ -147,6 +155,8 @@ public final class MirroredObjectDefinition<T> {
 	/**
 	 * Effectively stops all DELETE operations performed in space from being reflected in the persistent storage. I.e. an object that is deleted
 	 * in GigaSpaces will remain in the persistent storage. Usually used in combination with {@link #excludeFromInitialLoad()}
+	 *
+	 * @param keepPersistent
 	 */
 	public MirroredObjectDefinition<T> keepPersistent(boolean keepPersistent) {
 		this.keepPersistent = keepPersistent;
