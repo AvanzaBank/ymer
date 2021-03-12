@@ -16,11 +16,11 @@
 package com.avanza.ymer;
 
 import static com.avanza.ymer.MongoProbes.containsObject;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import java.lang.management.ManagementFactory;
 import java.util.Set;
