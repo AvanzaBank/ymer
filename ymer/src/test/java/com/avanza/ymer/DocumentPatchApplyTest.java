@@ -28,33 +28,8 @@ public class DocumentPatchApplyTest {
     public void shouldHandlePatchRemovalsUsingBasicDBObject() {
 
         // Given
-        DocumentPatch documentPatch$1 = new DocumentPatch() {
-
-            @Override
-            public void apply(BasicDBObject dbObject) {
-                dbObject.put("theKey", "theValue");
-                dbObject.put("theKeyToBeRemoved", "theValueToBeRemoved");
-            }
-
-            @Override
-            public int patchedVersion() {
-                return 0;
-            }
-        };
-
-        DocumentPatch documentPatch$2 = new DocumentPatch() {
-
-            @Override
-            public void apply(BasicDBObject dbObject) {
-                dbObject.put("anotherKey", "anotherValue");
-                dbObject.remove("theKeyToBeRemoved");
-            }
-
-            @Override
-            public int patchedVersion() {
-                return 1;
-            }
-        };
+        DocumentPatch documentPatch$1 = getDocumentPatch$1();
+        DocumentPatch documentPatch$2 = getDocumentPatch$2();
 
         BasicDBObject initialObject = new BasicDBObject();
 
@@ -70,41 +45,14 @@ public class DocumentPatchApplyTest {
     }
 
     @Test
-    public void shouldHandlePatchRemovalsUsingDocument() {
+    public void shouldHandlePatchRemovalsUsingDocumentOnBasicDBObject() {
 
         // Given
-        DocumentPatch documentPatch$1 = new DocumentPatch() {
-
-            @Override
-            public void apply(BasicDBObject dbObject) {
-                dbObject.put("theKey", "theValue");
-                dbObject.put("theKeyToBeRemoved", "theValueToBeRemoved");
-            }
-
-            @Override
-            public int patchedVersion() {
-                return 0;
-            }
-        };
-
-        DocumentPatch documentPatch$2 = new DocumentPatch() {
-
-            @Override
-            public void apply(BasicDBObject dbObject) {
-                dbObject.put("anotherKey", "anotherValue");
-                dbObject.remove("theKeyToBeRemoved");
-            }
-
-            @Override
-            public int patchedVersion() {
-                return 1;
-            }
-        };
-
+        DocumentPatch documentPatch$1 = getDocumentPatch$1();
+        DocumentPatch documentPatch$2 = getDocumentPatch$2();
         Document initialObject = new Document();
 
         // When
-
         documentPatch$1.apply(initialObject);
         documentPatch$2.apply(initialObject);
 
@@ -114,11 +62,8 @@ public class DocumentPatchApplyTest {
         assertThat(initialObject.get("theKeyToBeRemoved"), nullValue());
     }
 
-    @Test
-    public void shouldHandlePatchRemovalsUsingDocumentOnBasicDBOject() {
-
-        // Given
-        DocumentPatch documentPatch$1 = new DocumentPatch() {
+    private DocumentPatch getDocumentPatch$1() {
+        return new DocumentPatch() {
 
             @Override
             public void apply(BasicDBObject dbObject) {
@@ -131,8 +76,10 @@ public class DocumentPatchApplyTest {
                 return 0;
             }
         };
+    }
 
-        DocumentPatch documentPatch$2 = new DocumentPatch() {
+    private DocumentPatch getDocumentPatch$2() {
+        return new DocumentPatch() {
 
             @Override
             public void apply(BasicDBObject dbObject) {
@@ -145,16 +92,5 @@ public class DocumentPatchApplyTest {
                 return 1;
             }
         };
-        Document initialObject = new Document();
-
-        // When
-
-        documentPatch$1.apply(initialObject);
-        documentPatch$2.apply(initialObject);
-
-        // Then
-        assertThat(initialObject.get("theKey"), is("theValue"));
-        assertThat(initialObject.get("anotherKey"), is("anotherValue"));
-        assertThat(initialObject.get("theKeyToBeRemoved"), nullValue());
     }
 }
