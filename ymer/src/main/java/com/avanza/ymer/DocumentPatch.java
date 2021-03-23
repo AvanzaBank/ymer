@@ -38,7 +38,8 @@ public interface DocumentPatch extends BsonDocumentPatch {
 	default void apply(Document document) {
 		BasicDBObject dbo = new BasicDBObject(document);
 		apply(dbo);
-		document.putAll(dbo);
+		document.putAll(dbo); // Ensures that new properties are added and replaced properties are updated.
+		document.keySet().retainAll(dbo.keySet()); // Ensures that removed properties are deleted.
 	}
 
 	/**
