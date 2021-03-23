@@ -66,7 +66,7 @@ public class DocumentPatchApplyTest {
         // Then
         assertThat(initialObject.get("theKey"), is("theValue"));
         assertThat(initialObject.get("anotherKey"), is("anotherValue"));
-        assertThat(initialObject.get("toBeRemoved"), nullValue());
+        assertThat(initialObject.get("theKeyToBeRemoved"), nullValue());
     }
 
     @Test
@@ -111,7 +111,7 @@ public class DocumentPatchApplyTest {
         // Then
         assertThat(initialObject.get("theKey"), is("theValue"));
         assertThat(initialObject.get("anotherKey"), is("anotherValue"));
-        assertThat(initialObject.get("toBeRemoved"), nullValue());
+        assertThat(initialObject.get("theKeyToBeRemoved"), nullValue());
     }
 
     @Test
@@ -155,6 +155,6 @@ public class DocumentPatchApplyTest {
         // Then
         assertThat(initialObject.get("theKey"), is("theValue"));
         assertThat(initialObject.get("anotherKey"), is("anotherValue"));
-        assertThat(initialObject.get("toBeRemoved"), nullValue());
+        assertThat(initialObject.get("theKeyToBeRemoved"), nullValue());
     }
 }
