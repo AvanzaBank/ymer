@@ -100,8 +100,8 @@
 	</profiles>
 
 	<properties>
-		<!-- -Xdoclint:NONE ignores validation errors in javadoc -->
-		<additionalparam>-Xdoclint:none</additionalparam>
+		<!-- -none ignores validation errors in javadoc -->
+		<doclint>none</doclint>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>11</java.version>
 

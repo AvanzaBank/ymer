@@ -166,10 +166,11 @@ public class YmerMigrationTestBaseTest {
 		);
 
 		// Act
-		new FakeTestSuite(
+		@SuppressWarnings("deprecation")
+		var suite = new FakeTestSuite(
 				new MigrationTest(v1, expectedV2, 1, TestSpaceObject.class),
-				mirroredObjects
-		).migratesTheOldDocumentToTheNextDocumentVersion();
+				mirroredObjects);
+		suite.migratesTheOldDocumentToTheNextDocumentVersion();
 
 		// Assert that no exceptions were thrown
 	}

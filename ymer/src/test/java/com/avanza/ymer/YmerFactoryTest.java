@@ -43,7 +43,9 @@ import com.mongodb.client.MongoDatabase;
 
 public class YmerFactoryTest {
 	private final MongoDatabase db = mock(MongoDatabase.class);
+	@SuppressWarnings("unchecked")
 	private final MongoCollection<Document> fakeSpaceObjectCollection = createMockedEmptyCollection();
+	@SuppressWarnings("unchecked")
 	private final MongoCollection<Document> testSpaceObjectCollection = createMockedEmptyCollection();
 
 	@Before

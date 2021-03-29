@@ -63,6 +63,7 @@ final class DocumentDb {
 	}
 	
 	private static final class MongoDocumentDb implements DocumentDb.Provider {
+		@SuppressWarnings("deprecation")
 		private static final Set<WriteConcern> EXPECTED_WRITE_CONCERNS = new HashSet<>(Arrays.asList(WriteConcern.SAFE, WriteConcern.ACKNOWLEDGED));
 		private static final Logger LOGGER = LoggerFactory.getLogger(MongoDocumentDb.class);
 
