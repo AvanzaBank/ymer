@@ -17,8 +17,10 @@ package example.domain;
 
 import org.springframework.data.annotation.Id;
 
+import com.gigaspaces.annotation.pojo.SpaceClass;
 import com.gigaspaces.annotation.pojo.SpaceId;
 
+@SpaceClass
 public class SpaceFruit {
 
 	@Id
