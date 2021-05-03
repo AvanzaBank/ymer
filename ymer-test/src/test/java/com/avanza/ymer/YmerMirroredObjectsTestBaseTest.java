@@ -30,6 +30,9 @@ public class YmerMirroredObjectsTestBaseTest {
 	static class TestSpaceClass {
 	}
 
+	static class TestPersistedClassWithoutAnnotation {
+	}
+
 	@Test
 	public void testWhereSpaceClassIsInMirroredObjectDefinitionsShouldPass() {
 		YmerMirroredObjectsTestBase testInstance = new YmerMirroredObjectsTestBase() {
@@ -101,5 +104,39 @@ public class YmerMirroredObjectsTestBaseTest {
 		};
 
 		testInstance.allSpaceClassesAreIncludedInYmerFactory();
+	}
+
+	@Test
+	public void mirroredTypeAnnotatedWithSpaceClassShouldPass() {
+		YmerMirroredObjectsTestBase testInstance = new YmerMirroredObjectsTestBase() {
+			@Override
+			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
+				return Collections.singleton(new MirroredObjectDefinition<>(TestSpaceClass.class));
+			}
+
+			@Override
+			protected String basePackageForScanning() {
+				return null;
+			}
+		};
+
+		testInstance.allMirroredTypesAreAnnotatedWithSpaceClass();
+	}
+
+	@Test(expected = AssertionError.class)
+	public void mirroredTypeNotAnnotatedWithSpaceClassShouldFail() {
+		YmerMirroredObjectsTestBase testInstance = new YmerMirroredObjectsTestBase() {
+			@Override
+			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
+				return Collections.singleton(new MirroredObjectDefinition<>(TestPersistedClassWithoutAnnotation.class));
+			}
+
+			@Override
+			protected String basePackageForScanning() {
+				return null;
+			}
+		};
+
+		testInstance.allMirroredTypesAreAnnotatedWithSpaceClass();
 	}
 }

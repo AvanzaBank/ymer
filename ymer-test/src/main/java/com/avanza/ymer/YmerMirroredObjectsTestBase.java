@@ -68,6 +68,30 @@ public abstract class YmerMirroredObjectsTestBase {
 				.collect(Collectors.toSet());
 	}
 
+	@Test
+	public void allMirroredTypesAreAnnotatedWithSpaceClass() {
+		Set<Class<?>> mirroredClasses = mirroredObjectDefinitions().stream()
+				.map(MirroredObjectDefinition::getMirroredType)
+				.collect(Collectors.toSet());
+
+		List<Class<?>> mirroredClassesWithoutAnnotation = new ArrayList<>();
+		for (Class<?> mirroredClass : mirroredClasses) {
+			if (mirroredClass.getAnnotation(SpaceClass.class) == null) {
+				mirroredClassesWithoutAnnotation.add(mirroredClass);
+			}
+		}
+
+		if (!mirroredClassesWithoutAnnotation.isEmpty()) {
+			StringBuilder failMessageBuilder = new StringBuilder("The following classes are included in Ymer mirrored object definitions but not annotated with @SpaceClass:\n");
+			mirroredClassesWithoutAnnotation.forEach(c -> failMessageBuilder.append(c.getName()).append('\n'));
+
+			failMessageBuilder.append('\n').append("All classes marked for persisting through Ymer should be annotated with @SpaceClass.");
+			failMessageBuilder.append('\n').append("To resolve this, annotate the classes listed above with @SpaceClass.");
+
+			fail(failMessageBuilder.toString());
+		}
+	}
+
 	/**
 	 * List of mirrored object definitions that would be sent to YmerFactory.
 	 * The classes found by scanning the basePackage below are expected to be found in this list.
