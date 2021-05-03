@@ -210,7 +210,7 @@ public class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
 ```
 
 ```java
-public class ExampleMirroredObjectsTest extends YmerMirroredObjectsTestBase {
+public class ExampleMirroredTypesTest extends YmerMirroredTypesTestBase {
 
 	@Override
 	protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {

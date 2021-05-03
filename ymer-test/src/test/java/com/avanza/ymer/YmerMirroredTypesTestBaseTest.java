@@ -23,7 +23,7 @@ import org.junit.Test;
 
 import com.gigaspaces.annotation.pojo.SpaceClass;
 
-public class YmerMirroredObjectsTestBaseTest {
+public class YmerMirroredTypesTestBaseTest {
 
 	// This SpaceClass will be found by the annotation scanner in the tests below
 	@SpaceClass
@@ -35,7 +35,7 @@ public class YmerMirroredObjectsTestBaseTest {
 
 	@Test
 	public void testWhereSpaceClassIsInMirroredObjectDefinitionsShouldPass() {
-		YmerMirroredObjectsTestBase testInstance = new YmerMirroredObjectsTestBase() {
+		YmerMirroredTypesTestBase testInstance = new YmerMirroredTypesTestBase() {
 			@Override
 			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
 				return Collections.singleton(new MirroredObjectDefinition<>(TestSpaceClass.class));
@@ -52,7 +52,7 @@ public class YmerMirroredObjectsTestBaseTest {
 
 	@Test(expected = AssertionError.class)
 	public void testWhereSpaceClassIsNotInMirroredObjectDefinitionsShouldFail() {
-		YmerMirroredObjectsTestBase testInstance = new YmerMirroredObjectsTestBase() {
+		YmerMirroredTypesTestBase testInstance = new YmerMirroredTypesTestBase() {
 			@Override
 			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
 				return Collections.emptySet();
@@ -69,7 +69,7 @@ public class YmerMirroredObjectsTestBaseTest {
 
 	@Test
 	public void testExcludingMissingObjectDefinitionFromTestShouldMakeTestPass() {
-		YmerMirroredObjectsTestBase testInstance = new YmerMirroredObjectsTestBase() {
+		YmerMirroredTypesTestBase testInstance = new YmerMirroredTypesTestBase() {
 			@Override
 			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
 				return Collections.emptySet();
@@ -91,7 +91,7 @@ public class YmerMirroredObjectsTestBaseTest {
 
 	@Test
 	public void testSearchingInOtherPackageShouldNotFindSpaceClass() {
-		YmerMirroredObjectsTestBase testInstance = new YmerMirroredObjectsTestBase() {
+		YmerMirroredTypesTestBase testInstance = new YmerMirroredTypesTestBase() {
 			@Override
 			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
 				return Collections.emptySet();
@@ -108,7 +108,7 @@ public class YmerMirroredObjectsTestBaseTest {
 
 	@Test
 	public void mirroredTypeAnnotatedWithSpaceClassShouldPass() {
-		YmerMirroredObjectsTestBase testInstance = new YmerMirroredObjectsTestBase() {
+		YmerMirroredTypesTestBase testInstance = new YmerMirroredTypesTestBase() {
 			@Override
 			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
 				return Collections.singleton(new MirroredObjectDefinition<>(TestSpaceClass.class));
@@ -125,7 +125,7 @@ public class YmerMirroredObjectsTestBaseTest {
 
 	@Test(expected = AssertionError.class)
 	public void mirroredTypeNotAnnotatedWithSpaceClassShouldFail() {
-		YmerMirroredObjectsTestBase testInstance = new YmerMirroredObjectsTestBase() {
+		YmerMirroredTypesTestBase testInstance = new YmerMirroredTypesTestBase() {
 			@Override
 			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
 				return Collections.singleton(new MirroredObjectDefinition<>(TestPersistedClassWithoutAnnotation.class));

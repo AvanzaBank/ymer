@@ -31,7 +31,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import com.gigaspaces.annotation.pojo.SpaceClass;
 
-public abstract class YmerMirroredObjectsTestBase {
+public abstract class YmerMirroredTypesTestBase {
 
 	@Test
 	public void allSpaceClassesAreIncludedInYmerFactory() {
@@ -70,16 +70,10 @@ public abstract class YmerMirroredObjectsTestBase {
 
 	@Test
 	public void allMirroredTypesAreAnnotatedWithSpaceClass() {
-		Set<Class<?>> mirroredClasses = mirroredObjectDefinitions().stream()
+		Set<Class<?>> mirroredClassesWithoutAnnotation = mirroredObjectDefinitions().stream()
 				.map(MirroredObjectDefinition::getMirroredType)
+				.filter(type -> type.getAnnotation(SpaceClass.class) == null)
 				.collect(Collectors.toSet());
-
-		List<Class<?>> mirroredClassesWithoutAnnotation = new ArrayList<>();
-		for (Class<?> mirroredClass : mirroredClasses) {
-			if (mirroredClass.getAnnotation(SpaceClass.class) == null) {
-				mirroredClassesWithoutAnnotation.add(mirroredClass);
-			}
-		}
 
 		if (!mirroredClassesWithoutAnnotation.isEmpty()) {
 			StringBuilder failMessageBuilder = new StringBuilder("The following classes are included in Ymer mirrored object definitions but not annotated with @SpaceClass:\n");
