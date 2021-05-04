@@ -440,6 +440,7 @@
 					<release>${java.version}</release>
 					<encoding>${project.build.sourceEncoding}</encoding>
 					<showDeprecation>true</showDeprecation>
+					<failOnWarning>true</failOnWarning>
 				</configuration>
 				<dependencies>
 					<dependency>
