@@ -53,17 +53,17 @@ public class YmerMirrorIntegrationTest {
 
 	private MongoOperations mongo;
 	private GigaSpace gigaSpace;
-	private static MirrorEnvironment mirrorEnviroment = new MirrorEnvironment();
+	private static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
-	private static RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
+	private static final RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
 									   .numberOfBackups(1)
 									   .numberOfPrimaries(1)
-									   .parentContext(mirrorEnviroment.getMongoClientContext())
+									   .parentContext(mirrorEnvironment.getMongoClientContext())
 									   .configure();
 
-	private static RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
+	private static final RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
 											   	     .contextProperty("exportExceptionHandlerMBean", "true")
-											   	     .parentContext(mirrorEnviroment.getMongoClientContext())
+											   	     .parentContext(mirrorEnvironment.getMongoClientContext())
 											   	     .configure();
 
 	@ClassRule
@@ -73,18 +73,18 @@ public class YmerMirrorIntegrationTest {
 	public void setUp() {
 		BasicConfigurator.configure();
 		Logger.getRootLogger().setLevel(Level.INFO);
-		mongo = mirrorEnviroment.getMongoTemplate();
+		mongo = mirrorEnvironment.getMongoTemplate();
 		gigaSpace = pu.getClusteredGigaSpace();
 	}
 
 	@After
 	public void cleanup() {
-		mirrorEnviroment.dropAllMongoCollections();
+		mirrorEnvironment.dropAllMongoCollections();
 		gigaSpace.clear(null);
 	}
 
 	@Test
-	public void  mirrorsInsertOfTestSpaceObjects() throws Exception {
+	public void mirrorsInsertOfTestSpaceObjects() throws Exception {
 		TestSpaceObject o1 = new TestSpaceObject();
 		o1.setId("id_23");
 		o1.setMessage("mirror_test");
@@ -93,6 +93,25 @@ public class YmerMirrorIntegrationTest {
 		assertEquals(1, gigaSpace.count(new TestSpaceObject()));
 
 		assertEventually(containsObject(mongo, equalTo(o1), TestSpaceObject.class));
+	}
+
+	@Test
+	public void testUpdatingSpaceObjectFieldToNullIsSaved() throws Exception {
+		TestSpaceObject withMessageSet = new TestSpaceObject();
+		withMessageSet.setId("object_id");
+		withMessageSet.setMessage("not_null_value");
+
+		gigaSpace.write(withMessageSet, WriteModifiers.WRITE_ONLY);
+		assertEquals(1, gigaSpace.count(new TestSpaceObject()));
+		assertEventually(containsObject(mongo, equalTo(withMessageSet), TestSpaceObject.class));
+
+		TestSpaceObject withMessageAsNull = new TestSpaceObject();
+		withMessageAsNull.setId("object_id");
+		withMessageAsNull.setMessage(null);
+
+		gigaSpace.write(withMessageAsNull, WriteModifiers.UPDATE_OR_WRITE);
+		assertEquals(1, gigaSpace.count(new TestSpaceObject()));
+		assertEventually(containsObject(mongo, equalTo(withMessageAsNull), TestSpaceObject.class));
 	}
 
 	@Test
@@ -162,7 +181,7 @@ public class YmerMirrorIntegrationTest {
 		assertEventually(containsObject(mongo, equalTo(new TestSpaceThirdObject("1", "a|")), TestSpaceThirdObject.class)); // prewrite processor prepends a
 		assertEquals("|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // a removed by postread processor
 
-		mirrorEnviroment.removeFormatVersion(TestSpaceThirdObject.class, "1");
+		mirrorEnvironment.removeFormatVersion(TestSpaceThirdObject.class, "1");
 		assertEquals("b|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // patch adds b to read data (after postread processor)
 		assertEventually(containsObject(mongo, equalTo(new TestSpaceThirdObject("1", "ab|")), TestSpaceThirdObject.class)); // a is prepended after patching by prewrite processor
 		assertEquals("b|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // nothing happens once patch has been applied
