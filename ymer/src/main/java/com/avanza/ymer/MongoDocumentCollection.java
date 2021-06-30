@@ -22,6 +22,7 @@ import java.util.stream.StreamSupport;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Query;
+
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
@@ -71,20 +72,20 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public void replace(Document oldVersion, Document newVersion) {
-		if (!Objects.equals(oldVersion.get("_id"),newVersion.get("_id"))) {
-			collection.insertOne(newVersion);
+		if (!Objects.equals(oldVersion.get("_id"), newVersion.get("_id"))) {
+			insert(newVersion);
 			collection.deleteOne(new Document("_id", oldVersion.get("_id")));
 		} else {
-			collection.updateOne(Filters.eq("_id", oldVersion.get("_id")),
-								 new Document("$set", newVersion));
+			collection.replaceOne(Filters.eq("_id", oldVersion.get("_id")),
+								 newVersion);
 		}
 	}
 
 	@Override
 	public void update(Document newVersion) {
-		collection.updateOne(Filters.eq("_id", newVersion.get("_id")),
-							 new Document("$set", newVersion),
-							 new UpdateOptions().upsert(true));
+		collection.replaceOne(Filters.eq("_id", newVersion.get("_id")),
+				newVersion,
+				new UpdateOptions().upsert(true));
 	}
 
 	@Override
