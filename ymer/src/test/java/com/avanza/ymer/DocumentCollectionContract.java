@@ -18,8 +18,8 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.Iterables.newArrayList;
-import static com.avanza.ymer.Iterables.sizeOf;
+import static com.avanza.ymer.StreamMatchers.hasCount;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -28,6 +28,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -77,7 +78,7 @@ public abstract class DocumentCollectionContract {
 			// Expected 
 		}
 		// Still only one element in the collection
-		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(1));
 		
 		// the original version did not change on insert
 		assertEquals(d1, documentCollection.findAll().iterator().next());
@@ -92,7 +93,7 @@ public abstract class DocumentCollectionContract {
 		documentCollection.insert(d1);
 
 		assertNotNull("_id should be generated on insert", d1.get("_id"));
-		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(1));
 		assertEquals(d1, documentCollection.findAll().iterator().next());
 	}
 
@@ -109,7 +110,7 @@ public abstract class DocumentCollectionContract {
 
 		documentCollection.replace(document, newVersion);
 
-		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(1));
 		Document dbVersion = documentCollection.findAll().iterator().next();
 		assertEquals(22, dbVersion.get("count"));
 	}
@@ -127,7 +128,7 @@ public abstract class DocumentCollectionContract {
 
 		documentCollection.replace(document, newVersion);
 
-		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(1));
 		Document dbVersion = documentCollection.findAll().iterator().next();
 		assertEquals(21, dbVersion.get("count"));
 		assertEquals("id_2", dbVersion.get("_id"));
@@ -146,7 +147,7 @@ public abstract class DocumentCollectionContract {
 		documentCollection.insert(d1);
 		documentCollection.insert(d2);
 
-		List<Document> all = newArrayList(documentCollection.findAll());
+		List<Document> all = documentCollection.findAll().collect(Collectors.toList());
 		assertEquals(2, all.size());
 		assertEquals(d1, firstElementWithId(all, "id_1"));
 		assertEquals(d2, firstElementWithId(all, "id_2"));
@@ -189,9 +190,9 @@ public abstract class DocumentCollectionContract {
 
 		documentCollection.insert(d1);
 		documentCollection.insert(d2);
-		assertEquals(2, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(2));
 		documentCollection.delete(d1Template);
-		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(1));
 		assertEquals(d2, documentCollection.findAll().iterator().next());
 	}
 
@@ -201,9 +202,9 @@ public abstract class DocumentCollectionContract {
 		d1.put("_id", "id_1");
 		d1.put("count", 21);
 
-		assertEquals(0, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(0));
 		documentCollection.delete(d1);
-		assertEquals(0, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(0));
 	}
 
 	@Test
@@ -213,14 +214,14 @@ public abstract class DocumentCollectionContract {
 		d1.put("count", 21);
 
 		documentCollection.insert(d1);
-		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(1));
 
 		Document d2 = new Document();
 		d2.put("_id", d1.get("_id"));
 		d2.put("count", 22);
 
 		documentCollection.delete(d2);
-		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(1));
 	}
 
 	@Test
@@ -250,11 +251,11 @@ public abstract class DocumentCollectionContract {
 
 		documentCollection.update(d1);
 
-		assertEquals(1, sizeOf(documentCollection.findAll()));
+		assertThat(documentCollection.findAll(), hasCount(1));
 		assertEquals(d1, documentCollection.findAll().iterator().next());
 	}
 
 	private Document firstElementWithId(List<Document> all, final String id) {
-		return all.stream().filter(input -> input.get("_id").equals(id)).findFirst().get();
+		return all.stream().filter(input -> input.get("_id").equals(id)).findFirst().orElseThrow();
 	}
 }

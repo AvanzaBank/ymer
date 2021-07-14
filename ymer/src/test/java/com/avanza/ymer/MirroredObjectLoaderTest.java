@@ -15,20 +15,21 @@
  */
 package com.avanza.ymer;
 
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
+
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
-import com.avanza.ymer.util.OptionalUtil;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.mongodb.BasicDBObject;
 
@@ -70,7 +71,7 @@ public class MirroredObjectLoaderTest {
 
 		List<FakeSpaceObject> loadedSpaceObjects = documentLoader.loadAllObjects().stream()
 																 .map(LoadedDocument::getDocument)
-																 .collect(Collectors.toList());
+																 .collect(toList());
 		assertEquals(2, loadedSpaceObjects.size());
 		assertEquals(new FakeSpaceObject(22, 2, true), loadedSpaceObjects.get(0));
 		assertEquals(new FakeSpaceObject(33, 2, false), loadedSpaceObjects.get(1));
@@ -101,9 +102,8 @@ public class MirroredObjectLoaderTest {
 
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.create(filterImpl), contextProperties, noOpPostReadProcessor());
 		List<PatchedDocument> patchedDocuments = documentLoader.loadAllObjects().stream()
-																 .map(LoadedDocument::getPatchedDocument)
-																 .flatMap(OptionalUtil::asStream)
-																 .collect(Collectors.toList());
+																 .flatMap(loadedDocument -> loadedDocument.getPatchedDocument().stream())
+																 .collect(toList());
 
 		assertEquals(1, patchedDocuments.size());
 		assertEquals(doc2, patchedDocuments.get(0).getOldVersion());
@@ -132,7 +132,7 @@ public class MirroredObjectLoaderTest {
 	}
 
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void loadByIdThrowsIllegalArgumentExceptionIfSpaceObjectNotAcceptedByFilter() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
@@ -145,7 +145,7 @@ public class MirroredObjectLoaderTest {
 		fakeDocumentCollection.insertAll(doc3);
 
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.create(obj -> false), contextProperties, noOpPostReadProcessor());
-		documentLoader.loadById(doc3.get("_id"));
+		assertThrows(IllegalArgumentException.class, () -> documentLoader.loadById(doc3.get("_id")));
 	}
 
 	@Test
@@ -180,7 +180,7 @@ public class MirroredObjectLoaderTest {
 		assertEquals(Integer.valueOf(1), spaceObject.getLatestRestoreVersion());
 	}
 
-	@Test(expected = RuntimeException.class)
+	@Test
 	public void breaksIfConverterThrowsException() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject =
@@ -208,10 +208,10 @@ public class MirroredObjectLoaderTest {
 		SpaceObjectFilter.Impl<FakeSpaceObject> filterImpl =
 				spaceObject -> spaceObject.getId() == doc2.getInteger("_id", -1) || spaceObject.getId() == doc3.getInteger("_id", -1);
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.createConverterWhichThrowsException(), mirroredObject, SpaceObjectFilter.create(filterImpl), contextProperties, noOpPostReadProcessor());
-		documentLoader.loadAllObjects();
+		assertThrows(RuntimeException.class, documentLoader::loadAllObjects);
 	}
 
-	@Test(expected = RuntimeException.class)
+	@Test
 	public void propagatesExceptionsThrownByMigrator() throws Exception {
 		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() {
 			@Override
@@ -228,7 +228,7 @@ public class MirroredObjectLoaderTest {
 		fakeDocumentCollection.insertAll(doc3);
 
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(fakeDocumentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll(), contextProperties, noOpPostReadProcessor());
-		documentLoader.loadById(doc3.get("_id"));
+		assertThrows(RuntimeException.class, () -> documentLoader.loadById(doc3.get("_id")));
 	}
 
 	private static class FakeSpaceObject implements ReloadableSpaceObject {
