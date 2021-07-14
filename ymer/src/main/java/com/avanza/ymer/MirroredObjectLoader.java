@@ -15,17 +15,20 @@
  */
 package com.avanza.ymer;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.avanza.ymer.plugin.PostReadProcessor;
-import com.avanza.ymer.util.OptionalUtil;
 
 /**
  * Loads mirrored objects from an external (persistent) source.
@@ -35,7 +38,6 @@ import com.avanza.ymer.util.OptionalUtil;
  * @author Elias Lindholm (elilin), Kristoffer Erlandsson, Andreas Skoog
  */
 final class MirroredObjectLoader<T> {
-    private static final int NUM_THREADS = 15;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final MirroredObject<T> mirroredObject;
@@ -61,15 +63,14 @@ final class MirroredObjectLoader<T> {
     }
 
     List<LoadedDocument<T>> loadAllObjects() {
-        return streamAllObjects().collect(Collectors.toList());
+        return streamAllObjects().collect(toList());
     }
 
     Stream<LoadedDocument<T>> streamAllObjects() {
         log.info("Begin loadAllObjects. targetCollection={}", mirroredObject.getCollectionName());
         return loadDocuments()
                 .parallel() // We run patching and conversions in parallel as this is a cpu-intensive task
-                .map(this::tryPatchAndConvert)
-                .flatMap(OptionalUtil::asStream);
+                .flatMap(document -> tryPatchAndConvert(document).stream());
     }
 
     private Stream<Document> loadDocuments() {
@@ -81,8 +82,9 @@ final class MirroredObjectLoader<T> {
         }
         if (mirroredObject.loadDocumentsRouted()) {
             return documentCollection.findAll(spaceObjectFilter);
+        } else {
+            return documentCollection.findAll();
         }
-        return documentCollection.findAll();
     }
 
     private Optional<LoadedDocument<T>> tryPatchAndConvert(Document document) {
@@ -94,16 +96,16 @@ final class MirroredObjectLoader<T> {
                 // MongoConverter is not thread-safe due to a bug in AbstractMappingContext.addPersistentEntity().
                 // The bug occurs at most once or twice per collection but will produce objects without any properties set
                 // Resolve it temporarily by retrying.
-                log.warn("Failed to load dbObject=" + document + ". Retrying.", e);
+                log.warn("Failed to load dbObject={}. Retrying.", document, e);
                 result = patchAndConvert(new Document(document));
             }
             long loaded = numLoadedObjects.incrementAndGet();
-            if (loaded % 10000 == 0) {
+            if (loaded % 10_000 == 0) {
                 log.info("Status: loaded {} records for collection {}", loaded, mirroredObject.getCollectionName());
             }
             return result;
         } catch (RuntimeException e) {
-            log.error("Unable to load document=" + document, e);
+            log.error("Unable to load document={}", document, e);
             throw e;
         }
     }
@@ -120,9 +122,8 @@ final class MirroredObjectLoader<T> {
 
     List<LoadedDocument<T>> loadByQuery(T template) {
         return documentCollection.findByQuery(documentConverter.toQuery(template))
-                .map(this::patchAndConvert)
-                .flatMap(OptionalUtil::asStream)
-                .collect(Collectors.toList());
+                .flatMap(document -> patchAndConvert(document).stream())
+                .collect(toList());
     }
 
     private Document findById(Object id) {
@@ -141,7 +142,7 @@ final class MirroredObjectLoader<T> {
                 postReadProcessor.postRead(currentVersion);
                 currentVersion = this.mirroredObject.patch(currentVersion);
             } catch (RuntimeException e) {
-                log.error("Patch of document failed! document=" + mirroredObject + "currentVersion=" + currentVersion, e);
+                log.error("Patch of document failed! document={}currentVersion={}", mirroredObject, currentVersion, e);
                 throw e;
             }
         } else {
@@ -152,9 +153,10 @@ final class MirroredObjectLoader<T> {
             return Optional.empty();
         }
         if (patched) {
-            return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.of(new PatchedDocument(document, currentVersion))));
+            return Optional.of(new LoadedDocument<>(postProcess(mirroredObject), new PatchedDocument(document, currentVersion)));
+        } else {
+            return Optional.of(new LoadedDocument<>(postProcess(mirroredObject), null));
         }
-        return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.empty()));
     }
 
     private T postProcess(T mirroredObject) {
@@ -171,9 +173,9 @@ final class MirroredObjectLoader<T> {
      */
     static class LoadedDocument<T> {
         private final T document;
-        private final Optional<PatchedDocument> patchedDocument;
+        private final PatchedDocument patchedDocument;
 
-        public LoadedDocument(T document, Optional<PatchedDocument> patchedDocument) {
+        public LoadedDocument(T document, @Nullable PatchedDocument patchedDocument) {
             this.document = document;
             this.patchedDocument = patchedDocument;
         }
@@ -183,7 +185,7 @@ final class MirroredObjectLoader<T> {
         }
 
         public Optional<PatchedDocument> getPatchedDocument() {
-            return patchedDocument;
+            return Optional.ofNullable(patchedDocument);
         }
 
     }

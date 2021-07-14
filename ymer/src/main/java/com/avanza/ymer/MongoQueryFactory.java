@@ -36,7 +36,7 @@ import org.springframework.data.mongodb.core.query.Query;
  */
 class MongoQueryFactory {
 
-	private final HashMap<Class<?>, List<PropertyDescriptor>> propertyDescriptors = new HashMap<Class<?>, List<PropertyDescriptor>>();
+	private final HashMap<Class<?>, List<PropertyDescriptor>> propertyDescriptors = new HashMap<>();
 	private final MongoMappingContext mongoMappingContext;
 	private final MongoConverter mongoConverter;
 
@@ -89,7 +89,7 @@ class MongoQueryFactory {
 	}
 
 	private List<PropertyDescriptor> findTemplatablePropertyDescriptors(Class<?> type) {
-		ArrayList<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>();
+		ArrayList<PropertyDescriptor> result = new ArrayList<>();
 		for (PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(type)) {
 			if (!isNotTemplatableMethod(pd)) {
 				result.add(pd);

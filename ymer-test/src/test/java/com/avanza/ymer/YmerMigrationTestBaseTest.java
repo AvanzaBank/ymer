@@ -15,15 +15,16 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.bson.Document;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 
 import com.avanza.ymer.YmerMigrationTestBase.MigrationTest;
 import com.mongodb.BasicDBObject;
@@ -51,15 +52,10 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 		
-		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
-		assertPasses(new TestRun() {
-			@Override
-			void run() throws Exception {
-				new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion();
-			}
-		});
+		assertPasses(() -> new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion());
 	}
 	
 	@Test
@@ -82,15 +78,10 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 
-		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
-		assertFails(new TestRun() {
-			@Override
-			void run() throws Exception {
-				new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion();
-			}
-		});
+		assertFails(() -> new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion());
 	}
 	
 	@Test
@@ -128,15 +119,10 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 
-		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
-		assertPasses(new TestRun() {
-			@Override
-			void run() throws Exception {
-				new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion();
-			}
-		});
+		assertPasses(() -> new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion());
 	}
 
 	@Test
@@ -175,7 +161,7 @@ public class YmerMigrationTestBaseTest {
 		// Assert that no exceptions were thrown
 	}
 
-	class FakeTestSuite extends YmerMigrationTestBase {
+	static class FakeTestSuite extends YmerMigrationTestBase {
 
 		private final Collection<MirroredObjectDefinition<?>> mirroredObjects;
 
@@ -192,35 +178,18 @@ public class YmerMigrationTestBaseTest {
 	}
 	
 	
-	private void assertFails(TestRun testRun) {
-		boolean failed = false;
-		try {
-			testRun.run();
-		} catch (AssertionError e) {
-			failed = true;
-		} catch (Exception e) {
-			failed = true;
-		}
-		assertTrue("Expected test to fail", failed);
+	private static void assertFails(ThrowingRunnable testRun) {
+		assertThrows("Expected test to fail", Throwable.class, testRun);
 	}
 
-	private void assertPasses(TestRun testRun) {
+	private static void assertPasses(ThrowingRunnable testRun) {
 		try {
 			testRun.run();
-			return;
 		} catch (AssertionError e) {
 			fail("Expected test to pass, failed with: " + e.getMessage());
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			fail("Expected test to pass, but exception thrown");
 		}
-	}
-
-
-
-	public static abstract class TestRun {
-		
-		abstract void run() throws Exception;
-		
 	}
 
 }

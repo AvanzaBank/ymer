@@ -70,7 +70,7 @@ public interface MirroredObjectDefinitionsOverride {
         private Optional<Boolean> getProperty(MirroredObjectDefinition<?> definition, String setting) {
             return Optional.ofNullable(System.getProperty(getPropertyName(definition, setting)))
                     .filter(s -> s.equals("true") || s.equals("false"))
-                    .map(s -> s.equals("true") ? true : false);
+                    .map("true"::equals);
         }
 
         public static String getPropertyName(MirroredObjectDefinition<?> definition, String setting) {

@@ -15,15 +15,16 @@
  */
 package com.avanza.ymer;
 
-import com.mongodb.MongoClientException;
-import com.mongodb.MongoNotPrimaryException;
-import com.mongodb.MongoSocketException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.mongodb.MongoClientException;
+import com.mongodb.MongoNotPrimaryException;
+import com.mongodb.MongoSocketException;
 
 /**
  * @author Kristoffer Erlandsson (krierl), kristoffer.erlandsson@avanzabank.se
@@ -33,7 +34,7 @@ class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExc
 	private final Set<Class<? extends Exception>> transientErrorClasses;
 	private final Set<String> transientErrorMessages;
 
-	private Logger log = LoggerFactory.getLogger(RethrowsTransientDocumentWriteExceptionHandler.class);
+	private final Logger log = LoggerFactory.getLogger(RethrowsTransientDocumentWriteExceptionHandler.class);
 
 	public RethrowsTransientDocumentWriteExceptionHandler() {
 		this.transientErrorClasses = new HashSet<>(Arrays.asList(
@@ -70,20 +71,13 @@ class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExc
 	}
 
 	private void logRecoverableError(Exception e, String operationDescription) {
-		log.warn(
-				"Recoverable exception when executing mirror command! Attempted operation: " + operationDescription
-						+ " - will propagate error",
-				e);
+		log.warn("Recoverable exception when executing mirror command! Attempted operation: {} - will propagate error", operationDescription, e);
 	}
 
 	private void logIrrecoverableError(Exception e, String operationDescription) {
 		log.error(
-				"Exception when executing mirror command! Attempted operation: " + operationDescription
-						+ " - This command will be ignored but the rest" +
-						" of the commands in this bulk will be attempted." +
-						" This can lead to data inconsistency in the mongo database." +
-						" Must be investigated ASAP. If this error was preceeded by a TransientDocumentWriteException "
-						+ "the cause might be that we reattempt already performed operations, which might be fine.",
+				"Exception when executing mirror command! Attempted operation: {} - This command will be ignored but the rest of the commands in this bulk will be attempted. This can lead to data inconsistency in the mongo database. Must be investigated ASAP. If this error was preceeded by a TransientDocumentWriteException the cause might be that we reattempt already performed operations, which might be fine.",
+				operationDescription,
 				e);
 	}
 

@@ -15,14 +15,19 @@
  */
 package com.avanza.ymer;
 
-import com.gigaspaces.annotation.pojo.SpaceRouting;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+
+import com.gigaspaces.annotation.pojo.SpaceRouting;
 
 /**
  * 
@@ -31,10 +36,10 @@ import static org.junit.Assert.*;
  */
 public class MirroredObjectsTest {
 	
-	@Test(expected = NonMirroredTypeException.class)
+	@Test
 	public void getMirroredDocumentThrowsIllegalArgumentExceptionForNonMirroredType() throws Exception {
 		MirroredObjects mirroredObjects = new MirroredObjects();
-		mirroredObjects.getMirroredObject(FakeMirroredType.class);
+		assertThrows(NonMirroredTypeException.class, () -> mirroredObjects.getMirroredObject(FakeMirroredType.class));
 	}
 	
 	@Test
@@ -63,7 +68,7 @@ public class MirroredObjectsTest {
 		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
-		Set<String> expected = new HashSet<String>();
+		Set<String> expected = new HashSet<>();
 		expected.add(FakeMirroredType.class.getName());
 		
 		assertEquals(expected, mirroredObjects.getMirroredTypeNames());

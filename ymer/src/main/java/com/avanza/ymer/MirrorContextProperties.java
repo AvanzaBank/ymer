@@ -17,8 +17,8 @@ package com.avanza.ymer;
 
 final class MirrorContextProperties {
 	
-	private int partitionCount;
-	private int instanceId;
+	private final int partitionCount;
+	private final int instanceId;
 	
 	public MirrorContextProperties(int partitionCount, int instanceId) {
 		this.partitionCount = partitionCount;

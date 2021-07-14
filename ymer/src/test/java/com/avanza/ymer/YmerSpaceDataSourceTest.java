@@ -15,8 +15,9 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.StreamMatchers.hasCount;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -37,6 +38,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.core.query.Query;
+
 import com.avanza.ymer.YmerSpaceDataSource.InitialLoadCompleteDispatcher;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.gigaspaces.datasource.DataIterator;
@@ -90,7 +92,7 @@ public class YmerSpaceDataSourceTest {
 
 
 		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.load(patchedMirroredDocument, doneDistpacher);
-		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
+		assertThat(loadInitialLoadData, hasCount(1));
 	}
 
 	@Test
@@ -231,7 +233,6 @@ public class YmerSpaceDataSourceTest {
 
 			Integer id = Optional.ofNullable(document.getInteger("_id"))
 								 .orElseThrow(() -> new NullPointerException("no value for: _id"));
-								 ;
 			spaceObject.setSpaceRouting(spaceRouting);
 			spaceObject.setId(id);
 			return (T) spaceObject;

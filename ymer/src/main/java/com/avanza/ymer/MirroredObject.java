@@ -18,6 +18,7 @@ package com.avanza.ymer;
 import java.lang.reflect.Method;
 
 import org.bson.Document;
+
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.ReadPreference;
@@ -79,10 +80,8 @@ final class MirroredObject<T> {
 	/**
 	 * Checks whether a given document requires patching. <p>
 	 *
-	 * @param document
 	 * @throws UnknownDocumentVersionException if the version of the given document is unknown
 	 *
-	 * @return
 	 */
 	boolean requiresPatching(Document document) {
 		int documentVersion = getDocumentVersion(document);
@@ -142,8 +141,6 @@ final class MirroredObject<T> {
 	 *
 	 * The argument document will not be mutated. <p>
 	 *
-	 * @param document
-	 * @return
 	 */
 	Document patch(Document document) {
 		if (!requiresPatching(document)) {
@@ -158,7 +155,6 @@ final class MirroredObject<T> {
 	/**
 	 * Patches the given document to the next version by writing mutating the passed in document. <p>
 	 *
-	 * @param document
 	 */
 	void patchToNextVersion(Document document) {
 		if (!requiresPatching(document)) {
@@ -172,7 +168,6 @@ final class MirroredObject<T> {
 	/**
 	 * Returns the name of the collection that the underlying documents will be stored in. <p>
 	 *
-	 * @return
 	 */
 	public String getCollectionName() {
 		return this.collectionName;

@@ -35,7 +35,7 @@ import com.mongodb.client.model.UpdateOptions;
  */
 final class MongoDocumentCollection implements DocumentCollection {
 
-	private MongoCollection<Document> collection;
+	private final MongoCollection<Document> collection;
 
 	public MongoDocumentCollection(MongoCollection<Document> collection) {
 		this.collection = Objects.requireNonNull(collection);

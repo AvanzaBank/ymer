@@ -15,17 +15,17 @@
  */
 package com.avanza.ymer;
 
-import org.bson.Document;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.bson.Document;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import com.mongodb.BasicDBObject;
 
@@ -72,7 +72,7 @@ import com.mongodb.BasicDBObject;
 @RunWith(Parameterized.class)
 public abstract class YmerMigrationTestBase {
 
-	private MigrationTest migrationTest;
+	private final MigrationTest migrationTest;
 
 	public YmerMigrationTestBase(MigrationTest testCase) {
 		this.migrationTest = testCase;
@@ -111,8 +111,8 @@ public abstract class YmerMigrationTestBase {
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 	
 	
-	protected final static List<Object[]> buildTestCases(MigrationTest... list) {
-		List<Object[]> result = new ArrayList<Object[]>();
+	protected static List<Object[]> buildTestCases(MigrationTest... list) {
+		List<Object[]> result = new ArrayList<>();
 		for (MigrationTest testCase : list) {
 			result.add(new Object[] { testCase });
 		}
@@ -129,9 +129,6 @@ public abstract class YmerMigrationTestBase {
 		/**
 		 * 
 		 * @param oldVersionDoc The document to be patched (one step)t
-		 * @param expectedPatchedVersion
-		 * @param oldVersion
-		 * @param spaceObjectType
 		 */
 		public MigrationTest(Document oldVersionDoc, Document expectedPatchedVersion, int oldVersion, Class<?> spaceObjectType) {
 			this.toBePatched = oldVersionDoc;
