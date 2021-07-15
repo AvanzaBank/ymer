@@ -26,6 +26,7 @@ import java.util.Objects;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
@@ -41,10 +42,12 @@ final class MirroredObjectWriter {
 
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
+	private final int partitionCount;
 
-	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
+	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler, int partitionCount) {
 		this.mirror = Objects.requireNonNull(mirror);
 		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
+		this.partitionCount = partitionCount;
 	}
 
 	public void executeBulk(OperationsBatchData batch) {
@@ -158,7 +161,7 @@ final class MirroredObjectWriter {
 			try {
 				Document[] documents = new Document[items.length];
 				for (int i = 0; i < documents.length; i++) {
-					Document versionedDocument = MirroredObjectWriter.this.mirror.toVersionedDocument(items[i]);
+					Document versionedDocument = MirroredObjectWriter.this.mirror.toVersionedDocument(items[i], MirroredObjectWriter.this.partitionCount);
 					MirroredObjectWriter.this.mirror.getPreWriteProcessing(items[i].getClass()).preWrite(versionedDocument);
 					documents[i] = versionedDocument;
 				}

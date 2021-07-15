@@ -15,9 +15,13 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.util.GigaSpacesPartitionIdUtil.getPartitionId;
+
 import java.lang.reflect.Method;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
+
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.ReadPreference;
@@ -32,11 +36,13 @@ final class MirroredObject<T> {
 
 	public static final String DOCUMENT_FORMAT_VERSION_PROPERTY = "_formatVersion";
 	public static final String DOCUMENT_ROUTING_KEY = "_routingKey";
+	public static final String DOCUMENT_PARTITION_ID = "_partitionId";
 	private final DocumentPatchChain<T> patchChain;
 	private final RoutingKeyExtractor routingKeyExtractor;
 	private final boolean excludeFromInitialLoad;
 	private final boolean writeBackPatchedDocuments;
 	private final boolean loadDocumentsRouted;
+	private final boolean persistPartitionId;
 	private final boolean keepPersistent;
     private final String collectionName;
 	private final TemplateFactory customInitialLoadTemplateFactory;
@@ -48,6 +54,7 @@ final class MirroredObject<T> {
 		this.excludeFromInitialLoad = override.excludeFromInitialLoad(definition);
         this.writeBackPatchedDocuments = override.writeBackPatchedDocuments(definition);
         this.loadDocumentsRouted = override.loadDocumentsRouted(definition);
+        this.persistPartitionId = override.persistPartitionId(definition);
         this.keepPersistent = definition.keepPersistent();
         this.collectionName = definition.collectionName();
         this.customInitialLoadTemplateFactory = definition.customInitialLoadTemplateFactory();
@@ -105,10 +112,14 @@ final class MirroredObject<T> {
 		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, version);
 	}
 
-	void setDocumentAttributes(Document document, T spaceObject) {
+	void setDocumentAttributes(Document document, T spaceObject, int partitionCount) {
 		setDocumentVersion(document);
-		if (loadDocumentsRouted) {
-			setRoutingKey(document, spaceObject);
+		if (loadDocumentsRouted || persistPartitionId) {
+			Object routingKey = routingKeyExtractor.getRoutingKey(spaceObject);
+			setRoutingKey(document, routingKey);
+			if (persistPartitionId) {
+				setPartitionId(document, routingKey, partitionCount);
+			}
 		}
 	}
 
@@ -116,11 +127,23 @@ final class MirroredObject<T> {
 		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, getCurrentVersion());
 	}
 
-	private void setRoutingKey(Document document, T spaceObject) {
-		Object routingKey = routingKeyExtractor.getRoutingKey(spaceObject);
+	private void setRoutingKey(Document document, @Nullable Object routingKey) {
 		if (routingKey != null) {
 			document.put(DOCUMENT_ROUTING_KEY, routingKey.hashCode());
 		}
+	}
+
+	private void setPartitionId(Document document, @Nullable Object routingKey, int partitionCount) {
+		if (routingKey != null) {
+			int partitionId = getPartitionId(routingKey, partitionCount);
+			document.put(DOCUMENT_PARTITION_ID, partitionId);
+		}
+	}
+
+	@Nullable
+	private Integer getRoutingKeyHashCode(T spaceObject) {
+		Object routingKey = routingKeyExtractor.getRoutingKey(spaceObject);
+		return routingKey == null ? null : routingKey.hashCode();
 	}
 
 	int getCurrentVersion() {

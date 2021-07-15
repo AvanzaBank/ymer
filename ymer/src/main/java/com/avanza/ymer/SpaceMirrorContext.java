@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bson.Document;
+
 import com.avanza.ymer.plugin.PreWriteProcessor;
 
 /**
@@ -106,11 +107,11 @@ final class SpaceMirrorContext {
 	 * Converts the given space object to a mongo document and appends
 	 * the current document version to the created mongo document. <p>
 	 */
-	<T> Document toVersionedDocument(T spaceObject) {
+	<T> Document toVersionedDocument(T spaceObject, int partitionCount) {
 		@SuppressWarnings("unchecked")
 		MirroredObject<T> mirroredObject = (MirroredObject<T>) this.mirroredObjects.getMirroredObject(spaceObject.getClass());
 		Document document = this.documentConverter.convertToBsonDocument(spaceObject);
-		mirroredObject.setDocumentAttributes(document, spaceObject);
+		mirroredObject.setDocumentAttributes(document, spaceObject, partitionCount);
 		return document;
 	}
 

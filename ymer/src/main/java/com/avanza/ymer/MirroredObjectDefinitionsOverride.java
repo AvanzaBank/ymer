@@ -22,6 +22,7 @@ public interface MirroredObjectDefinitionsOverride {
     boolean excludeFromInitialLoad(MirroredObjectDefinition<?> definition);
     boolean writeBackPatchedDocuments(MirroredObjectDefinition<?> definition);
     boolean loadDocumentsRouted(MirroredObjectDefinition<?> definition);
+    boolean persistPartitionId(MirroredObjectDefinition<?> definition);
 
     static MirroredObjectDefinitionsOverride noOverride() {
         return new MirroredObjectDefinitionsOverrideNone();
@@ -46,6 +47,11 @@ public interface MirroredObjectDefinitionsOverride {
         public boolean loadDocumentsRouted(MirroredObjectDefinition<?> definition) {
             return definition.loadDocumentsRouted();
         }
+
+        @Override
+        public boolean persistPartitionId(MirroredObjectDefinition<?> definition) {
+            return definition.persistPartitionId();
+        }
     }
 
     class MirroredObjectDefinitionsOverrideSystemProperties implements MirroredObjectDefinitionsOverride {
@@ -65,6 +71,12 @@ public interface MirroredObjectDefinitionsOverride {
         public boolean loadDocumentsRouted(MirroredObjectDefinition<?> definition) {
             return getProperty(definition, "loadDocumentsRouted")
                     .orElse(definition.loadDocumentsRouted());
+        }
+
+        @Override
+        public boolean persistPartitionId(MirroredObjectDefinition<?> definition) {
+            return getProperty(definition, "persistPartitionId")
+                    .orElse(definition.persistPartitionId());
         }
 
         private Optional<Boolean> getProperty(MirroredObjectDefinition<?> definition, String setting) {

@@ -31,6 +31,7 @@ import org.openspaces.core.GigaSpace;
 import org.openspaces.core.GigaSpaceConfigurer;
 import org.openspaces.core.space.EmbeddedSpaceConfigurer;
 import org.springframework.data.mongodb.MongoCollectionUtils;
+
 import com.avanza.gs.test.JVMGlobalLus;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
@@ -324,7 +325,7 @@ public class MirroredObjectTest {
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
-		document.setDocumentAttributes(dbObject, new MirroredType(23));
+		document.setDocumentAttributes(dbObject, new MirroredType(23), 2);
 		assertEquals(23, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
 	}
 
@@ -334,7 +335,7 @@ public class MirroredObjectTest {
 		MirroredObject<RoutedType> document = MirroredObjectDefinition.create(RoutedType.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
-		document.setDocumentAttributes(dbObject, new RoutedType(23, "bananskal"));
+		document.setDocumentAttributes(dbObject, new RoutedType(23, "bananskal"), 2);
 		assertEquals("bananskal".hashCode(), dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
 	}
 

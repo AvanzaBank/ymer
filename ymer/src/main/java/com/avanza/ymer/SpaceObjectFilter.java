@@ -15,10 +15,9 @@
  */
 package com.avanza.ymer;
 
-import java.util.Objects;
+import static com.avanza.ymer.util.GigaSpacesPartitionIdUtil.getPartitionId;
 
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
+import java.util.Objects;
 
 /**
  * Strategy for filtering out objects during initial load. <p>
@@ -79,9 +78,6 @@ final class SpaceObjectFilter<T> {
 
 		@Override
 		public boolean accept(T spaceObject) {
-			int myVal = 0;
-			DBObject filter = BasicDBObjectBuilder.start("lease", BasicDBObjectBuilder.start("$gt", myVal).get()).get();
-
 			return isRoutedToThisPartition(spaceObject);
 		}
 
@@ -98,11 +94,7 @@ final class SpaceObjectFilter<T> {
 		}
 
 		private boolean routesToThisPartition(Object routingKey) {
-			return partitionId == safeAbsoluteValue(routingKey.hashCode()) % partitionCount + 1;
-		}
-
-		private int safeAbsoluteValue(int value) {
-		     return value == Integer.MIN_VALUE ? Integer.MAX_VALUE : Math.abs(value);
+			return partitionId == getPartitionId(routingKey, partitionCount);
 		}
 
 		public int getTotalPartitions() {

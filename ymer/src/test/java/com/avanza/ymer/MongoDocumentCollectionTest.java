@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
+
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
@@ -82,12 +83,12 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		Document doc1 = new Document();
 		doc1.put("_id", 1);
 		doc1.put("value", "a");
-		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"));
+		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"), 2);
 
 		final Document doc2 = new Document();
 		doc2.put("_id", 2);
 		doc2.put("value", "b");
-		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"));
+		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"), 2);
 
 		// Objects WITHOUT routed field
 		final Document doc3 = new Document();
@@ -133,12 +134,12 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		Document doc1 = new Document();
 		doc1.put("_id", 1);
 		doc1.put("value", "a");
-		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"));
+		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"), 2);
 
 		final Document doc2 = new Document();
 		doc2.put("_id", 2);
 		doc2.put("value", "b");
-		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"));
+		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"), 2);
 
 		// Objects WITHOUT routed field
 		final Document doc3 = new Document();

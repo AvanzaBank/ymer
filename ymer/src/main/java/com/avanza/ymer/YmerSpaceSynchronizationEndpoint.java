@@ -19,31 +19,40 @@ import java.lang.management.ManagementFactory;
 
 import javax.management.ObjectName;
 
+import org.openspaces.core.cluster.ClusterInfo;
+import org.openspaces.core.cluster.ClusterInfoAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
-final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
-	
+final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint implements ClusterInfoAware {
+
 	private static final Logger log = LoggerFactory.getLogger(YmerSpaceSynchronizationEndpoint.class);
-	
-	private final MirroredObjectWriter mirroredObjectWriter;
-	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
+
+	private final ToggleableDocumentWriteExceptionHandler exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
+			new RethrowsTransientDocumentWriteExceptionHandler(),
+			new CatchesAllDocumentWriteExceptionHandler()
+	);
+	private final SpaceMirrorContext spaceMirror;
+	private ClusterInfo clusterInfo;
 
 	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
-		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
-				new RethrowsTransientDocumentWriteExceptionHandler(),
-				new CatchesAllDocumentWriteExceptionHandler());
-		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler);
+		this.spaceMirror = spaceMirror;
+	}
+
+	@Override
+	public void setClusterInfo(ClusterInfo clusterInfo) {
+		this.clusterInfo = clusterInfo;
 	}
 
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
+		MirroredObjectWriter mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler, clusterInfo.getNumberOfInstances());
 		mirroredObjectWriter.executeBulk(batchData);
 	}
-	
+
 	void registerExceptionHandlerMBean() {
 		try {
 			String name = "se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler";

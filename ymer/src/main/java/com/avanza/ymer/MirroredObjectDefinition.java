@@ -30,11 +30,11 @@ o * Copyright 2015 Avanza Bank AB
  */
 package com.avanza.ymer;
 
-import org.springframework.data.mongodb.MongoCollectionUtils;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+
+import org.springframework.data.mongodb.MongoCollectionUtils;
 
 import com.mongodb.ReadPreference;
 
@@ -52,6 +52,7 @@ public final class MirroredObjectDefinition<T> {
 	private boolean excludeFromInitialLoad = false;
 	private boolean writeBackPatchedDocuments = true;
 	private boolean loadDocumentsRouted = false;
+	private boolean persistPartitionId = false;
 	private boolean keepPersistent = false;
 	private TemplateFactory customInitialLoadTemplateFactory;
 	private ReadPreference readPreference;
@@ -151,7 +152,21 @@ public final class MirroredObjectDefinition<T> {
 	boolean loadDocumentsRouted() {
 		return this.loadDocumentsRouted;
 	}
-	
+
+	/**
+	 * Whether to persist the current partition id for each document.
+	 * This can increase load speed, but requires all persisted partition numbers to be recalculated
+	 * when the number of partitions change.
+	 */
+	public MirroredObjectDefinition<T> persistPartitionId(boolean persistPartitionId) {
+		this.persistPartitionId = persistPartitionId;
+		return this;
+	}
+
+	boolean persistPartitionId() {
+		return persistPartitionId;
+	}
+
 	/**
 	 * Effectively stops all DELETE operations performed in space from being reflected in the persistent storage. I.e. an object that is deleted
 	 * in GigaSpaces will remain in the persistent storage. Usually used in combination with {@link #excludeFromInitialLoad()}
