@@ -68,7 +68,7 @@ public class MirroredObjectWriterTest {
 		documentDb = FakeDocumentDb.create();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler(), 2);
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
 	}
 
 	@Test
@@ -192,7 +192,7 @@ public class MirroredObjectWriterTest {
 		documentDb = throwsOnUpdateDocumentDb();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler(), 2);
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -208,7 +208,7 @@ public class MirroredObjectWriterTest {
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
 		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler(
-				new TransientDocumentWriteException(new Exception())), 2);
+				new TransientDocumentWriteException(new Exception())));
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -240,7 +240,7 @@ public class MirroredObjectWriterTest {
 		});
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler(), 2);
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -310,7 +310,7 @@ public class MirroredObjectWriterTest {
 
 		@Override
 		public SynchronizationSourceDetails getSourceDetails() {
-			throw new UnsupportedOperationException("Not implemented by FakeBatchData (yet)");
+			return () -> "spaceName_container1_1:spaceName";
 		}
 
 	}

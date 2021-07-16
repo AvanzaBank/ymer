@@ -15,12 +15,11 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.util.GigaSpacesPartitionIdUtil.getPartitionId;
-
 import java.lang.reflect.Method;
 
+import javax.annotation.Nullable;
+
 import org.bson.Document;
-import org.springframework.lang.Nullable;
 
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
@@ -112,13 +111,12 @@ final class MirroredObject<T> {
 		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, version);
 	}
 
-	void setDocumentAttributes(Document document, T spaceObject, int partitionCount) {
+	void setDocumentAttributes(Document document, T spaceObject, @Nullable Integer partitionId) {
 		setDocumentVersion(document);
 		if (loadDocumentsRouted || persistPartitionId) {
-			Object routingKey = routingKeyExtractor.getRoutingKey(spaceObject);
-			setRoutingKey(document, routingKey);
+			setRoutingKey(document, spaceObject);
 			if (persistPartitionId) {
-				setPartitionId(document, routingKey, partitionCount);
+				setPartitionId(document, partitionId);
 			}
 		}
 	}
@@ -127,23 +125,17 @@ final class MirroredObject<T> {
 		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, getCurrentVersion());
 	}
 
-	private void setRoutingKey(Document document, @Nullable Object routingKey) {
+	private void setRoutingKey(Document document, T spaceObject) {
+		Object routingKey = getRoutingKey(spaceObject);
 		if (routingKey != null) {
 			document.put(DOCUMENT_ROUTING_KEY, routingKey.hashCode());
 		}
 	}
 
-	private void setPartitionId(Document document, @Nullable Object routingKey, int partitionCount) {
-		if (routingKey != null) {
-			int partitionId = getPartitionId(routingKey, partitionCount);
+	private void setPartitionId(Document document, @Nullable Integer partitionId) {
+		if (partitionId != null) {
 			document.put(DOCUMENT_PARTITION_ID, partitionId);
 		}
-	}
-
-	@Nullable
-	private Integer getRoutingKeyHashCode(T spaceObject) {
-		Object routingKey = routingKeyExtractor.getRoutingKey(spaceObject);
-		return routingKey == null ? null : routingKey.hashCode();
 	}
 
 	int getCurrentVersion() {

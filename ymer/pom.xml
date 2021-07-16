@@ -35,7 +35,11 @@
             <groupId>org.gigaspaces</groupId>
             <artifactId>xap-datagrid</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.hamcrest</groupId>

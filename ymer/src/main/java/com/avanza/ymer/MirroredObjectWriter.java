@@ -15,6 +15,8 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.util.GigaSpacesPartitionIdUtil.extractPartitionIdFromSpaceName;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.annotation.Nullable;
 
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -42,15 +46,14 @@ final class MirroredObjectWriter {
 
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
-	private final int partitionCount;
 
-	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler, int partitionCount) {
+	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
 		this.mirror = Objects.requireNonNull(mirror);
 		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
-		this.partitionCount = partitionCount;
 	}
 
 	public void executeBulk(OperationsBatchData batch) {
+		Integer partitionId = extractPartitionIdFromSpaceName(batch.getSourceDetails().getName()).orElse(null);
 		List<Object> pendingWrites = new ArrayList<>();
 		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
 			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {
@@ -58,26 +61,25 @@ final class MirroredObjectWriter {
 				continue;
 			}
 			switch (bulkItem.getDataSyncOperationType()) {
-			case WRITE:
-				pendingWrites.add(bulkItem.getDataAsObject());
-				break;
-			case UPDATE:
-			case PARTIAL_UPDATE:
-				insertAll(pendingWrites);
-				pendingWrites = new ArrayList<>();
-				update(bulkItem.getDataAsObject());
-				break;
-			case REMOVE:
-				insertAll(pendingWrites);
-				pendingWrites = new ArrayList<>();
-				remove(bulkItem.getDataAsObject());
-				break;
-			default:
-				throw new UnsupportedOperationException("Bulkoperation " + bulkItem.getDataSyncOperationType()
-						+ " is not supported");
+				case WRITE:
+					pendingWrites.add(bulkItem.getDataAsObject());
+					break;
+				case UPDATE:
+				case PARTIAL_UPDATE:
+					insertAll(partitionId, pendingWrites);
+					pendingWrites = new ArrayList<>();
+					update(partitionId, bulkItem.getDataAsObject());
+					break;
+				case REMOVE:
+					insertAll(partitionId, pendingWrites);
+					pendingWrites = new ArrayList<>();
+					remove(partitionId, bulkItem.getDataAsObject());
+					break;
+				default:
+					throw new UnsupportedOperationException("Bulkoperation " + bulkItem.getDataSyncOperationType() + " is not supported");
 			}
 		}
-		insertAll(pendingWrites);
+		insertAll(partitionId, pendingWrites);
 	}
 
 	private Collection<DataSyncOperation> filterSpaceObjects(DataSyncOperation[] batchDataItems) {
@@ -102,8 +104,8 @@ final class MirroredObjectWriter {
 				&& ReloadableSpaceObjectUtil.isReloaded((ReloadableSpaceObject) item);
 	}
 
-	private void remove(final Object item) {
-		MongoCommand mongoCommand = new MongoCommand(MirrorOperation.REMOVE, item) {
+	private void remove(@Nullable Integer partitionId, final Object item) {
+		MongoCommand mongoCommand = new MongoCommand(MirrorOperation.REMOVE, partitionId, item) {
 			@Override
 			protected void execute(Document... documents) {
 				Document id = new Document();
@@ -115,8 +117,8 @@ final class MirroredObjectWriter {
 		mongoCommand.execute(item);
 	}
 
-	private void update(final Object item) {
-		new MongoCommand(MirrorOperation.UPDATE, item) {
+	private void update(@Nullable Integer partitionId, final Object item) {
+		new MongoCommand(MirrorOperation.UPDATE, partitionId, item) {
 			@Override
 			protected void execute(Document... documents) {
 				getDocumentCollection(item).update(documents[0]);
@@ -124,7 +126,7 @@ final class MirroredObjectWriter {
 		}.execute(item);
 	}
 
-	private void insertAll(List<Object> items) {
+	private void insertAll(@Nullable Integer partitionId, List<Object> items) {
 		Map<String, List<Object>> pendingItemsByCollection = new HashMap<>();
 		for (Object item : items) {
 			String collectionName = this.mirror.getCollectionName(item.getClass());
@@ -133,7 +135,7 @@ final class MirroredObjectWriter {
 			documentToBeWrittenToCollection.add(item);
 		}
 		for (final List<Object> pendingObjects : pendingItemsByCollection.values()) {
-			new MongoCommand(MirrorOperation.INSERT, pendingObjects) {
+			new MongoCommand(MirrorOperation.INSERT, partitionId, pendingObjects) {
 				@Override
 				protected void execute(Document... documents) {
 					DocumentCollection documentCollection = getDocumentCollection(pendingObjects.get(0));
@@ -149,19 +151,21 @@ final class MirroredObjectWriter {
 
 	abstract class MongoCommand {
 
-		private final Object[] objects;
 		private final MirrorOperation operation;
+		private final Integer partitionId;
+		private final Object[] objects;
 
-		public MongoCommand(MirrorOperation operation, Object... objects) {
-			this.objects = objects;
+		public MongoCommand(MirrorOperation operation, @Nullable Integer partitionId, Object... objects) {
 			this.operation = operation;
+			this.partitionId = partitionId;
+			this.objects = objects;
 		}
 
 		final void execute(Object... items) {
 			try {
 				Document[] documents = new Document[items.length];
 				for (int i = 0; i < documents.length; i++) {
-					Document versionedDocument = MirroredObjectWriter.this.mirror.toVersionedDocument(items[i], MirroredObjectWriter.this.partitionCount);
+					Document versionedDocument = MirroredObjectWriter.this.mirror.toVersionedDocument(items[i], partitionId);
 					MirroredObjectWriter.this.mirror.getPreWriteProcessing(items[i].getClass()).preWrite(versionedDocument);
 					documents[i] = versionedDocument;
 				}
