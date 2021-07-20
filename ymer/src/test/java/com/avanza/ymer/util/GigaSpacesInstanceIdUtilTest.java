@@ -20,15 +20,15 @@ import static org.hamcrest.Matchers.equalTo;
 
 import org.junit.Test;
 
-public class GigaSpacesPartitionIdUtilTest {
+public class GigaSpacesInstanceIdUtilTest {
 
 	@Test
-	public void shouldExtractPartitionIdFromSpaceName() {
+	public void shouldExtractInstanceIdFromSpaceName() {
 		String spaceName = "qaSpace_container2_1:qaSpace";
 
-		int partitionId = GigaSpacesPartitionIdUtil.extractPartitionIdFromSpaceName(spaceName).orElseThrow();
+		int instanceId = GigaSpacesInstanceIdUtil.extractInstanceIdIdFromSpaceName(spaceName).orElseThrow();
 
-		assertThat(partitionId, equalTo(2));
+		assertThat(instanceId, equalTo(2));
 	}
 
  }

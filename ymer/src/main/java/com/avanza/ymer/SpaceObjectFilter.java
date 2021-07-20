@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.util.GigaSpacesPartitionIdUtil.getPartitionId;
+import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
 
 import java.util.Objects;
 
@@ -36,8 +36,8 @@ final class SpaceObjectFilter<T> {
 		this.impl = Objects.requireNonNull(impl);
 	}
 
-	static <T> SpaceObjectFilter<T> partitionFilter(MirroredObject<T> document, int partitionId, int partitionCount) {
-		return new SpaceObjectFilter<>(new PartitionFilter<>(document, partitionId, partitionCount));
+	static <T> SpaceObjectFilter<T> partitionFilter(MirroredObject<T> document, int instanceId, int partitionCount) {
+		return new SpaceObjectFilter<>(new PartitionFilter<>(document, instanceId, partitionCount));
 	}
 
 	static <T> SpaceObjectFilter<T> create(Impl<T> impl) {
@@ -67,12 +67,12 @@ final class SpaceObjectFilter<T> {
 	public static class PartitionFilter<T> implements SpaceObjectFilter.Impl<T> {
 
 		private final MirroredObject<T> document;
-		private final int partitionId;
+		private final int instanceId;
 		private final int partitionCount;
 
-		public PartitionFilter(MirroredObject<T> document, int partitionId, int partitionCount) {
+		public PartitionFilter(MirroredObject<T> document, int instanceId, int partitionCount) {
 			this.document = document;
-			this.partitionId = partitionId;
+			this.instanceId = instanceId;
 			this.partitionCount = partitionCount;
 		}
 
@@ -94,7 +94,7 @@ final class SpaceObjectFilter<T> {
 		}
 
 		private boolean routesToThisPartition(Object routingKey) {
-			return partitionId == getPartitionId(routingKey, partitionCount);
+			return instanceId == getInstanceId(routingKey, partitionCount);
 		}
 
 		public int getTotalPartitions() {
@@ -102,7 +102,7 @@ final class SpaceObjectFilter<T> {
 		}
 
 		public int getCurrentPartition() {
-			return partitionId;
+			return instanceId;
 		}
 	}
 

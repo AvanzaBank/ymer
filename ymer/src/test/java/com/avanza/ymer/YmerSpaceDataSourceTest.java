@@ -37,6 +37,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.core.query.Query;
+
 import com.avanza.ymer.YmerSpaceDataSource.InitialLoadCompleteDispatcher;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.gigaspaces.datasource.DataIterator;
@@ -58,7 +59,7 @@ public class YmerSpaceDataSourceTest {
 		appender.clear();
 	}
 
-	private final Integer partitionId = 1;
+	private final Integer instanceId = 1;
 	private final int numberOfInstances = 2;
 	InitialLoadCompleteDispatcher doneDistpacher = new InitialLoadCompleteDispatcher();
 
@@ -69,7 +70,7 @@ public class YmerSpaceDataSourceTest {
 		DocumentDb fakeDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb, SpaceMirrorContext.NO_EXCEPTION_LISTENER, Plugins.empty(), 1);
 		YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
-		ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
+		ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", instanceId, null, numberOfInstances, 0));
 
 		DocumentCollection documentCollection = fakeDb.getCollection(patchedMirroredDocument.getCollectionName());
 		Document doc1 = new Document();
@@ -106,7 +107,7 @@ public class YmerSpaceDataSourceTest {
 				Plugins.empty(),
 				1);
 		YmerSpaceDataSource externalDataSourceForPartition1 = new YmerSpaceDataSource(spaceMirror);
-		externalDataSourceForPartition1.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
+		externalDataSourceForPartition1.setClusterInfo(new ClusterInfo("", instanceId, null, numberOfInstances, 0));
 
 		DocumentCollection documentCollection = documentDb.getCollection(mirroredObject.getCollectionName());
 		Document doc1 = new Document();
@@ -141,7 +142,7 @@ public class YmerSpaceDataSourceTest {
             DocumentDb fakeDb = FakeDocumentDb.create();
             SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb, SpaceMirrorContext.NO_EXCEPTION_LISTENER, Plugins.empty(), 1);
             YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
-            ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", partitionId, null, numberOfInstances, 0));
+            ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", instanceId, null, numberOfInstances, 0));
 
             DocumentCollection documentCollection = fakeDb.getCollection(patchedMirroredDocument.getCollectionName());
 			Document doc2 = new Document();
@@ -226,12 +227,11 @@ public class YmerSpaceDataSourceTest {
 		public <T> T convert(Class<T> toType, Document document) {
 			FakeSpaceObject spaceObject = new FakeSpaceObject();
 
-			Integer spaceRouting = Optional.ofNullable(document.getInteger("spaceRouting"))
+			int spaceRouting = Optional.ofNullable(document.getInteger("spaceRouting"))
 										   .orElseThrow(() -> new NullPointerException("no value for: spaceRouting"));
 
-			Integer id = Optional.ofNullable(document.getInteger("_id"))
+			int id = Optional.ofNullable(document.getInteger("_id"))
 								 .orElseThrow(() -> new NullPointerException("no value for: _id"));
-								 ;
 			spaceObject.setSpaceRouting(spaceRouting);
 			spaceObject.setId(id);
 			return (T) spaceObject;

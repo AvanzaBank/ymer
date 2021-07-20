@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.util.GigaSpacesPartitionIdUtil.extractPartitionIdFromSpaceName;
+import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.extractInstanceIdIdFromSpaceName;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +53,7 @@ final class MirroredObjectWriter {
 	}
 
 	public void executeBulk(OperationsBatchData batch) {
-		Integer partitionId = extractPartitionIdFromSpaceName(batch.getSourceDetails().getName()).orElse(null);
+		Integer instanceId = extractInstanceIdIdFromSpaceName(batch.getSourceDetails().getName()).orElse(null);
 		List<Object> pendingWrites = new ArrayList<>();
 		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
 			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {
@@ -66,20 +66,20 @@ final class MirroredObjectWriter {
 					break;
 				case UPDATE:
 				case PARTIAL_UPDATE:
-					insertAll(partitionId, pendingWrites);
+					insertAll(instanceId, pendingWrites);
 					pendingWrites = new ArrayList<>();
-					update(partitionId, bulkItem.getDataAsObject());
+					update(instanceId, bulkItem.getDataAsObject());
 					break;
 				case REMOVE:
-					insertAll(partitionId, pendingWrites);
+					insertAll(instanceId, pendingWrites);
 					pendingWrites = new ArrayList<>();
-					remove(partitionId, bulkItem.getDataAsObject());
+					remove(instanceId, bulkItem.getDataAsObject());
 					break;
 				default:
 					throw new UnsupportedOperationException("Bulkoperation " + bulkItem.getDataSyncOperationType() + " is not supported");
 			}
 		}
-		insertAll(partitionId, pendingWrites);
+		insertAll(instanceId, pendingWrites);
 	}
 
 	private Collection<DataSyncOperation> filterSpaceObjects(DataSyncOperation[] batchDataItems) {
@@ -104,8 +104,8 @@ final class MirroredObjectWriter {
 				&& ReloadableSpaceObjectUtil.isReloaded((ReloadableSpaceObject) item);
 	}
 
-	private void remove(@Nullable Integer partitionId, final Object item) {
-		MongoCommand mongoCommand = new MongoCommand(MirrorOperation.REMOVE, partitionId, item) {
+	private void remove(@Nullable Integer instanceId, final Object item) {
+		MongoCommand mongoCommand = new MongoCommand(MirrorOperation.REMOVE, instanceId, item) {
 			@Override
 			protected void execute(Document... documents) {
 				Document id = new Document();
@@ -117,8 +117,8 @@ final class MirroredObjectWriter {
 		mongoCommand.execute(item);
 	}
 
-	private void update(@Nullable Integer partitionId, final Object item) {
-		new MongoCommand(MirrorOperation.UPDATE, partitionId, item) {
+	private void update(@Nullable Integer instanceId, final Object item) {
+		new MongoCommand(MirrorOperation.UPDATE, instanceId, item) {
 			@Override
 			protected void execute(Document... documents) {
 				getDocumentCollection(item).update(documents[0]);
@@ -126,7 +126,7 @@ final class MirroredObjectWriter {
 		}.execute(item);
 	}
 
-	private void insertAll(@Nullable Integer partitionId, List<Object> items) {
+	private void insertAll(@Nullable Integer instanceId, List<Object> items) {
 		Map<String, List<Object>> pendingItemsByCollection = new HashMap<>();
 		for (Object item : items) {
 			String collectionName = this.mirror.getCollectionName(item.getClass());
@@ -135,7 +135,7 @@ final class MirroredObjectWriter {
 			documentToBeWrittenToCollection.add(item);
 		}
 		for (final List<Object> pendingObjects : pendingItemsByCollection.values()) {
-			new MongoCommand(MirrorOperation.INSERT, partitionId, pendingObjects) {
+			new MongoCommand(MirrorOperation.INSERT, instanceId, pendingObjects) {
 				@Override
 				protected void execute(Document... documents) {
 					DocumentCollection documentCollection = getDocumentCollection(pendingObjects.get(0));
@@ -152,12 +152,12 @@ final class MirroredObjectWriter {
 	abstract class MongoCommand {
 
 		private final MirrorOperation operation;
-		private final Integer partitionId;
+		private final Integer instanceId;
 		private final Object[] objects;
 
-		public MongoCommand(MirrorOperation operation, @Nullable Integer partitionId, Object... objects) {
+		public MongoCommand(MirrorOperation operation, @Nullable Integer instanceId, Object... objects) {
 			this.operation = operation;
-			this.partitionId = partitionId;
+			this.instanceId = instanceId;
 			this.objects = objects;
 		}
 
@@ -165,7 +165,7 @@ final class MirroredObjectWriter {
 			try {
 				Document[] documents = new Document[items.length];
 				for (int i = 0; i < documents.length; i++) {
-					Document versionedDocument = MirroredObjectWriter.this.mirror.toVersionedDocument(items[i], partitionId);
+					Document versionedDocument = MirroredObjectWriter.this.mirror.toVersionedDocument(items[i], instanceId);
 					MirroredObjectWriter.this.mirror.getPreWriteProcessing(items[i].getClass()).preWrite(versionedDocument);
 					documents[i] = versionedDocument;
 				}

@@ -15,20 +15,28 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
-import com.avanza.ymer.util.OptionalUtil;
-import com.gigaspaces.datasource.DataIterator;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
 import org.bson.Document;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
+import com.avanza.ymer.util.OptionalUtil;
+import com.gigaspaces.datasource.DataIterator;
 
 final class YmerSpaceDataSource extends AbstractSpaceDataSource {
 
@@ -41,14 +49,13 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         this.spaceMirrorContext = spaceMirror;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public DataIterator<Object> initialDataLoad() {
         InitialLoadCompleteDispatcher initialLoadCompleteDispatcher = new InitialLoadCompleteDispatcher();
 
         Stream<Object> objectStream = spaceMirrorContext.getMirroredDocuments().stream()
-                .sorted(Comparator.comparing(MirroredObject::getCollectionName)) // Make load order same for all partitions to reduce mongo cache misses
-                .collect(Collectors.toList()).stream() // Pass through a list to make sorting not block the whole stream on iterator.next which will be called later
+                .sorted(comparing(MirroredObject::getCollectionName)) // Make load order same for all partitions to reduce mongo cache misses
+                .collect(toList()).stream() // Pass through a list to make sorting not block the whole stream on iterator.next which will be called later
                 .filter(md -> !md.excludeFromInitialLoad())
                 .flatMap(mirroredObject -> load(mirroredObject, initialLoadCompleteDispatcher));
 
@@ -59,7 +66,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         logger.info("Loading all documents for type: {}", mirroredObject.getMirroredType().getName());
         MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(
                 mirroredObject,
-                getPartitionId(),
+                getInstanceId(),
                 getPartitionCount());
 
         AtomicInteger counter = new AtomicInteger(0);
@@ -100,7 +107,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
     @Override
     public <T> T loadObject(Class<T> spaceType, Object documentId) {
         MirroredObject<T> mirroredObject = spaceMirrorContext.getMirroredDocument(spaceType);
-        MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getPartitionId(), getPartitionCount());
+        MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getInstanceId(), getPartitionCount());
         Optional<LoadedDocument<T>> loadDocument = documentLoader.loadById(documentId);
         writeBackPatchedDocuments(mirroredObject, loadDocument.map(Arrays::asList).orElse(Collections.emptyList()));
         return loadDocument
@@ -112,20 +119,20 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         return clusterInfo.getNumberOfInstances();
     }
 
-    private Integer getPartitionId() {
+    private Integer getInstanceId() {
         return clusterInfo.getInstanceId();
     }
 
     @Override
     public <T> Collection<T> loadObjects(Class<T> spaceType, T template) {
         MirroredObject<T> mirroredObject = spaceMirrorContext.getMirroredDocument(spaceType);
-        MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getPartitionId(), getPartitionCount());
+        MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getInstanceId(), getPartitionCount());
         List<LoadedDocument<T>> loadedDocuments = documentLoader.loadByQuery(template);
         writeBackPatchedDocuments(mirroredObject, loadedDocuments);
         return loadedDocuments
                 .stream()
                 .map(LoadedDocument::getDocument)
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     private <T> void writeBackPatchedDocuments(MirroredObject<T> document, List<LoadedDocument<T>> loadedDocuments) {
@@ -183,7 +190,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         }
 
         public void initialLoadComplete() {
-            l.stream().forEach(Runnable::run);
+            l.forEach(Runnable::run);
         }
     }
 }

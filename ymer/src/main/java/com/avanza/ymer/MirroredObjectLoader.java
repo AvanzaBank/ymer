@@ -15,15 +15,22 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.query.Query;
+
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.util.OptionalUtil;
 
@@ -79,6 +86,18 @@ final class MirroredObjectLoader<T> {
                                                            contextProperties.getInstanceId());
             return documentCollection.findByTemplate(template);
         }
+        if (mirroredObject.persistInstanceId()) {
+            String expectedSuffix = "_" + contextProperties.getPartitionCount();
+            boolean indexExists = documentCollection.getIndexes()
+                    .filter(i -> i.isIndexForFields(List.of(DOCUMENT_INSTANCE_ID)))
+                    .anyMatch(i -> i.getName().endsWith(expectedSuffix));
+            if (indexExists) {
+                Query query = new Query(where(DOCUMENT_INSTANCE_ID).is(contextProperties.getInstanceId()));
+                return documentCollection.findByQuery(query);
+            } else {
+                log.warn("Configured to load using persisted instance id, but index name indicates number of partitions do not match {}", contextProperties.getPartitionCount());
+            }
+        }
         if (mirroredObject.loadDocumentsRouted()) {
             return documentCollection.findAll(spaceObjectFilter);
         }
@@ -94,7 +113,7 @@ final class MirroredObjectLoader<T> {
                 // MongoConverter is not thread-safe due to a bug in AbstractMappingContext.addPersistentEntity().
                 // The bug occurs at most once or twice per collection but will produce objects without any properties set
                 // Resolve it temporarily by retrying.
-                log.warn("Failed to load dbObject=" + document + ". Retrying.", e);
+                log.warn("Failed to load dbObject={}. Retrying.", document, e);
                 result = patchAndConvert(new Document(document));
             }
             long loaded = numLoadedObjects.incrementAndGet();
@@ -103,7 +122,7 @@ final class MirroredObjectLoader<T> {
             }
             return result;
         } catch (RuntimeException e) {
-            log.error("Unable to load document=" + document, e);
+            log.error("Unable to load document={}", document, e);
             throw e;
         }
     }
@@ -141,7 +160,7 @@ final class MirroredObjectLoader<T> {
                 postReadProcessor.postRead(currentVersion);
                 currentVersion = this.mirroredObject.patch(currentVersion);
             } catch (RuntimeException e) {
-                log.error("Patch of document failed! document=" + mirroredObject + "currentVersion=" + currentVersion, e);
+                log.error("Patch of document failed! document={}currentVersion={}", mirroredObject, currentVersion, e);
                 throw e;
             }
         } else {
@@ -152,9 +171,9 @@ final class MirroredObjectLoader<T> {
             return Optional.empty();
         }
         if (patched) {
-            return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.of(new PatchedDocument(document, currentVersion))));
+            return Optional.of(new LoadedDocument<>(postProcess(mirroredObject), new PatchedDocument(document, currentVersion)));
         }
-        return Optional.of(new LoadedDocument<T>(postProcess(mirroredObject), Optional.empty()));
+        return Optional.of(new LoadedDocument<>(postProcess(mirroredObject), null));
     }
 
     private T postProcess(T mirroredObject) {
@@ -171,9 +190,9 @@ final class MirroredObjectLoader<T> {
      */
     static class LoadedDocument<T> {
         private final T document;
-        private final Optional<PatchedDocument> patchedDocument;
+        private final PatchedDocument patchedDocument;
 
-        public LoadedDocument(T document, Optional<PatchedDocument> patchedDocument) {
+        public LoadedDocument(T document, @Nullable PatchedDocument patchedDocument) {
             this.document = document;
             this.patchedDocument = patchedDocument;
         }
@@ -183,7 +202,7 @@ final class MirroredObjectLoader<T> {
         }
 
         public Optional<PatchedDocument> getPatchedDocument() {
-            return patchedDocument;
+            return Optional.ofNullable(patchedDocument);
         }
 
     }

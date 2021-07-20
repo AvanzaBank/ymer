@@ -22,7 +22,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
+
+import com.mongodb.client.model.IndexOptions;
+
 /**
  *
  * @author Elias Lindholm (elilin)
@@ -138,5 +142,18 @@ class FakeDocumentCollection implements DocumentCollection {
 	@Override
 	public Stream<Document> findByTemplate(Document template) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Stream<IndexInfo> getIndexes() {
+		return Stream.empty();
+	}
+
+	@Override
+	public void dropIndex(String name) {
+	}
+
+	@Override
+	public void createIndex(Document keys, IndexOptions indexOptions) {
 	}
 }

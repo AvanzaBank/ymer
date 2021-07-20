@@ -78,14 +78,14 @@ final class SpaceMirrorContext {
 		return getDocumentCollection(document.getMirroredType());
 	}
 
-	<T> MirroredObjectLoader<T> createDocumentLoader(MirroredObject<T> document, int partitionId, int partitionCount) {
+	<T> MirroredObjectLoader<T> createDocumentLoader(MirroredObject<T> document, int instanceId, int partitionCount) {
 		DocumentCollection documentCollection = getDocumentCollection(document.getMirroredType());
 		return new MirroredObjectLoader<>(
 				documentCollection,
 				documentConverter,
 				document,
-				SpaceObjectFilter.partitionFilter(document, partitionId, partitionCount),
-				new MirrorContextProperties(partitionCount, partitionId),
+				SpaceObjectFilter.partitionFilter(document, instanceId, partitionCount),
+				new MirrorContextProperties(partitionCount, instanceId),
 				plugins.getPostReadProcessing(document.getMirroredType()));
 	}
 
@@ -109,11 +109,11 @@ final class SpaceMirrorContext {
 	 * Converts the given space object to a mongo document and appends
 	 * the current document version to the created mongo document. <p>
 	 */
-	<T> Document toVersionedDocument(T spaceObject, @Nullable Integer partitionId) {
+	<T> Document toVersionedDocument(T spaceObject, @Nullable Integer instanceId) {
 		@SuppressWarnings("unchecked")
 		MirroredObject<T> mirroredObject = (MirroredObject<T>) this.mirroredObjects.getMirroredObject(spaceObject.getClass());
 		Document document = this.documentConverter.convertToBsonDocument(spaceObject);
-		mirroredObject.setDocumentAttributes(document, spaceObject, partitionId);
+		mirroredObject.setDocumentAttributes(document, spaceObject, instanceId);
 		return document;
 	}
 

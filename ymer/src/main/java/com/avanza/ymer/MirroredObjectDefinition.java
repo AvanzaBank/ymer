@@ -52,7 +52,7 @@ public final class MirroredObjectDefinition<T> {
 	private boolean excludeFromInitialLoad = false;
 	private boolean writeBackPatchedDocuments = true;
 	private boolean loadDocumentsRouted = false;
-	private boolean persistPartitionId = false;
+	private boolean persistInstanceId = false;
 	private boolean keepPersistent = false;
 	private TemplateFactory customInitialLoadTemplateFactory;
 	private ReadPreference readPreference;
@@ -76,11 +76,11 @@ public final class MirroredObjectDefinition<T> {
 	}
     
     public MirroredObject<T> buildMirroredDocument(MirroredObjectDefinitionsOverride override) {
-    	return new MirroredObject<T>(this, override);
+    	return new MirroredObject<>(this, override);
     }
 
 	DocumentPatchChain<T> createPatchChain() {
-		return new DocumentPatchChain<T>(mirroredType, Arrays.asList(patches));
+		return new DocumentPatchChain<>(mirroredType, Arrays.asList(patches));
 	}
 	
 	/**
@@ -88,8 +88,6 @@ public final class MirroredObjectDefinition<T> {
 	 * In other words no data for this MirroredObject will be present if not loaded through other means.<br>
 	 * <br>
 	 * Can be used for collections that are loaded via lazy load. See {@link ReloadableSpaceObject}.
-	 *
-	 * @param excludeFromInitialLoad
 	 */
 	public MirroredObjectDefinition<T> excludeFromInitialLoad(boolean excludeFromInitialLoad) {
 		this.excludeFromInitialLoad = excludeFromInitialLoad;
@@ -107,8 +105,6 @@ public final class MirroredObjectDefinition<T> {
 	 * When true, persistence-support can utilize several optimizations which reduce system load and memory usage during InitialLoad.
 	 * 
 	 * Default value is true, indicating that documents will be written back to persistent storage.
-	 *
-	 * @param writeBackPatchedDocuments
 	 */
 	public MirroredObjectDefinition<T> writeBackPatchedDocuments(boolean writeBackPatchedDocuments) {
 		this.writeBackPatchedDocuments = writeBackPatchedDocuments;
@@ -130,9 +126,6 @@ public final class MirroredObjectDefinition<T> {
 	 * persistent storage. Make sure to rewrite all space objects before turning routed document loading back on.
 	 * 
 	 * Default value is false.
-	 *
-	 * @param loadDocumentsRouted
-	 * 
 	 */
 	public MirroredObjectDefinition<T> loadDocumentsRouted(boolean loadDocumentsRouted) {
 		this.loadDocumentsRouted = loadDocumentsRouted;
@@ -141,8 +134,6 @@ public final class MirroredObjectDefinition<T> {
 
 	/**
 	 * Sets the read preference for queries against documents in this collection.
-	 *
-	 * @param readPreference
 	 */
 	public MirroredObjectDefinition<T> withReadPreference(ReadPreference readPreference) {
 		this.readPreference = Objects.requireNonNull(readPreference);
@@ -154,24 +145,22 @@ public final class MirroredObjectDefinition<T> {
 	}
 
 	/**
-	 * Whether to persist the current partition id for each document.
+	 * Whether to persist the current instance id for each document.
 	 * This can increase load speed, but requires all persisted partition numbers to be recalculated
 	 * when the number of partitions change.
 	 */
-	public MirroredObjectDefinition<T> persistPartitionId(boolean persistPartitionId) {
-		this.persistPartitionId = persistPartitionId;
+	public MirroredObjectDefinition<T> persistInstanceId(boolean persistInstanceId) {
+		this.persistInstanceId = persistInstanceId;
 		return this;
 	}
 
-	boolean persistPartitionId() {
-		return persistPartitionId;
+	boolean persistInstanceId() {
+		return persistInstanceId;
 	}
 
 	/**
 	 * Effectively stops all DELETE operations performed in space from being reflected in the persistent storage. I.e. an object that is deleted
 	 * in GigaSpaces will remain in the persistent storage. Usually used in combination with {@link #excludeFromInitialLoad()}
-	 *
-	 * @param keepPersistent
 	 */
 	public MirroredObjectDefinition<T> keepPersistent(boolean keepPersistent) {
 		this.keepPersistent = keepPersistent;

@@ -25,20 +25,24 @@ import org.springframework.util.StringUtils;
 
 /**
  * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils
- * Note that Ymer uses the term "partition id" for what Gigaspaces calls "instance id", ie. starting at 1.
- * The Gigaspaces term "instance id" is one less than the "instance id", so starting at 0.
  */
-public final class GigaSpacesPartitionIdUtil {
+public final class GigaSpacesInstanceIdUtil {
 	private static final Pattern PARTITION_ID_PATTERN = Pattern.compile("_container(\\d+)");
 
-	private GigaSpacesPartitionIdUtil() {
+	private GigaSpacesInstanceIdUtil() {
 	}
 
-	public static int getPartitionId(Object routingKey, int partitionCount) {
+	/**
+	 * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils#getPartitionId(Object, int)
+	 */
+	public static int getInstanceId(Object routingKey, int partitionCount) {
 		return safeAbsoluteValue(routingKey.hashCode()) % partitionCount + 1;
 	}
 
-	public static Optional<Integer> extractPartitionIdFromSpaceName(@Nullable String spaceName) {
+	/**
+	 * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils#extractPartitionIdFromSpaceName(String)
+	 */
+	public static Optional<Integer> extractInstanceIdIdFromSpaceName(@Nullable String spaceName) {
 		// Format: qaSpace_container2_1:qaSpace
 		if (StringUtils.isEmpty(spaceName)) {
 			return Optional.empty();

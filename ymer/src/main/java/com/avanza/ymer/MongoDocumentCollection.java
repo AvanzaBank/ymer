@@ -15,17 +15,23 @@
  */
 package com.avanza.ymer;
 
+import static java.util.Spliterators.spliteratorUnknownSize;
+
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.UpdateOptions;
 
 /**
@@ -45,15 +51,16 @@ final class MongoDocumentCollection implements DocumentCollection {
 	public Stream<Document> findAll(SpaceObjectFilter<?> objectFilter) {
 		if (MongoPartitionFilter.canCreateFrom(objectFilter)) {
 			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.createBsonFilter(objectFilter);
-			return StreamSupport.stream(collection.find(mongoPartitionFilter.toBson()).spliterator(), false);
+			return toStream(collection.find(mongoPartitionFilter.toBson()));
 		}
 		return findAll();
 	}
 
 	@Override
 	public Stream<Document> findAll() {
-		return StreamSupport.stream(collection.find().spliterator(), false);
+		return toStream(collection.find());
 	}
+
 
 	@Override
 	public Document findById(Object id) {
@@ -62,12 +69,12 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public Stream<Document> findByQuery(Query query) {
-		return StreamSupport.stream(collection.find(query.getQueryObject()).spliterator(), false);
+		return toStream(collection.find(query.getQueryObject()));
 	}
 
 	@Override
 	public Stream<Document> findByTemplate(Document template) {
-		return StreamSupport.stream(collection.find(template).spliterator(), false);
+		return toStream(collection.find(template));
 	}
 
 	@Override
@@ -109,5 +116,26 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public void insertAll(Document... documents) {
 		collection.insertMany(Arrays.asList(documents)); // TODO: test for this method
+	}
+
+	@Override
+	public Stream<IndexInfo> getIndexes() {
+		return toStream(collection.listIndexes().map(IndexInfo::indexInfoOf));
+	}
+
+	@Override
+	public void dropIndex(String name) {
+		collection.dropIndex(name);
+	}
+
+	@Override
+	public void createIndex(Document keys, IndexOptions indexOptions) {
+		collection.createIndex(keys, indexOptions);
+	}
+
+	private static <T> Stream<T> toStream(MongoIterable<T> mongoIterable) {
+		MongoCursor<T> iterator = mongoIterable.iterator();
+		return StreamSupport.stream(spliteratorUnknownSize(iterator, 0), false)
+				.onClose(iterator::close);
 	}
 }

@@ -35,13 +35,13 @@ final class MirroredObject<T> {
 
 	public static final String DOCUMENT_FORMAT_VERSION_PROPERTY = "_formatVersion";
 	public static final String DOCUMENT_ROUTING_KEY = "_routingKey";
-	public static final String DOCUMENT_PARTITION_ID = "_partitionId";
+	public static final String DOCUMENT_INSTANCE_ID = "_instanceId";
 	private final DocumentPatchChain<T> patchChain;
 	private final RoutingKeyExtractor routingKeyExtractor;
 	private final boolean excludeFromInitialLoad;
 	private final boolean writeBackPatchedDocuments;
 	private final boolean loadDocumentsRouted;
-	private final boolean persistPartitionId;
+	private final boolean persistInstanceId;
 	private final boolean keepPersistent;
     private final String collectionName;
 	private final TemplateFactory customInitialLoadTemplateFactory;
@@ -53,7 +53,7 @@ final class MirroredObject<T> {
 		this.excludeFromInitialLoad = override.excludeFromInitialLoad(definition);
         this.writeBackPatchedDocuments = override.writeBackPatchedDocuments(definition);
         this.loadDocumentsRouted = override.loadDocumentsRouted(definition);
-        this.persistPartitionId = override.persistPartitionId(definition);
+        this.persistInstanceId = override.persistInstanceId(definition);
         this.keepPersistent = definition.keepPersistent();
         this.collectionName = definition.collectionName();
         this.customInitialLoadTemplateFactory = definition.customInitialLoadTemplateFactory();
@@ -85,10 +85,7 @@ final class MirroredObject<T> {
 	/**
 	 * Checks whether a given document requires patching. <p>
 	 *
-	 * @param document
 	 * @throws UnknownDocumentVersionException if the version of the given document is unknown
-	 *
-	 * @return
 	 */
 	boolean requiresPatching(Document document) {
 		int documentVersion = getDocumentVersion(document);
@@ -111,12 +108,12 @@ final class MirroredObject<T> {
 		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, version);
 	}
 
-	void setDocumentAttributes(Document document, T spaceObject, @Nullable Integer partitionId) {
+	void setDocumentAttributes(Document document, T spaceObject, @Nullable Integer instanceId) {
 		setDocumentVersion(document);
-		if (loadDocumentsRouted || persistPartitionId) {
+		if (loadDocumentsRouted || persistInstanceId) {
 			setRoutingKey(document, spaceObject);
-			if (persistPartitionId) {
-				setPartitionId(document, partitionId);
+			if (persistInstanceId) {
+				setInstanceId(document, instanceId);
 			}
 		}
 	}
@@ -132,9 +129,9 @@ final class MirroredObject<T> {
 		}
 	}
 
-	private void setPartitionId(Document document, @Nullable Integer partitionId) {
-		if (partitionId != null) {
-			document.put(DOCUMENT_PARTITION_ID, partitionId);
+	private void setInstanceId(Document document, @Nullable Integer instanceId) {
+		if (instanceId != null) {
+			document.put(DOCUMENT_INSTANCE_ID, instanceId);
 		}
 	}
 
@@ -156,9 +153,6 @@ final class MirroredObject<T> {
 	 * Patches the given document to the current version. <p>
 	 *
 	 * The argument document will not be mutated. <p>
-	 *
-	 * @param document
-	 * @return
 	 */
 	Document patch(Document document) {
 		if (!requiresPatching(document)) {
@@ -172,8 +166,6 @@ final class MirroredObject<T> {
 
 	/**
 	 * Patches the given document to the next version by writing mutating the passed in document. <p>
-	 *
-	 * @param document
 	 */
 	void patchToNextVersion(Document document) {
 		if (!requiresPatching(document)) {
@@ -186,8 +178,6 @@ final class MirroredObject<T> {
 
 	/**
 	 * Returns the name of the collection that the underlying documents will be stored in. <p>
-	 *
-	 * @return
 	 */
 	public String getCollectionName() {
 		return this.collectionName;
@@ -211,6 +201,10 @@ final class MirroredObject<T> {
 
 	boolean loadDocumentsRouted() {
 		return loadDocumentsRouted;
+	}
+
+	boolean persistInstanceId() {
+		return persistInstanceId;
 	}
 
 	ReadPreference getReadPreference() {

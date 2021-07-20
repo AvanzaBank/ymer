@@ -22,7 +22,7 @@ public interface MirroredObjectDefinitionsOverride {
     boolean excludeFromInitialLoad(MirroredObjectDefinition<?> definition);
     boolean writeBackPatchedDocuments(MirroredObjectDefinition<?> definition);
     boolean loadDocumentsRouted(MirroredObjectDefinition<?> definition);
-    boolean persistPartitionId(MirroredObjectDefinition<?> definition);
+    boolean persistInstanceId(MirroredObjectDefinition<?> definition);
 
     static MirroredObjectDefinitionsOverride noOverride() {
         return new MirroredObjectDefinitionsOverrideNone();
@@ -49,8 +49,8 @@ public interface MirroredObjectDefinitionsOverride {
         }
 
         @Override
-        public boolean persistPartitionId(MirroredObjectDefinition<?> definition) {
-            return definition.persistPartitionId();
+        public boolean persistInstanceId(MirroredObjectDefinition<?> definition) {
+            return definition.persistInstanceId();
         }
     }
 
@@ -74,15 +74,15 @@ public interface MirroredObjectDefinitionsOverride {
         }
 
         @Override
-        public boolean persistPartitionId(MirroredObjectDefinition<?> definition) {
-            return getProperty(definition, "persistPartitionId")
-                    .orElse(definition.persistPartitionId());
+        public boolean persistInstanceId(MirroredObjectDefinition<?> definition) {
+            return getProperty(definition, "persistInstanceId")
+                    .orElse(definition.persistInstanceId());
         }
 
         private Optional<Boolean> getProperty(MirroredObjectDefinition<?> definition, String setting) {
             return Optional.ofNullable(System.getProperty(getPropertyName(definition, setting)))
                     .filter(s -> s.equals("true") || s.equals("false"))
-                    .map(s -> s.equals("true") ? true : false);
+                    .map("true"::equals);
         }
 
         public static String getPropertyName(MirroredObjectDefinition<?> definition, String setting) {
