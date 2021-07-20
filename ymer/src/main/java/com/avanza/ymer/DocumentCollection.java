@@ -18,8 +18,12 @@ package com.avanza.ymer;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
+
 import com.mongodb.DBCollection;
+import com.mongodb.client.model.IndexOptions;
+
 /**
  * Abstraction over {@link DBCollection}. <p>
  *
@@ -72,4 +76,9 @@ interface DocumentCollection {
 	 */
 	void insertAll(Document... documents);
 
+	Stream<IndexInfo> getIndexes();
+
+	void dropIndex(String name);
+
+	void createIndex(Document keys, IndexOptions indexOptions);
 }
