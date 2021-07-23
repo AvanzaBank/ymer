@@ -47,9 +47,6 @@ final class DocumentConverter {
     /**
      * Reads the given Document and convert it to the given type. <p>
      *
-     * @param toType
-     * @param document
-     * @return
      */
     <T> T convert(Class<T> toType, Document document) {
         return provider.convert(toType, document);
@@ -58,8 +55,6 @@ final class DocumentConverter {
     /**
      * Converts the given object to a BSON document. <p>
      *
-     * @param type
-     * @return
      */
     Document convertToBsonDocument(Object type) {
         return provider.convertToBsonDocument(type);
@@ -68,8 +63,6 @@ final class DocumentConverter {
     /**
      * Converts the given object to the corresponding mongo object (may or may not be a DBObject)
      *
-     * @param type
-     * @return
      */
     Object convertToMongoObject(Object type) {
         return provider.convert(type);
@@ -84,25 +77,18 @@ final class DocumentConverter {
         /**
          * Reads the given Document and convert it to the given type. <p>
          *
-         * @param toType
-         * @param document
-         * @return
          */
         <T> T convert(Class<T> toType, Document document);
 
         /**
          * Converts the given object to a BSON Document. <p>
          *
-         * @param type
-         * @return
          */
         Document convertToBsonDocument(Object type);
 
         /**
          * Converts the given object to the corresponding mongo object (may or may not be a DBObject)
          *
-         * @param type
-         * @return
          */
         Object convert(Object type);
 

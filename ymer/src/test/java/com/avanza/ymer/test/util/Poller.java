@@ -63,8 +63,8 @@ import org.hamcrest.StringDescription;
  */
 public class Poller {
 	
-	private long timeoutMillis;
-	private long pollDelayMillis;
+	private final long timeoutMillis;
+	private final long pollDelayMillis;
 	
 	public Poller(long timeoutMillis, long pollDelayMillis) {
 		this.timeoutMillis = timeoutMillis;
@@ -79,7 +79,6 @@ public class Poller {
 	 * 
 	 * If timeout occurs an AssertionError will be thrown.<p>
 	 * 
-	 * @param probe
 	 * @throws InterruptedException - if the current thread is interrupted.
 	 * @throws AssertionError - if timeout occurs before the Probe is satisfied.
 	 */
@@ -113,7 +112,7 @@ public class Poller {
 	
 	private static class Timeout {
 
-		private long endTimeMillis;
+		private final long endTimeMillis;
 
 		public Timeout(long timeoutMillis) {
 			this.endTimeMillis = currentTimeMillis() + timeoutMillis;

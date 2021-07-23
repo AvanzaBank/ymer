@@ -233,7 +233,6 @@ public class YmerSpaceDataSourceTest {
 
 			Integer id = Optional.ofNullable(document.getInteger("_id"))
 								 .orElseThrow(() -> new NullPointerException("no value for: _id"));
-								 ;
 			spaceObject.setSpaceRouting(spaceRouting);
 			spaceObject.setId(id);
 			return (T) spaceObject;

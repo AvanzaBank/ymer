@@ -211,6 +211,7 @@ public class YmerMirrorIntegrationTest {
 	}
 
 	public static void assertEventually(Probe probe) throws InterruptedException {
+
 		new Poller(7000L, 50L).check(probe);
 	}
 

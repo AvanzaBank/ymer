@@ -40,7 +40,7 @@ public class MongoProbes {
 			final Class<T> objectClass) {
 		return new Probe() {
 
-			private List<T> sampledObjects = new ArrayList<T>();
+			private List<T> sampledObjects = new ArrayList<>();
 
 			@Override
 			public void sample() {

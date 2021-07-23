@@ -18,6 +18,7 @@ package com.avanza.ymer;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 
 import java.util.List;
 
@@ -117,7 +118,7 @@ public class MirroredObjectWriterTest {
 	}
 
 	@Test
-	public void udatesAreUpdatedInDb() throws Exception {
+	public void updatesAreUpdatedInDb() throws Exception {
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		documentDb.getCollection(mirroredObject.getCollectionName()).insert(documentConverter.convertToBsonDocument(item1));
 		item1.setMessage("updated");
@@ -203,7 +204,7 @@ public class MirroredObjectWriterTest {
 		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
 	}
 
-	@Test(expected=TransientDocumentWriteException.class)
+	@Test
 	public void exceptionFromExceptionHandlerIsPropagated() throws Exception {
 		documentDb = throwsOnUpdateDocumentDb();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
@@ -213,11 +214,11 @@ public class MirroredObjectWriterTest {
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
-		mirroredObjectWriter.executeBulk(FakeBatchData.create(bulkItem));
+		assertThrows(TransientDocumentWriteException.class, () -> mirroredObjectWriter.executeBulk(FakeBatchData.create(bulkItem)));
 	}
 
 	@Test
-	public void exceptionThrownDuringConvertionToMongoDbObjectAreNotPropagated() throws Exception {
+	public void exceptionThrownDuringConversionToMongoDbObjectAreNotPropagated() throws Exception {
 		documentConverter = DocumentConverter.create(new DocumentConverter.Provider() {
 			@Override
 			public Document convertToBsonDocument(Object type) {

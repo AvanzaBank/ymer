@@ -15,12 +15,12 @@
  */
 package com.avanza.ymer;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 		
-		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {
@@ -82,7 +82,7 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 
-		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertFails(new TestRun() {
@@ -128,7 +128,7 @@ public class YmerMigrationTestBaseTest {
 			}
 		} };
 
-		final Collection<MirroredObjectDefinition<?>> mirroredObjects = Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
 		assertPasses(new TestRun() {
@@ -175,7 +175,7 @@ public class YmerMigrationTestBaseTest {
 		// Assert that no exceptions were thrown
 	}
 
-	class FakeTestSuite extends YmerMigrationTestBase {
+	static class FakeTestSuite extends YmerMigrationTestBase {
 
 		private final Collection<MirroredObjectDefinition<?>> mirroredObjects;
 
@@ -192,30 +192,19 @@ public class YmerMigrationTestBaseTest {
 	}
 	
 	
-	private void assertFails(TestRun testRun) {
-		boolean failed = false;
-		try {
-			testRun.run();
-		} catch (AssertionError e) {
-			failed = true;
-		} catch (Exception e) {
-			failed = true;
-		}
-		assertTrue("Expected test to fail", failed);
+	private static void assertFails(TestRun testRun) {
+		assertThrows("Expected test to fail", Throwable.class, testRun::run);
 	}
 
-	private void assertPasses(TestRun testRun) {
+	private static void assertPasses(TestRun testRun) {
 		try {
 			testRun.run();
-			return;
 		} catch (AssertionError e) {
 			fail("Expected test to pass, failed with: " + e.getMessage());
 		} catch (Exception e) {
 			fail("Expected test to pass, but exception thrown");
 		}
 	}
-
-
 
 	public static abstract class TestRun {
 		

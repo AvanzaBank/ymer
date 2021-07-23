@@ -31,8 +31,8 @@ final class DocumentPatchChain<T> implements Iterable<BsonDocumentPatch> {
 
 	// TODO: remove mirroredType field and info from DocumentPatchChain
 	
-	private Class<T> mirroredType;
-	private BsonDocumentPatch[] patchChain;
+	private final Class<T> mirroredType;
+	private final BsonDocumentPatch[] patchChain;
 
 	DocumentPatchChain(Class<T> mirroredType, List<BsonDocumentPatch> patches) {
 		this.mirroredType = mirroredType;
@@ -81,9 +81,7 @@ final class DocumentPatchChain<T> implements Iterable<BsonDocumentPatch> {
 
 	/**
 	 * Returns the patch for a given version. <p>
-	 * 
-	 * @param version
-	 * @return
+	 *
 	 */
 	BsonDocumentPatch getPatch(int version) {
 		if (version > getLastPatchInChain().patchedVersion() || version < getFirstPatchInChain().patchedVersion()) {

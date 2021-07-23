@@ -29,8 +29,7 @@ public interface Probe {
 	/**
 	 * Indicates whether this Probe is satisfied or note, will be called repeatedly
 	 * until timeout occurs. Timeout is determine by the Poller that polls the probe. <p>
-	 * 
-	 * @return
+	 *
 	 */
 	boolean isSatisfied();
 	
@@ -43,8 +42,7 @@ public interface Probe {
 	/**
 	 * This method will be invoked in case of failure, i.e. the probe was not satisfied before
 	 * timeout occurs. <p>
-	 * 
-	 * @param description
+	 *
 	 */
 	void describeFailureTo(Description description);
 

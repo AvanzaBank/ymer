@@ -33,24 +33,22 @@ public interface ReloadableSpaceObject {
 	 * This should most likely be annotated with {@link SpaceVersion} in implementing classes
 	 * @return current versionID
 	 */
-	public int getVersionID();
+	int getVersionID();
 
 	/**
 	 * Used by gigaspaces
-	 * @param versionID
 	 */
-	public void setVersionID(int versionID);
+	void setVersionID(int versionID);
 
 	/**
 	 * Used by mirror to determine what gs objects should be written to persistent storage
 	 * @return {@link Integer} may be <code>null</code>
 	 */
-	public Integer getLatestRestoreVersion();
+	Integer getLatestRestoreVersion();
 
 	/**
 	 * Used by datasources to set at what version an {@link ReloadableSpaceObject} has be restored from persistent storage
-	 * @param latestRestoreVersion
 	 */
-	public void setLatestRestoreVersion(Integer latestRestoreVersion);
+	void setLatestRestoreVersion(Integer latestRestoreVersion);
 
 }

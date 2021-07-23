@@ -15,11 +15,16 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.YmerConverterTestBase.ConverterTest;
-import com.gigaspaces.annotation.pojo.SpaceId;
-import com.gigaspaces.annotation.pojo.SpaceRouting;
-import org.hamcrest.Description;
-import org.hamcrest.TypeSafeMatcher;
+import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -28,18 +33,14 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.avanza.ymer.YmerConverterTestBase.ConverterTest;
+import com.gigaspaces.annotation.pojo.SpaceId;
+import com.gigaspaces.annotation.pojo.SpaceRouting;
 
 public class YmerConverterTestBaseTest {
 
 	@Test
-	public void testingIfMirroredObjectIsMirrroedPasses() throws Exception {
+	public void testingIfMirroredObjectIsMirroredPasses() throws Exception {
 		final FakeTestSuite test1 = new FakeTestSuite(new ConverterTest<>(new TestSpaceObject("foo", "message")));
 		assertPasses(new TestRun() {
 			@Override
@@ -64,18 +65,9 @@ public class YmerConverterTestBaseTest {
 	}
 
 	@Test
-	public void serializationTestSucceds() throws Exception {
+	public void serializationTestSucceeds() throws Exception {
 		final FakeTestSuite test1 = new FakeTestSuite(
-				new ConverterTest<>(new TestSpaceObject("foo", "message"), new TypeSafeMatcher<TestSpaceObject>() {
-					@Override
-					public void describeTo(Description arg0) {
-					}
-
-					@Override
-					protected boolean matchesSafely(TestSpaceObject item) {
-						return true;
-					}
-				}));
+				new ConverterTest<>(new TestSpaceObject("foo", "message"), anything()));
 		assertPasses(new TestRun() {
 			@Override
 			void run() throws Exception {
@@ -87,16 +79,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void serializationTestFails() throws Exception {
 		final FakeTestSuite test1 = new FakeTestSuite(
-				new ConverterTest<>(new TestSpaceObject("foo", "message"), new TypeSafeMatcher<TestSpaceObject>() {
-					@Override
-					public void describeTo(Description arg0) {
-					}
-
-					@Override
-					protected boolean matchesSafely(TestSpaceObject item) {
-						return false;
-					}
-				}));
+				new ConverterTest<>(new TestSpaceObject("foo", "message"), not(anything())));
 		assertFails(new TestRun() {
 			@Override
 			void run() throws Exception {
@@ -108,17 +91,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void spaceObjectWithoutIdAnnotationTestFails() throws Exception {
 		final FakeTestSuiteWithoutId test1 = new FakeTestSuiteWithoutId(
-				new ConverterTest<>(new TestSpaceObjectWithoutSpringDataIdAnnotation("foo"),
-						new TypeSafeMatcher<TestSpaceObjectWithoutSpringDataIdAnnotation>() {
-							@Override
-							public void describeTo(Description arg0) {
-							}
-
-							@Override
-							protected boolean matchesSafely(TestSpaceObjectWithoutSpringDataIdAnnotation item) {
-								return true;
-							}
-						}));
+				new ConverterTest<>(new TestSpaceObjectWithoutSpringDataIdAnnotation("foo"), anything()));
 		assertFails(new TestRun() {
 			@Override
 			void run() throws Exception {
@@ -130,17 +103,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void spaceObjectWithEmptyCollectionTestFails() throws Exception {
 		final FakeTestSuiteWithEmptyCollection test = new FakeTestSuiteWithEmptyCollection(
-			new ConverterTest<>(new TestSpaceObjectWithEmptyCollection(),
-				new TypeSafeMatcher<TestSpaceObjectWithEmptyCollection>() {
-					@Override
-					public void describeTo(Description arg0) {
-					}
-
-					@Override
-					protected boolean matchesSafely(TestSpaceObjectWithEmptyCollection item) {
-						return true;
-					}
-				}));
+				new ConverterTest<>(new TestSpaceObjectWithEmptyCollection(), anything()));
 
 		assertFails(new TestRun() {
 			@Override
@@ -153,17 +116,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void spaceObjectWithEmptyMapTestFails() throws Exception {
 		final FakeTestSuiteWithEmptyMap test = new FakeTestSuiteWithEmptyMap(
-			new ConverterTest<>(new TestSpaceObjectWithEmptyMap(),
-				new TypeSafeMatcher<TestSpaceObjectWithEmptyMap>() {
-					@Override
-					public void describeTo(Description arg0) {
-					}
-
-					@Override
-					protected boolean matchesSafely(TestSpaceObjectWithEmptyMap item) {
-						return true;
-					}
-				}));
+				new ConverterTest<>(new TestSpaceObjectWithEmptyMap(), anything()));
 
 		assertFails(new TestRun() {
 			@Override
@@ -173,7 +126,7 @@ public class YmerConverterTestBaseTest {
 		});
 	}
 
-	class FakeTestSuiteWithEmptyCollection extends YmerConverterTestBase {
+	static class FakeTestSuiteWithEmptyCollection extends YmerConverterTestBase {
 
 		public FakeTestSuiteWithEmptyCollection(ConverterTest<?> testCase) {
 			super(testCase);
@@ -182,7 +135,7 @@ public class YmerConverterTestBaseTest {
 		@Override
 		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			DocumentPatch[] patches = {};
-			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyCollection.class).documentPatches(patches));
+			return List.of(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyCollection.class).documentPatches(patches));
 		}
 
 		@Override
@@ -192,7 +145,7 @@ public class YmerConverterTestBaseTest {
 
 	}
 
-	class FakeTestSuiteWithEmptyMap extends YmerConverterTestBase {
+	static class FakeTestSuiteWithEmptyMap extends YmerConverterTestBase {
 
 		public FakeTestSuiteWithEmptyMap(ConverterTest<?> testCase) {
 			super(testCase);
@@ -201,7 +154,7 @@ public class YmerConverterTestBaseTest {
 		@Override
 		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			DocumentPatch[] patches = {};
-			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyMap.class).documentPatches(patches));
+			return List.of(MirroredObjectDefinition.create(TestSpaceObjectWithEmptyMap.class).documentPatches(patches));
 		}
 
 		@Override
@@ -211,7 +164,7 @@ public class YmerConverterTestBaseTest {
 
 	}
 
-	class FakeTestSuite extends YmerConverterTestBase {
+	static class FakeTestSuite extends YmerConverterTestBase {
 
 		public FakeTestSuite(ConverterTest<?> testCase) {
 			super(testCase);
@@ -220,7 +173,7 @@ public class YmerConverterTestBaseTest {
 		@Override
 		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			DocumentPatch[] patches = {};
-			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
+			return List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
 		}
 
 		@Override
@@ -230,7 +183,7 @@ public class YmerConverterTestBaseTest {
 
 	}
 
-	class FakeTestSuiteWithoutId extends YmerConverterTestBase {
+	static class FakeTestSuiteWithoutId extends YmerConverterTestBase {
 
 		public FakeTestSuiteWithoutId(ConverterTest<?> testCase) {
 			super(testCase);
@@ -239,7 +192,7 @@ public class YmerConverterTestBaseTest {
 		@Override
 		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 			DocumentPatch[] patches = {};
-			return Arrays.asList(MirroredObjectDefinition.create(TestSpaceObjectWithoutSpringDataIdAnnotation.class).documentPatches(patches));
+			return List.of(MirroredObjectDefinition.create(TestSpaceObjectWithoutSpringDataIdAnnotation.class).documentPatches(patches));
 		}
 
 		@Override
@@ -253,7 +206,7 @@ public class YmerConverterTestBaseTest {
 		@Id
 		String id;
 
-		Collection<String> emptyCollection = Collections.<String>emptyList();
+		Collection<String> emptyCollection = Collections.emptyList();
 
 		public String getId() {
 			return id;
@@ -277,7 +230,7 @@ public class YmerConverterTestBaseTest {
 		@Id
 		String id;
 
-		Map<String, String> map = Collections.<String, String>emptyMap();
+		Map<String, String> map = Collections.emptyMap();
 
 		public String getId() {
 			return id;
@@ -406,23 +359,17 @@ public class YmerConverterTestBaseTest {
 
 	}
 
-	private void assertFails(TestRun testRun) {
-		boolean failed = false;
-		try {
-			testRun.run();
-		} catch (AssertionError e) {
-			failed = true;
-		} catch (Exception e) {
-			e.printStackTrace();
-			failed = true;
+	private static void assertFails(TestRun testRun) {
+		Throwable exception = assertThrows("Expected test to fail", Throwable.class, testRun::run);
+
+		if(!(exception instanceof AssertionError)) {
+			exception.printStackTrace();
 		}
-		assertTrue("Expected test to fail", failed);
 	}
 
-	private void assertPasses(TestRun testRun) {
+	private static void assertPasses(TestRun testRun) {
 		try {
 			testRun.run();
-			return;
 		} catch (AssertionError e) {
 			fail("Expected test to pass");
 		} catch (Exception e) {

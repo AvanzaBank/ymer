@@ -40,6 +40,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+
 import com.mongodb.DB;
 import com.mongodb.client.MongoDatabase;
 
@@ -54,8 +55,8 @@ import com.mongodb.client.MongoDatabase;
 public abstract class YmerConverterTestBase {
 
 	@SuppressWarnings("rawtypes")
-	private ConverterTest testCase;
-	private MongoDbFactory dummyMongoDbFactory;
+	private final ConverterTest testCase;
+	private final MongoDbFactory dummyMongoDbFactory;
 
 	public YmerConverterTestBase(ConverterTest<?> testCase) {
 		this.testCase = testCase;
@@ -144,8 +145,8 @@ public abstract class YmerConverterTestBase {
 
 	protected abstract MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory);
 
-	protected final static List<Object[]> buildTestCases(ConverterTest<?>... list) {
-		List<Object[]> result = new ArrayList<Object[]>();
+	protected static List<Object[]> buildTestCases(ConverterTest<?>... list) {
+		List<Object[]> result = new ArrayList<>();
 		for (ConverterTest<?> testCase : list) {
 			result.add(new Object[] { testCase });
 		}
@@ -163,7 +164,6 @@ public abstract class YmerConverterTestBase {
 		 * Matching for determining if deserialized object is 'correct' will be made using
 		 * Matchers.samePropertyValuesAs(spaceObject).
 		 *
-		 * @param spaceObject
 		 */
 		public ConverterTest(T spaceObject) {
 			this(spaceObject, Matchers.samePropertyValuesAs(spaceObject));
@@ -174,8 +174,6 @@ public abstract class YmerConverterTestBase {
 		 *
 		 * Uses given matcher to check if deserialized version is correct. <p>
 		 *
-		 * @param spaceObject
-		 * @param matcher
 		 */
 		public ConverterTest(T spaceObject, Matcher<T> matcher) {
 			this.spaceObject = spaceObject;

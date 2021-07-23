@@ -15,12 +15,12 @@
  */
 package com.avanza.ymer;
 
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -48,13 +48,12 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         this.spaceMirrorContext = spaceMirror;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public DataIterator<Object> initialDataLoad() {
         InitialLoadCompleteDispatcher initialLoadCompleteDispatcher = new InitialLoadCompleteDispatcher();
 
         Stream<Object> objectStream = spaceMirrorContext.getMirroredDocuments().stream()
-                .sorted(Comparator.comparing(MirroredObject::getCollectionName)) // Make load order same for all partitions to reduce mongo cache misses
+                .sorted(comparing(MirroredObject::getCollectionName)) // Make load order same for all partitions to reduce mongo cache misses
                 .collect(toList()).stream() // Pass through a list to make sorting not block the whole stream on iterator.next which will be called later
                 .filter(md -> !md.excludeFromInitialLoad())
                 .flatMap(mirroredObject -> load(mirroredObject, initialLoadCompleteDispatcher));
@@ -75,9 +74,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         return documentLoader.streamAllObjects()
                 .map(createPatchedDocumentWriteBack(mirroredObject, initialLoadCompleteDispatcher))
                 .peek(d -> counter.incrementAndGet())
-                .onClose(() -> logger.info("Loaded " + counter.get()
-                        + " documents from " + mirroredObject.getCollectionName()
-                        + " in " + (System.currentTimeMillis() - start) + " milliseconds!"));
+                .onClose(() -> logger.info("Loaded {} documents from {} in {} milliseconds!", counter.get(), mirroredObject.getCollectionName(), System.currentTimeMillis() - start));
     }
 
     private <T> Function<LoadedDocument<T>, T> createPatchedDocumentWriteBack(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
@@ -189,7 +186,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         }
 
         public void initialLoadComplete() {
-            l.stream().forEach(Runnable::run);
+            l.forEach(Runnable::run);
         }
     }
 }

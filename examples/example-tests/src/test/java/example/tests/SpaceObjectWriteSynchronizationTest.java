@@ -58,8 +58,8 @@ public class SpaceObjectWriteSynchronizationTest {
 	private RunningPu pu;
 	private RunningPu mirrorPu;
 
-	private MongoServer mongoServer;
-	private MongoClient mongoClient;
+	private final MongoServer mongoServer;
+	private final MongoClient mongoClient;
 
 	public SpaceObjectWriteSynchronizationTest() {
 		mongoServer = new MongoServer(new MemoryBackend());

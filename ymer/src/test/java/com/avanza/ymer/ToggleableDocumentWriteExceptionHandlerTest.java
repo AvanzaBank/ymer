@@ -15,19 +15,20 @@
  */
 package com.avanza.ymer;
 
+import static org.junit.Assert.assertThrows;
+
 import org.junit.Test;
 
 public class ToggleableDocumentWriteExceptionHandlerTest {
 
-	private FakeDocumentWriteExceptionHandler catchesAllHandler = new FakeDocumentWriteExceptionHandler();
-	private FakeDocumentWriteExceptionHandler throwsHandler = new FakeDocumentWriteExceptionHandler(new TestException());
-	private ToggleableDocumentWriteExceptionHandler h = ToggleableDocumentWriteExceptionHandler.create(
+	private final FakeDocumentWriteExceptionHandler catchesAllHandler = new FakeDocumentWriteExceptionHandler();
+	private final FakeDocumentWriteExceptionHandler throwsHandler = new FakeDocumentWriteExceptionHandler(new TestException());
+	private final ToggleableDocumentWriteExceptionHandler h = ToggleableDocumentWriteExceptionHandler.create(
 			throwsHandler, catchesAllHandler);
 
-
-	@Test(expected = TestException.class)
+	@Test
 	public void defaultHandlerThrows() throws Exception {
-		h.handleException(new RuntimeException(), "");
+		assertThrows(TestException.class, () -> h.handleException(new RuntimeException(), ""));
 	}
 
 	@Test
@@ -36,11 +37,11 @@ public class ToggleableDocumentWriteExceptionHandlerTest {
 		h.handleException(new RuntimeException(), "");
 	}
 
-	@Test(expected = TestException.class)
+	@Test
 	public void throwsAfterSwitchBackToDefaultHandler() throws Exception {
 		h.useCatchesAllHandler();
 		h.useDefaultHandler();
-		h.handleException(new RuntimeException(), "");
+		assertThrows(TestException.class, () -> h.handleException(new RuntimeException(), ""));
 	}
 
 	public static class TestException extends RuntimeException {
@@ -48,7 +49,6 @@ public class ToggleableDocumentWriteExceptionHandlerTest {
 		private static final long serialVersionUID = 1L;
 
 		public TestException() {
-			super();
 		}
 
 	}

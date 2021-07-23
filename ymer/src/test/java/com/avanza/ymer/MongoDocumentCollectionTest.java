@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
+
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
@@ -50,8 +51,8 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	private MongoDatabase database;
 	private MongoCollection<Document> collection;
-	private MongoServer mongoServer;
-	private MongoClient mongoClient;
+	private final MongoServer mongoServer;
+	private final MongoClient mongoClient;
 
 	public MongoDocumentCollectionTest() {
 		mongoServer = new MongoServer(new MemoryBackend());

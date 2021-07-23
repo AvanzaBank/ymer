@@ -30,11 +30,11 @@ o * Copyright 2015 Avanza Bank AB
  */
 package com.avanza.ymer;
 
-import org.springframework.data.mongodb.MongoCollectionUtils;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+
+import org.springframework.data.mongodb.MongoCollectionUtils;
 
 import com.mongodb.ReadPreference;
 
@@ -75,11 +75,11 @@ public final class MirroredObjectDefinition<T> {
 	}
     
     public MirroredObject<T> buildMirroredDocument(MirroredObjectDefinitionsOverride override) {
-    	return new MirroredObject<T>(this, override);
+    	return new MirroredObject<>(this, override);
     }
 
 	DocumentPatchChain<T> createPatchChain() {
-		return new DocumentPatchChain<T>(mirroredType, Arrays.asList(patches));
+		return new DocumentPatchChain<>(mirroredType, Arrays.asList(patches));
 	}
 	
 	/**
@@ -88,7 +88,6 @@ public final class MirroredObjectDefinition<T> {
 	 * <br>
 	 * Can be used for collections that are loaded via lazy load. See {@link ReloadableSpaceObject}.
 	 *
-	 * @param excludeFromInitialLoad
 	 */
 	public MirroredObjectDefinition<T> excludeFromInitialLoad(boolean excludeFromInitialLoad) {
 		this.excludeFromInitialLoad = excludeFromInitialLoad;
@@ -107,7 +106,6 @@ public final class MirroredObjectDefinition<T> {
 	 * 
 	 * Default value is true, indicating that documents will be written back to persistent storage.
 	 *
-	 * @param writeBackPatchedDocuments
 	 */
 	public MirroredObjectDefinition<T> writeBackPatchedDocuments(boolean writeBackPatchedDocuments) {
 		this.writeBackPatchedDocuments = writeBackPatchedDocuments;
@@ -130,7 +128,6 @@ public final class MirroredObjectDefinition<T> {
 	 * 
 	 * Default value is false.
 	 *
-	 * @param loadDocumentsRouted
 	 * 
 	 */
 	public MirroredObjectDefinition<T> loadDocumentsRouted(boolean loadDocumentsRouted) {
@@ -141,7 +138,6 @@ public final class MirroredObjectDefinition<T> {
 	/**
 	 * Sets the read preference for queries against documents in this collection.
 	 *
-	 * @param readPreference
 	 */
 	public MirroredObjectDefinition<T> withReadPreference(ReadPreference readPreference) {
 		this.readPreference = Objects.requireNonNull(readPreference);
@@ -156,7 +152,6 @@ public final class MirroredObjectDefinition<T> {
 	 * Effectively stops all DELETE operations performed in space from being reflected in the persistent storage. I.e. an object that is deleted
 	 * in GigaSpaces will remain in the persistent storage. Usually used in combination with {@link #excludeFromInitialLoad()}
 	 *
-	 * @param keepPersistent
 	 */
 	public MirroredObjectDefinition<T> keepPersistent(boolean keepPersistent) {
 		this.keepPersistent = keepPersistent;

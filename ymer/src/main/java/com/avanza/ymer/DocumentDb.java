@@ -24,6 +24,7 @@ import java.util.Set;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
@@ -75,8 +76,7 @@ final class DocumentDb {
 			this.mongoDatabase = Objects.requireNonNull(mongoDb);
 
 			if (!EXPECTED_WRITE_CONCERNS.contains(mongoDb.getWriteConcern())) {
-				LOGGER.error("Expected WriteConcern=" + EXPECTED_WRITE_CONCERNS + " but was " + mongoDb.getWriteConcern() + "!"
-							 + " Ymer is not designed for use with this WriteConcern and using it in production can/will lead to irrevocable data loss!");
+				LOGGER.error("Expected WriteConcern={} but was {}! Ymer is not designed for use with this WriteConcern and using it in production can/will lead to irrevocable data loss!", EXPECTED_WRITE_CONCERNS, mongoDb.getWriteConcern());
 			}
 		}
 

@@ -37,7 +37,6 @@ final class PatchedDocument {
 	
 	/**
 	 * The current version of the document in the database. <p>
-	 * @return
 	 */
 	Document getOldVersion() {
 		return oldVersion;
@@ -45,8 +44,7 @@ final class PatchedDocument {
 	
 	/**
 	 * The new patched version that of the given document. <p>
-	 * 
-	 * @return
+	 *
 	 */
 	Document getNewVersion() {
 		return newVersion;

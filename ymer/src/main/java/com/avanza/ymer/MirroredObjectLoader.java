@@ -125,7 +125,6 @@ final class MirroredObjectLoader<T> {
                 .collect(toList());
     }
 
-    @Nullable
     private Document findById(Object id) {
         final Object convertedId = documentConverter.convertToMongoObject(id);
         final Document document = documentCollection.findById(convertedId);
