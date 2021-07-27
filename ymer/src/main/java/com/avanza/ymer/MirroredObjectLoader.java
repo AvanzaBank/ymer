@@ -17,6 +17,7 @@ package com.avanza.ymer;
 
 import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import java.util.List;
 import java.util.Optional;
@@ -89,10 +90,10 @@ final class MirroredObjectLoader<T> {
         if (mirroredObject.persistInstanceId()) {
             String expectedSuffix = "_" + contextProperties.getPartitionCount();
             boolean indexExists = documentCollection.getIndexes()
-                    .filter(i -> i.isIndexForFields(List.of(DOCUMENT_INSTANCE_ID)))
-                    .anyMatch(i -> i.getName().endsWith(expectedSuffix));
+                    .filter(index -> index.isIndexForFields(List.of(DOCUMENT_INSTANCE_ID)))
+                    .anyMatch(index -> index.getName().endsWith(expectedSuffix));
             if (indexExists) {
-                Query query = new Query(where(DOCUMENT_INSTANCE_ID).is(contextProperties.getInstanceId()));
+                Query query = query(where(DOCUMENT_INSTANCE_ID).is(contextProperties.getInstanceId()));
                 return documentCollection.findByQuery(query);
             } else {
                 log.warn("Configured to load using persisted instance id, but index name indicates number of partitions do not match {}", contextProperties.getPartitionCount());

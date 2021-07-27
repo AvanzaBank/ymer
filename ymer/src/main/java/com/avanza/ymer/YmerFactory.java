@@ -15,18 +15,19 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.plugin.Plugin;
-import com.gigaspaces.datasource.SpaceDataSource;
-import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
-import com.mongodb.ReadPreference;
-import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+
+import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+
+import com.avanza.ymer.plugin.Plugin;
+import com.gigaspaces.datasource.SpaceDataSource;
+import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
+import com.mongodb.ReadPreference;
 /**
  * @author Elias Lindholm (elilin)
  *
@@ -109,6 +110,9 @@ public final class YmerFactory {
 		if (this.exportExceptionHandleMBean) {
 			ymerSpaceSynchronizationEndpoint.registerExceptionHandlerMBean();
 		}
+		if (mirroredObjects.getMirroredObjects().stream().anyMatch(MirroredObject::persistInstanceId)) {
+			ymerSpaceSynchronizationEndpoint.registerPersistedInstanceIdRecalculationServiceMBean();
+		}
 		return ymerSpaceSynchronizationEndpoint;
 	}
 
@@ -119,8 +123,7 @@ public final class YmerFactory {
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
-		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
-		return mirrorContext;
+		return new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
 	}
 
 }
