@@ -21,14 +21,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.hamcrest.Matcher;
@@ -180,13 +177,6 @@ public abstract class YmerConverterTestBase {
 			this.matcher = matcher;
 		}
 
-	}
-
-	private Stream<Method> createStreamOfAllMethods(Object spaceObject) {
-		Stream<Method> allPublicIncludingInheritedMethods = Arrays.stream(spaceObject.getClass().getMethods());
-		Stream<Method> allMethodsExcludingInherited = Arrays.stream(spaceObject.getClass().getDeclaredMethods());
-		return Stream.concat(allPublicIncludingInheritedMethods, allMethodsExcludingInherited)
-				.distinct();
 	}
 
 }
