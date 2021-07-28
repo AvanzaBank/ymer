@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -42,12 +43,7 @@ public class YmerConverterTestBaseTest {
 	@Test
 	public void testingIfMirroredObjectIsMirroredPasses() throws Exception {
 		final FakeTestSuite test1 = new FakeTestSuite(new ConverterTest<>(new TestSpaceObject("foo", "message")));
-		assertPasses(new TestRun() {
-			@Override
-			void run() {
-				test1.canMirrorSpaceObject();
-			}
-		});
+		assertPasses(test1::canMirrorSpaceObject);
 	}
 
 	@Test
@@ -56,48 +52,28 @@ public class YmerConverterTestBaseTest {
 
 		}
 		final FakeTestSuite test1 = new FakeTestSuite(new ConverterTest<>(new NonMirroredType()));
-		assertFails(new TestRun() {
-			@Override
-			void run() {
-				test1.canMirrorSpaceObject();
-			}
-		});
+		assertFails(test1::canMirrorSpaceObject);
 	}
 
 	@Test
 	public void serializationTestSucceeds() throws Exception {
 		final FakeTestSuite test1 = new FakeTestSuite(
 				new ConverterTest<>(new TestSpaceObject("foo", "message"), anything()));
-		assertPasses(new TestRun() {
-			@Override
-			void run() throws Exception {
-				test1.serializationTest();
-			}
-		});
+		assertPasses(test1::serializationTest);
 	}
 
 	@Test
 	public void serializationTestFails() throws Exception {
 		final FakeTestSuite test1 = new FakeTestSuite(
 				new ConverterTest<>(new TestSpaceObject("foo", "message"), not(anything())));
-		assertFails(new TestRun() {
-			@Override
-			void run() throws Exception {
-				test1.serializationTest();
-			}
-		});
+		assertFails(test1::serializationTest);
 	}
 
 	@Test
 	public void spaceObjectWithoutIdAnnotationTestFails() throws Exception {
 		final FakeTestSuiteWithoutId test1 = new FakeTestSuiteWithoutId(
 				new ConverterTest<>(new TestSpaceObjectWithoutSpringDataIdAnnotation("foo"), anything()));
-		assertFails(new TestRun() {
-			@Override
-			void run() throws Exception {
-				test1.testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject();
-			}
-		});
+		assertFails(test1::testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject);
 	}
 
 	@Test
@@ -105,12 +81,7 @@ public class YmerConverterTestBaseTest {
 		final FakeTestSuiteWithEmptyCollection test = new FakeTestSuiteWithEmptyCollection(
 				new ConverterTest<>(new TestSpaceObjectWithEmptyCollection(), anything()));
 
-		assertFails(new TestRun() {
-			@Override
-			void run() throws Exception {
-				test.testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty();
-			}
-		});
+		assertFails(test::testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty);
 	}
 
 	@Test
@@ -118,12 +89,7 @@ public class YmerConverterTestBaseTest {
 		final FakeTestSuiteWithEmptyMap test = new FakeTestSuiteWithEmptyMap(
 				new ConverterTest<>(new TestSpaceObjectWithEmptyMap(), anything()));
 
-		assertFails(new TestRun() {
-			@Override
-			void run() throws Exception {
-				test.testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty();
-			}
-		});
+		assertFails(test::testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty);
 	}
 
 	static class FakeTestSuiteWithEmptyCollection extends YmerConverterTestBase {
@@ -359,28 +325,22 @@ public class YmerConverterTestBaseTest {
 
 	}
 
-	private static void assertFails(TestRun testRun) {
-		Throwable exception = assertThrows("Expected test to fail", Throwable.class, testRun::run);
+	private static void assertFails(ThrowingRunnable testRun) {
+		Throwable exception = assertThrows("Expected test to fail", Throwable.class, testRun);
 
 		if(!(exception instanceof AssertionError)) {
 			exception.printStackTrace();
 		}
 	}
 
-	private static void assertPasses(TestRun testRun) {
+	private static void assertPasses(ThrowingRunnable testRun) {
 		try {
 			testRun.run();
 		} catch (AssertionError e) {
 			fail("Expected test to pass");
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			fail("Expected test to pass, but exception thrown");
 		}
-	}
-
-	public static abstract class TestRun {
-
-		abstract void run() throws Exception;
-
 	}
 
 }
