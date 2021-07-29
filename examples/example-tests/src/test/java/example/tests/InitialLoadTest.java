@@ -32,40 +32,41 @@ package example.tests;
 
 import static org.junit.Assert.assertEquals;
 
-import java.net.InetSocketAddress;
 import java.util.Map;
 
 import org.bson.Document;
 import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.testcontainers.containers.MongoDBContainer;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
 import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
 
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import example.domain.SpaceCar;
 import example.domain.SpaceFruit;
 
 public class InitialLoadTest {
-	
-	private MongoServer mongoServer;
+
+	@Rule
+	public final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+
 	private MongoClient mongoClient;
 
-	public InitialLoadTest() {
-		mongoServer = new MongoServer(new MemoryBackend());
-		InetSocketAddress serverAddress = mongoServer.bind();
-		mongoClient = new MongoClient(new ServerAddress(serverAddress));
-	}
-
 	private RunningPu pu;
+
+	@Before
+	public void setUp() {
+		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
+	}
 
 	@After
 	public void shutdownPus() throws Exception {

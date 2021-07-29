@@ -18,26 +18,25 @@ package com.avanza.ymer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
+import org.testcontainers.containers.MongoDBContainer;
 
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 
 /**
  *
@@ -46,30 +45,29 @@ import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
  */
 public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
+	@ClassRule
+	public static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+
 	private static final String DBNAME = "testdb";
 	private static final String COLLECTION_NAME = "testcollection";
 
-	private MongoDatabase database;
-	private MongoCollection<Document> collection;
-	private MongoServer mongoServer;
-	private MongoClient mongoClient;
+	private final MongoClient mongoClient;
 
 	public MongoDocumentCollectionTest() {
-		mongoServer = new MongoServer(new MemoryBackend());
-		InetSocketAddress serverAddress = mongoServer.bind();
-		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
 	}
 
-	/* (non-Javadoc)
-	 * @see com.avanza.ymer.DocumentCollectionContract#createEmptyCollection()
-	 */
+	@After
+	public void cleanDatabase() {
+		mongoClient.getDatabase(DBNAME).drop();
+	}
+
 	@Override
 	protected DocumentCollection createEmptyCollection() {
-		database = mongoClient.getDatabase(DBNAME);
+		MongoDatabase database = mongoClient.getDatabase(DBNAME);
 		database.drop();
-		database = mongoClient.getDatabase(DBNAME);
 
-		collection = database.getCollection(COLLECTION_NAME);
+		MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
 
 		return new MongoDocumentCollection(collection);
 	}

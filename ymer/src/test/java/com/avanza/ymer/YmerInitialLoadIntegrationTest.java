@@ -15,18 +15,20 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.gs.test.PuConfigurers;
-import com.avanza.gs.test.RunningPu;
-import com.mongodb.BasicDBObject;
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
 import org.bson.Document;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
+import com.avanza.gs.test.PuConfigurers;
+import com.avanza.gs.test.RunningPu;
+import com.mongodb.BasicDBObject;
 
 public class YmerInitialLoadIntegrationTest {
 	
@@ -46,6 +48,11 @@ public class YmerInitialLoadIntegrationTest {
 	public void cleanup() throws Exception {
 		mirrorEnv.dropAllMongoCollections();
 		pu.close();
+	}
+
+	@AfterClass
+	public static void shutdown() {
+		mirrorEnv.close();
 	}
 
 	@Test

@@ -15,13 +15,27 @@
  */
 package com.avanza.ymer;
 
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.domain.Sort.Direction.DESC;
+
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
 import org.bson.Document;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -35,7 +49,12 @@ import com.mongodb.client.model.IndexOptions;
 class FakeDocumentCollection implements DocumentCollection {
 
 	private final ConcurrentLinkedQueue<Document> collection = new ConcurrentLinkedQueue<>();
+	private final Set<IndexInfo> indexes = ConcurrentHashMap.newKeySet();
 	private final AtomicInteger idGenerator = new AtomicInteger(0);
+
+	FakeDocumentCollection() {
+		indexes.add(new IndexInfo(singletonList(IndexField.create("_id", ASC)), "_id_", false, false, ""));
+	}
 
 	@Override
 	public Stream<Document> findAll(SpaceObjectFilter<?> objectFilter)  {
@@ -146,14 +165,39 @@ class FakeDocumentCollection implements DocumentCollection {
 
 	@Override
 	public Stream<IndexInfo> getIndexes() {
-		return Stream.empty();
+		return indexes.stream();
 	}
 
 	@Override
 	public void dropIndex(String name) {
+		indexes.removeIf(index -> Objects.equals(index.getName(), name));
 	}
 
 	@Override
 	public void createIndex(Document keys, IndexOptions indexOptions) {
+		List<IndexField> indexFields = keys.entrySet().stream().flatMap(entry -> toIndexFieldOrEmpty(entry.getKey(), entry.getValue())).collect(toList());
+		IndexInfo index = new IndexInfo(indexFields, indexOptions.getName(), indexOptions.isUnique(), indexOptions.isSparse(), indexOptions.getDefaultLanguage());
+		indexes.add(index);
+	}
+
+	private Stream<IndexField> toIndexFieldOrEmpty(String key, @Nullable Object value) {
+		return toDirection(value)
+				.map(direction -> IndexField.create(key, direction))
+				.stream();
+	}
+
+	private Optional<Sort.Direction> toDirection(@Nullable Object direction) {
+		if (direction == null) {
+			return Optional.empty();
+		} else {
+			switch (direction.toString()) {
+				case "1":
+					return Optional.of(ASC);
+				case "-1":
+					return Optional.of(DESC);
+				default:
+					return Optional.empty();
+			}
+		}
 	}
 }

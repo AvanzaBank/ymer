@@ -35,6 +35,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -81,6 +82,11 @@ public class YmerMirrorIntegrationTest {
 	public void cleanup() {
 		mirrorEnvironment.dropAllMongoCollections();
 		gigaSpace.clear(null);
+	}
+
+	@AfterClass
+	public static void shutdown() {
+		mirrorEnvironment.close();
 	}
 
 	@Test

@@ -17,36 +17,37 @@ package com.avanza.ymer;
 
 import static org.junit.Assert.assertTrue;
 
-import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import org.bson.Document;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.testcontainers.containers.MongoDBContainer;
+
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
-
-
 public class MongoPartitionFilterTest {
+
+	@Rule
+	public final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
 
 	private final MirroredObject<TestSpaceObject> mirroredObject = 
 		MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-	private final MongoServer mongoServer;
-	private final MongoClient mongoClient;
 
-	public MongoPartitionFilterTest() {
-		mongoServer = new MongoServer(new MemoryBackend());
-		InetSocketAddress serverAddress = mongoServer.bind();
-		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+	private MongoClient mongoClient;
+
+	@Before
+	public void setUp() {
+		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
 	}
 
 	@Test
