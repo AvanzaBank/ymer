@@ -66,6 +66,7 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 				})
 				.peek(document -> document.put(DOCUMENT_INSTANCE_ID, getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances)))
 				.forEach(collection::update);
+		log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
 
 		boolean indexExists = collection.getIndexes()
 				.filter(index -> index.isIndexForFields(Set.of(DOCUMENT_INSTANCE_ID)))

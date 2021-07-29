@@ -46,6 +46,10 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 		mirroredObjectWriter.executeBulk(batchData);
 	}
 
+	public PersistedInstanceIdRecalculationService getPersistedInstanceIdRecalculationService() {
+		return persistedInstanceIdRecalculationService;
+	}
+
 	void registerExceptionHandlerMBean() {
 		try {
 			String name = "se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler";
@@ -65,5 +69,4 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 			log.warn("Exception handler MBean registration failed", e);
 		}
 	}
-
 }
