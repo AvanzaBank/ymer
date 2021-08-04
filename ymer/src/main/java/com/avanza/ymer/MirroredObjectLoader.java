@@ -16,13 +16,13 @@
 package com.avanza.ymer;
 
 import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
+import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.plugin.PostReadProcessor;
-import com.avanza.ymer.util.OptionalUtil;
 
 /**
  * Loads mirrored objects from an external (persistent) source.
@@ -43,7 +42,6 @@ import com.avanza.ymer.util.OptionalUtil;
  * @author Elias Lindholm (elilin), Kristoffer Erlandsson, Andreas Skoog
  */
 final class MirroredObjectLoader<T> {
-    private static final int NUM_THREADS = 15;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final MirroredObject<T> mirroredObject;
@@ -69,15 +67,14 @@ final class MirroredObjectLoader<T> {
     }
 
     List<LoadedDocument<T>> loadAllObjects() {
-        return streamAllObjects().collect(Collectors.toList());
+        return streamAllObjects().collect(toList());
     }
 
     Stream<LoadedDocument<T>> streamAllObjects() {
         log.info("Begin loadAllObjects. targetCollection={}", mirroredObject.getCollectionName());
         return loadDocuments()
                 .parallel() // We run patching and conversions in parallel as this is a cpu-intensive task
-                .map(this::tryPatchAndConvert)
-                .flatMap(OptionalUtil::asStream);
+                .flatMap(document -> tryPatchAndConvert(document).stream());
     }
 
     private Stream<Document> loadDocuments() {
@@ -101,8 +98,9 @@ final class MirroredObjectLoader<T> {
         }
         if (mirroredObject.loadDocumentsRouted()) {
             return documentCollection.findAll(spaceObjectFilter);
+        } else {
+            return documentCollection.findAll();
         }
-        return documentCollection.findAll();
     }
 
     private Optional<LoadedDocument<T>> tryPatchAndConvert(Document document) {
@@ -118,7 +116,7 @@ final class MirroredObjectLoader<T> {
                 result = patchAndConvert(new Document(document));
             }
             long loaded = numLoadedObjects.incrementAndGet();
-            if (loaded % 10000 == 0) {
+            if (loaded % 10_000 == 0) {
                 log.info("Status: loaded {} records for collection {}", loaded, mirroredObject.getCollectionName());
             }
             return result;
@@ -140,9 +138,8 @@ final class MirroredObjectLoader<T> {
 
     List<LoadedDocument<T>> loadByQuery(T template) {
         return documentCollection.findByQuery(documentConverter.toQuery(template))
-                .map(this::patchAndConvert)
-                .flatMap(OptionalUtil::asStream)
-                .collect(Collectors.toList());
+                .flatMap(document -> patchAndConvert(document).stream())
+                .collect(toList());
     }
 
     private Document findById(Object id) {
@@ -173,8 +170,9 @@ final class MirroredObjectLoader<T> {
         }
         if (patched) {
             return Optional.of(new LoadedDocument<>(postProcess(mirroredObject), new PatchedDocument(document, currentVersion)));
+        } else {
+            return Optional.of(new LoadedDocument<>(postProcess(mirroredObject), null));
         }
-        return Optional.of(new LoadedDocument<>(postProcess(mirroredObject), null));
     }
 
     private T postProcess(T mirroredObject) {

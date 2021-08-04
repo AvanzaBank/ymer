@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
-import com.avanza.ymer.util.OptionalUtil;
 import com.gigaspaces.datasource.DataIterator;
 
 final class YmerSpaceDataSource extends AbstractSpaceDataSource {
@@ -75,9 +74,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         return documentLoader.streamAllObjects()
                 .map(createPatchedDocumentWriteBack(mirroredObject, initialLoadCompleteDispatcher))
                 .peek(d -> counter.incrementAndGet())
-                .onClose(() -> logger.info("Loaded " + counter.get()
-                        + " documents from " + mirroredObject.getCollectionName()
-                        + " in " + (System.currentTimeMillis() - start) + " milliseconds!"));
+                .onClose(() -> logger.info("Loaded {} documents from {} in {} milliseconds!", counter.get(), mirroredObject.getCollectionName(), System.currentTimeMillis() - start));
     }
 
     private <T> Function<LoadedDocument<T>, T> createPatchedDocumentWriteBack(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
@@ -140,8 +137,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
             return;
         }
         long patchCount = loadedDocuments.stream()
-                .map(LoadedDocument::getPatchedDocument)
-                .flatMap(OptionalUtil::asStream)
+                .flatMap(loadedDocument -> loadedDocument.getPatchedDocument().stream())
                 .map(patchedDocument -> doWriteBackPatchedDocument(document, patchedDocument))
                 .count();
         logger.debug("Updated {} documents in db for {}", patchCount, document.getMirroredType().getName());

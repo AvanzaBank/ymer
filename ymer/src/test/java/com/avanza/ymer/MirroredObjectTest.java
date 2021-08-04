@@ -19,6 +19,7 @@ import static com.avanza.ymer.MirroredObjectDefinitionsOverride.fromSystemProper
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ import com.mongodb.BasicDBObject;
  */
 public class MirroredObjectTest {
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test
 	public void cannotMirrorTypesWithNoRoutingMethod() throws Exception {
 		class InvalidSpaceObject {
 			@SuppressWarnings("unused")
@@ -53,7 +54,7 @@ public class MirroredObjectTest {
 			}
 		}
 		DocumentPatch[] patches = {};
-		MirroredObjectDefinition.create(InvalidSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+		assertThrows(IllegalArgumentException.class, () -> MirroredObjectDefinition.create(InvalidSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride()));
 	}
 
 	@Test
@@ -181,17 +182,17 @@ public class MirroredObjectTest {
 		assertFalse(document.requiresPatching(dbObject));
 	}
 
-	@Test(expected = UnknownDocumentVersionException.class)
+	@Test
 	public void cannotPatchDocumentThatAreNewerThanLatestKnownVersion() throws Exception {
 		DocumentPatch[] patches = { new FakePatch(1), new FakePatch(2) };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		Document dbObject = new Document();
 		document.setDocumentVersion(dbObject, document.getCurrentVersion() + 1);
-		document.requiresPatching(dbObject);
+		assertThrows(UnknownDocumentVersionException.class, () -> document.requiresPatching(dbObject));
 	}
 
-	@Test(expected = UnknownDocumentVersionException.class)
+	@Test
 	public void cannotPatchDocumentThatAreOlderThanOldestKnownVersion() throws Exception {
 		DocumentPatch[] patches = { new FakePatch(2), new FakePatch(3) };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
@@ -199,16 +200,15 @@ public class MirroredObjectTest {
 		Document dbObject = new Document();
 		document.setDocumentVersion(dbObject, 1);
 
-		document.requiresPatching(dbObject);
+		assertThrows(UnknownDocumentVersionException.class, () -> document.requiresPatching(dbObject));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void patchingWhenNoPatchesExistsThrowsIllegalArgumentException() throws Exception {
 		DocumentPatch[] patches = {};
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document doc = new Document();
-		Document patched = document.patch(doc);
-		assertEquals(doc, patched);
+		assertThrows(IllegalArgumentException.class, () -> document.patch(doc));
 	}
 
 	@Test
@@ -223,7 +223,7 @@ public class MirroredObjectTest {
 	}
 
 	@Test
-	public void appliesAllPathechesIfDocumentIsOnVersionOne() throws Exception {
+	public void appliesAllPatchesIfDocumentIsOnVersionOne() throws Exception {
 		FakePatch patch1 = new FakePatch(1);
 		FakePatch patch2 = new FakePatch(2);
 		DocumentPatch[] patches = { patch1, patch2 };
@@ -248,14 +248,14 @@ public class MirroredObjectTest {
 		assertTrue(patch2.applied);
 	}
 
-	@Test(expected = UnknownDocumentVersionException.class)
-	public void throwsUnkownDocumentVersionExceptionIfFormatVersionIsNewerThanCurrentFormatVersion() throws Exception {
+	@Test
+	public void throwsUnknownDocumentVersionExceptionIfFormatVersionIsNewerThanCurrentFormatVersion() throws Exception {
 		DocumentPatch[] patches = { new FakePatch(1) };
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document doc = new Document();
 		document.setDocumentVersion(doc, 3);
 
-		document.requiresPatching(doc);
+		assertThrows(UnknownDocumentVersionException.class, () -> document.requiresPatching(doc));
 	}
 
 	@Test

@@ -36,7 +36,7 @@ class ReloadableSpaceObjectUtil {
 
 	static boolean isReloaded(ReloadableSpaceObject reloadableSpaceObject) {
 		return reloadableSpaceObject.getLatestRestoreVersion() != null
-				&& reloadableSpaceObject.getLatestRestoreVersion().intValue() == reloadableSpaceObject.getVersionID();
+				&& reloadableSpaceObject.getLatestRestoreVersion() == reloadableSpaceObject.getVersionID();
 	}
 
 }

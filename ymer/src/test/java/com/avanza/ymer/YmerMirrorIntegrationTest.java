@@ -15,15 +15,19 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.MongoProbes.containsObject;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 
 import java.lang.management.ManagementFactory;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -31,9 +35,7 @@ import javax.management.ObjectName;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -43,11 +45,10 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.openspaces.core.GigaSpace;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
-import com.avanza.ymer.test.util.Poller;
-import com.avanza.ymer.test.util.Probe;
 import com.gigaspaces.client.WriteModifiers;
 
 public class YmerMirrorIntegrationTest {
@@ -98,7 +99,7 @@ public class YmerMirrorIntegrationTest {
 		gigaSpace.write(o1, WriteModifiers.WRITE_ONLY);
 		assertEquals(1, gigaSpace.count(new TestSpaceObject()));
 
-		assertEventually(containsObject(mongo, equalTo(o1), TestSpaceObject.class));
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(o1));
 	}
 
 	@Test
@@ -109,7 +110,7 @@ public class YmerMirrorIntegrationTest {
 
 		gigaSpace.write(withMessageSet, WriteModifiers.WRITE_ONLY);
 		assertEquals(1, gigaSpace.count(new TestSpaceObject()));
-		assertEventually(containsObject(mongo, equalTo(withMessageSet), TestSpaceObject.class));
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(withMessageSet));
 
 		TestSpaceObject withMessageAsNull = new TestSpaceObject();
 		withMessageAsNull.setId("object_id");
@@ -117,7 +118,7 @@ public class YmerMirrorIntegrationTest {
 
 		gigaSpace.write(withMessageAsNull, WriteModifiers.UPDATE_OR_WRITE);
 		assertEquals(1, gigaSpace.count(new TestSpaceObject()));
-		assertEventually(containsObject(mongo, equalTo(withMessageAsNull), TestSpaceObject.class));
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(withMessageAsNull));
 	}
 
 	@Test
@@ -127,14 +128,14 @@ public class YmerMirrorIntegrationTest {
 		inserted.setMessage("inserted_mirror_test");
 		gigaSpace.write(inserted, WriteModifiers.WRITE_ONLY);
 
-		assertEventually(containsObject(mongo, equalTo(inserted), TestSpaceObject.class));
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(inserted));
 
 		TestSpaceObject updated = new TestSpaceObject();
 		updated.setId("id_23");
 		updated.setMessage("updated_mirror_test");
 		gigaSpace.write(updated, WriteModifiers.UPDATE_ONLY);
 
-		assertEventually(containsObject(mongo, equalTo(updated), TestSpaceObject.class));
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(updated));
 	}
 
 	@Test
@@ -144,11 +145,11 @@ public class YmerMirrorIntegrationTest {
 		inserted.setMessage("inserted_mirror_test");
 		gigaSpace.write(inserted, WriteModifiers.WRITE_ONLY);
 
-		assertEventually(containsObject(mongo, equalTo(inserted), TestSpaceObject.class));
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(inserted));
 
 		gigaSpace.takeById(TestSpaceObject.class, "id_23");
 
-		assertEventually(countOf(TestSpaceObject.class, Matchers.equalTo(0)));
+		assertEventually(() -> mongo.count(new Query(), TestSpaceObject.class), equalTo(0L));
 	}
 
 	@Test
@@ -157,8 +158,8 @@ public class YmerMirrorIntegrationTest {
 		ObjectName nameTemplate = ObjectName
 				.getInstance("se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler");
 		Set<ObjectName> names = server.queryNames(nameTemplate, null);
-		assertThat(names.size(), is(greaterThan(0)));
-		server.invoke(names.toArray(new ObjectName[1])[0], "useCatchesAllHandler", null, null);
+		assertThat(names, hasSize(greaterThan(0)));
+		server.invoke(names.toArray(new ObjectName[0])[0], "useCatchesAllHandler", null, null);
 	}
 
 	@Test
@@ -169,7 +170,7 @@ public class YmerMirrorIntegrationTest {
 		gigaSpace.write(new TestSpaceObject("id2", "m2"));
 		gigaSpace.write(new TestSpaceObject("id3", "m1"));
 
-		assertEventually(countOf(TestSpaceObject.class, Matchers.equalTo(3)));
+		assertEventually(() -> mongo.count(new Query(), TestSpaceObject.class), equalTo(3L));
 
 		assertEquals(2, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m1")).size());
 		assertEquals(1, persister.loadObjects(TestSpaceObject.class, new TestSpaceObject(null, "m2")).size());
@@ -184,40 +185,18 @@ public class YmerMirrorIntegrationTest {
 		SpaceObjectLoader persister = pu.getPrimaryInstanceApplicationContext(1).getBean(SpaceObjectLoader.class);
 
 		gigaSpace.write(new TestSpaceThirdObject("1", "|"));
-		assertEventually(containsObject(mongo, equalTo(new TestSpaceThirdObject("1", "a|")), TestSpaceThirdObject.class)); // prewrite processor prepends a
+		assertEventually(() -> mongo.findAll(TestSpaceThirdObject.class), hasItem(new TestSpaceThirdObject("1", "a|"))); // prewrite processor prepends a
 		assertEquals("|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // a removed by postread processor
 
 		mirrorEnvironment.removeFormatVersion(TestSpaceThirdObject.class, "1");
 		assertEquals("b|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // patch adds b to read data (after postread processor)
-		assertEventually(containsObject(mongo, equalTo(new TestSpaceThirdObject("1", "ab|")), TestSpaceThirdObject.class)); // a is prepended after patching by prewrite processor
+		assertEventually(() -> mongo.findAll(TestSpaceThirdObject.class), hasItem(new TestSpaceThirdObject("1", "ab|"))); // a is prepended after patching by prewrite processor
 		assertEquals("b|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // nothing happens once patch has been applied
-		assertEventually(containsObject(mongo, equalTo(new TestSpaceThirdObject("1", "ab|")), TestSpaceThirdObject.class));  // same in mongo
+		assertEventually(() -> mongo.findAll(TestSpaceThirdObject.class), hasItem(new TestSpaceThirdObject("1", "ab|")));  // same in mongo
 	}
 
-	private Probe countOf(final Class<?> mirroredType, final Matcher<Integer> countMatcher) {
-		return new Probe() {
-			int count;
-
-			@Override
-			public void sample() {
-				count = mongo.findAll(mirroredType).size();
-			}
-
-			@Override
-			public boolean isSatisfied() {
-				return countMatcher.matches(count);
-			}
-
-			@Override
-			public void describeFailureTo(Description description) {
-				description.appendText("Count of " + mirroredType.getName());
-				countMatcher.describeTo(description);
-			}
-		};
-	}
-
-	public static void assertEventually(Probe probe) throws InterruptedException {
-		new Poller(7000L, 50L).check(probe);
+	public static <T> void  assertEventually(Callable<T> poller, Matcher<? super T> matcher) {
+		await().atMost(7, SECONDS).pollInterval(50, MILLISECONDS).until(poller, matcher);
 	}
 
 }

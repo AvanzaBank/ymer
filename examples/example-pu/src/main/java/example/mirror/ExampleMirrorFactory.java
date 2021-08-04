@@ -41,7 +41,7 @@ import example.domain.SpaceFruit;
 
 public class ExampleMirrorFactory {
 	
-	private MongoDbFactory mongoDbFactory;
+	private final MongoDbFactory mongoDbFactory;
 	
 	@Autowired
 	public ExampleMirrorFactory(MongoDbFactory mongoDbFactory) {
@@ -75,7 +75,7 @@ public class ExampleMirrorFactory {
 			result.put("origin", fruit.getOrigin());
 			result.put("organic", fruit.isOrganic());
 			return result;
-		};
+		}
 	}
 	
 	static class BsonToFruit implements Converter<DBObject, SpaceFruit> {

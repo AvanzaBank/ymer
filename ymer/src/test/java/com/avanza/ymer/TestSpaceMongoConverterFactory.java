@@ -24,7 +24,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 public class TestSpaceMongoConverterFactory {
 
-	private MongoDbFactory mongoDbFactory;
+	private final MongoDbFactory mongoDbFactory;
 
 	@Autowired
 	public TestSpaceMongoConverterFactory(MongoDbFactory mongoDbFactory) {

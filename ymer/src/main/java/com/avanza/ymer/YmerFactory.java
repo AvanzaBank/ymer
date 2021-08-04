@@ -34,10 +34,7 @@ import com.mongodb.ReadPreference;
  */
 public final class YmerFactory {
 
-	private MirrorExceptionListener exceptionListener = new MirrorExceptionListener() {
-		@Override
-		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {}
-	};
+	private MirrorExceptionListener exceptionListener = (e, failedOperation, failedObjects) -> {};
 	private ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
 	private Set<Plugin> plugins = Collections.emptySet();
@@ -64,7 +61,6 @@ public final class YmerFactory {
 	 *
 	 * Default is "true"
 	 *
-	 * @param exportExceptionHandleMBean
 	 */
 	public void setExportExceptionHandlerMBean(boolean exportExceptionHandleMBean) {
 		this.exportExceptionHandleMBean = exportExceptionHandleMBean;
@@ -73,7 +69,6 @@ public final class YmerFactory {
 	/**
 	 * Sets a MirrorExceptionListener (optional). <p>
 	 *
-	 * @param exceptionListener
 	 */
 	public void setExceptionListener(MirrorExceptionListener exceptionListener) {
 		this.exceptionListener = exceptionListener;

@@ -20,16 +20,13 @@ import org.slf4j.LoggerFactory;
 
 class CatchesAllDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler {
 
-	private Logger log = LoggerFactory.getLogger(CatchesAllDocumentWriteExceptionHandler.class);
+	private final Logger log = LoggerFactory.getLogger(CatchesAllDocumentWriteExceptionHandler.class);
 	
 	@Override
 	public void handleException(Exception exception, String operationDescription) {
 		log.error(
-				"Exception when executing mirror command! Attempted operation: " + operationDescription
-						+ " - This command will be ignored but the rest" +
-						" of the commands in this bulk will be attempted." +
-						" This can lead to data inconsistency in the mongo database." +
-						" Must be investigated ASAP.",
+				"Exception when executing mirror command! Attempted operation: {} - This command will be ignored but the rest of the commands in this bulk will be attempted. This can lead to data inconsistency in the mongo database. Must be investigated ASAP.",
+				operationDescription,
 				exception);
 	}
 

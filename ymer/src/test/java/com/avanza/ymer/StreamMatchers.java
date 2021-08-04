@@ -13,14 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer.util;
+package com.avanza.ymer;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
-public class OptionalUtil {
-	
-	public static <T> Stream<T> asStream(Optional<T> optional) {
-		return optional.map(Stream::of).orElseGet(Stream::empty);
+import org.hamcrest.CustomTypeSafeMatcher;
+import org.hamcrest.Matcher;
+
+final class StreamMatchers {
+	private StreamMatchers(){}
+
+	public static <T> Matcher<Stream<T>> hasCount(int expectedSize) {
+		return new CustomTypeSafeMatcher<>("should have size " + expectedSize) {
+			@Override
+			protected boolean matchesSafely(Stream<T> item) {
+				return item.count() == expectedSize;
+			}
+		};
 	}
 }

@@ -25,7 +25,6 @@ public interface BsonDocumentPatch {
 	 * The patch should read the object for current state, and mutate it
 	 * to reflect the patch.
 	 *
-	 * @param document
 	 */
 	void apply(Document document);
 
@@ -34,7 +33,6 @@ public interface BsonDocumentPatch {
 	 * to a single version. A DocumentPatch is expected to patch the document
 	 * to the next version. <p>
 	 *
-	 * @return
 	 */
 	int patchedVersion();
 }

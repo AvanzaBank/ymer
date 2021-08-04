@@ -34,25 +34,20 @@ final class MirroredObjects {
 	
 	/**
 	 * Creates MirroredObjects holding the given documents. <p>
-	 * 
-	 * @param mirroredObjects
 	 */
 	MirroredObjects(MirroredObject<?>... mirroredObjects) {
-		Stream.of(mirroredObjects).forEach(mirroredObject -> {
-			this.mirroredObjectByType.put(mirroredObject.getMirroredType(), mirroredObject);
-		});
+		Stream.of(mirroredObjects)
+				.forEach(mirroredObject -> this.mirroredObjectByType.put(mirroredObject.getMirroredType(), mirroredObject));
 	}
-	
+
 	MirroredObjects(Stream<MirroredObjectDefinition<?>> mirroredObjects, MirroredObjectDefinitionsOverride override) {
 		mirroredObjects
 				.map(mirroredObjectDefinition -> mirroredObjectDefinition.buildMirroredDocument(override))
 				.forEach(mirroredObject -> this.mirroredObjectByType.put(mirroredObject.getMirroredType(), mirroredObject));
 	}
-	
+
 	/**
 	 * Returns a set of all mirrored types <p>
-	 * 
-	 * @return
 	 */
 	public Set<Class<?>> getMirroredTypes() {
 		return mirroredObjectByType.keySet();
@@ -60,7 +55,6 @@ final class MirroredObjects {
 	
 	/**
 	 * Returns a Collection of all MirroredObject's
-	 * @return
 	 */
 	public Collection<MirroredObject<?>> getMirroredObjects() {
 		return mirroredObjectByType.values();
@@ -68,8 +62,6 @@ final class MirroredObjects {
 	
 	/**
 	 * Returns the fully qualified classname for all mirrored types. <p>
-	 * 
-	 * @return
 	 */
 	public Set<String> getMirroredTypeNames() {
 		Set<String> result = new HashSet<>();
@@ -82,8 +74,6 @@ final class MirroredObjects {
 	/**
 	 * Returns the MirroredObject for a given type. <p>
 	 * 
-	 * @param type
-	 * @return
 	 * @throws NonMirroredTypeException if the given type is not mirrored
 	 */
 	@SuppressWarnings("unchecked")

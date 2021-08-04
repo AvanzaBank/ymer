@@ -15,8 +15,9 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.StreamMatchers.hasCount;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -91,7 +92,7 @@ public class YmerSpaceDataSourceTest {
 
 
 		Stream<FakeSpaceObject> loadInitialLoadData = ymerSpaceDataSource.load(patchedMirroredDocument, doneDistpacher);
-		assertEquals(1, Iterables.sizeOf(loadInitialLoadData));
+		assertThat(loadInitialLoadData, hasCount(1));
 	}
 
 	@Test
