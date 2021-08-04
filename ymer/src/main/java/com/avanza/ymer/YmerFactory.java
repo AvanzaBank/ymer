@@ -15,28 +15,26 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.plugin.Plugin;
-import com.gigaspaces.datasource.SpaceDataSource;
-import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
-import com.mongodb.ReadPreference;
-import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+
+import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+
+import com.avanza.ymer.plugin.Plugin;
+import com.gigaspaces.datasource.SpaceDataSource;
+import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
+import com.mongodb.ReadPreference;
 /**
  * @author Elias Lindholm (elilin)
  *
  */
 public final class YmerFactory {
 
-	private MirrorExceptionListener exceptionListener = new MirrorExceptionListener() {
-		@Override
-		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {}
-	};
+	private MirrorExceptionListener exceptionListener = (e, failedOperation, failedObjects) -> {};
 	private ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
 	private Set<Plugin> plugins = Collections.emptySet();
@@ -63,7 +61,6 @@ public final class YmerFactory {
 	 *
 	 * Default is "true"
 	 *
-	 * @param exportExceptionHandleMBean
 	 */
 	public void setExportExceptionHandlerMBean(boolean exportExceptionHandleMBean) {
 		this.exportExceptionHandleMBean = exportExceptionHandleMBean;
@@ -72,7 +69,6 @@ public final class YmerFactory {
 	/**
 	 * Sets a MirrorExceptionListener (optional). <p>
 	 *
-	 * @param exceptionListener
 	 */
 	public void setExceptionListener(MirrorExceptionListener exceptionListener) {
 		this.exceptionListener = exceptionListener;
@@ -119,8 +115,7 @@ public final class YmerFactory {
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
-		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
-		return mirrorContext;
+		return new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
 	}
 
 }

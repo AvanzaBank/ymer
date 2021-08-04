@@ -23,7 +23,7 @@ final class NonMirroredTypeException extends IllegalArgumentException {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private Class<?> type;
+	private final Class<?> type;
 
 	public NonMirroredTypeException(Class<?> type) {
 		super("Non mirrored type: " + type.getName());

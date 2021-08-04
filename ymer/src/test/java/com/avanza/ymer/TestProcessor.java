@@ -18,10 +18,10 @@ package com.avanza.ymer;
 import java.util.Optional;
 
 import org.bson.Document;
+
 import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.plugin.PreWriteProcessor;
-import com.mongodb.DBObject;
 
 public class TestProcessor implements PreWriteProcessor, PostReadProcessor {
 

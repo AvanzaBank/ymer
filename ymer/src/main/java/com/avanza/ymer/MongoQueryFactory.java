@@ -15,16 +15,22 @@
  */
 package com.avanza.ymer;
 
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
+
 import java.beans.PropertyDescriptor;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -36,16 +42,16 @@ import org.springframework.data.mongodb.core.query.Query;
  */
 class MongoQueryFactory {
 
-	private final HashMap<Class<?>, List<PropertyDescriptor>> propertyDescriptors = new HashMap<Class<?>, List<PropertyDescriptor>>();
-	private final MongoMappingContext mongoMappingContext;
+	private final ConcurrentMap<Class<?>, List<PropertyDescriptor>> propertyDescriptors = new ConcurrentHashMap<>();
 	private final MongoConverter mongoConverter;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mongoMappingContext;
 
 	/**
 	 * @param mongoConverter {@link MongoConverter} extracted from the mongo datasource used in gigaspaces
 	 */
 	public MongoQueryFactory(MongoConverter mongoConverter) {
-		this.mongoConverter = Objects.requireNonNull(mongoConverter);
-		this.mongoMappingContext = (MongoMappingContext) mongoConverter.getMappingContext();
+		this.mongoConverter = requireNonNull(mongoConverter);
+		this.mongoMappingContext = mongoConverter.getMappingContext();
 	}
 
 	/**
@@ -55,14 +61,14 @@ class MongoQueryFactory {
 	public Query createMongoQueryFromTemplate(Object template) {
 		try {
 			Criteria criteria = null;
-			BasicMongoPersistentEntity<?> pe = mongoMappingContext.getPersistentEntity(template.getClass());
+			MongoPersistentEntity<?> pe = mongoMappingContext.getRequiredPersistentEntity(template.getClass());
 			for (PropertyDescriptor pd : getTemplatablePropertyDescriptors(template.getClass())) {
 				Object objectValue = pd.getReadMethod().invoke(template);
 				if (objectValue == null) {
 					continue; // null == accept any value
 				}
 
-				String fieldName = pe.getPersistentProperty(pd.getName()).getFieldName();
+				String fieldName = pe.getRequiredPersistentProperty(pd.getName()).getFieldName();
 				Object mongoValue = mongoConverter.convertToMongoType(objectValue);
 				criteria = addCriteria(criteria, fieldName, mongoValue);
 			}
@@ -73,7 +79,7 @@ class MongoQueryFactory {
 		}
 	}
 
-	private Criteria addCriteria(Criteria c, String fieldName, Object mongoValue) {
+	private Criteria addCriteria(@Nullable Criteria c, String fieldName, Object mongoValue) {
 		if (c == null) {
 			return Criteria.where(fieldName).is(mongoValue);
 		} else {
@@ -82,20 +88,13 @@ class MongoQueryFactory {
 	}
 
 	private List<PropertyDescriptor> getTemplatablePropertyDescriptors(Class<?> type) {
-		if (!propertyDescriptors.containsKey(type)) {
-			propertyDescriptors.put(type, findTemplatablePropertyDescriptors(type));
-		}
-		return propertyDescriptors.get(type);
+		return propertyDescriptors.computeIfAbsent(type, this::findTemplatablePropertyDescriptors);
 	}
 
 	private List<PropertyDescriptor> findTemplatablePropertyDescriptors(Class<?> type) {
-		ArrayList<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>();
-		for (PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(type)) {
-			if (!isNotTemplatableMethod(pd)) {
-				result.add(pd);
-			}
-		}
-		return result;
+		return Stream.of(BeanUtils.getPropertyDescriptors(type))
+				.filter(pd -> !isNotTemplatableMethod(pd))
+				.collect(toList());
 	}
 
 	private boolean isNotTemplatableMethod(PropertyDescriptor pd) {

@@ -15,20 +15,27 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
-import com.avanza.ymer.util.OptionalUtil;
-import com.gigaspaces.datasource.DataIterator;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
 import org.bson.Document;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
+import com.gigaspaces.datasource.DataIterator;
 
 final class YmerSpaceDataSource extends AbstractSpaceDataSource {
 
@@ -41,14 +48,13 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         this.spaceMirrorContext = spaceMirror;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public DataIterator<Object> initialDataLoad() {
         InitialLoadCompleteDispatcher initialLoadCompleteDispatcher = new InitialLoadCompleteDispatcher();
 
         Stream<Object> objectStream = spaceMirrorContext.getMirroredDocuments().stream()
-                .sorted(Comparator.comparing(MirroredObject::getCollectionName)) // Make load order same for all partitions to reduce mongo cache misses
-                .collect(Collectors.toList()).stream() // Pass through a list to make sorting not block the whole stream on iterator.next which will be called later
+                .sorted(comparing(MirroredObject::getCollectionName)) // Make load order same for all partitions to reduce mongo cache misses
+                .collect(toList()).stream() // Pass through a list to make sorting not block the whole stream on iterator.next which will be called later
                 .filter(md -> !md.excludeFromInitialLoad())
                 .flatMap(mirroredObject -> load(mirroredObject, initialLoadCompleteDispatcher));
 
@@ -68,9 +74,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         return documentLoader.streamAllObjects()
                 .map(createPatchedDocumentWriteBack(mirroredObject, initialLoadCompleteDispatcher))
                 .peek(d -> counter.incrementAndGet())
-                .onClose(() -> logger.info("Loaded " + counter.get()
-                        + " documents from " + mirroredObject.getCollectionName()
-                        + " in " + (System.currentTimeMillis() - start) + " milliseconds!"));
+                .onClose(() -> logger.info("Loaded {} documents from {} in {} milliseconds!", counter.get(), mirroredObject.getCollectionName(), System.currentTimeMillis() - start));
     }
 
     private <T> Function<LoadedDocument<T>, T> createPatchedDocumentWriteBack(MirroredObject<T> document, InitialLoadCompleteDispatcher initialLoadCompleteDispatcher) {
@@ -125,7 +129,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         return loadedDocuments
                 .stream()
                 .map(LoadedDocument::getDocument)
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     private <T> void writeBackPatchedDocuments(MirroredObject<T> document, List<LoadedDocument<T>> loadedDocuments) {
@@ -133,8 +137,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
             return;
         }
         long patchCount = loadedDocuments.stream()
-                .map(LoadedDocument::getPatchedDocument)
-                .flatMap(OptionalUtil::asStream)
+                .flatMap(loadedDocument -> loadedDocument.getPatchedDocument().stream())
                 .map(patchedDocument -> doWriteBackPatchedDocument(document, patchedDocument))
                 .count();
         logger.debug("Updated {} documents in db for {}", patchCount, document.getMirroredType().getName());
@@ -183,7 +186,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         }
 
         public void initialLoadComplete() {
-            l.stream().forEach(Runnable::run);
+            l.forEach(Runnable::run);
         }
     }
 }

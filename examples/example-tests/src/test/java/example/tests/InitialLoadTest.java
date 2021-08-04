@@ -56,8 +56,8 @@ import example.domain.SpaceFruit;
 
 public class InitialLoadTest {
 	
-	private MongoServer mongoServer;
-	private MongoClient mongoClient;
+	private final MongoServer mongoServer;
+	private final MongoClient mongoClient;
 
 	public InitialLoadTest() {
 		mongoServer = new MongoServer(new MemoryBackend());

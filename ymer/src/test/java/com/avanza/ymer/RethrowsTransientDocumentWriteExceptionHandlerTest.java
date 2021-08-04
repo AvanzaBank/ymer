@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -33,9 +34,9 @@ public class RethrowsTransientDocumentWriteExceptionHandlerTest {
 
 	private final DocumentWriteExceptionHandler handler = new RethrowsTransientDocumentWriteExceptionHandler();
 
-	@Test(expected = TransientDocumentWriteException.class)
+	@Test
 	public void throwsOnTransientException() throws Exception {
-		handler.handleException(newMongoNetworkException(), "");
+		assertThrows(TransientDocumentWriteException.class, () -> handler.handleException(newMongoNetworkException(), ""));
 	}
 
 	@Test
@@ -55,7 +56,7 @@ public class RethrowsTransientDocumentWriteExceptionHandlerTest {
 			try {
 				handler.handleException(new RuntimeException(message), "");
 				fail("Exception should not be thrown for exception with message " + message);
-			} catch (TransientDocumentWriteException e) {
+			} catch (TransientDocumentWriteException ignored) {
 			}
 		}
 	}
