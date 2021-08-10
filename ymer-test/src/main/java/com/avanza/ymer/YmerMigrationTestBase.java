@@ -66,7 +66,6 @@ import com.mongodb.BasicDBObject;
  *	}
  * }
  * </pre>
- * 
  *
  */
 @RunWith(Parameterized.class)
@@ -79,14 +78,14 @@ public abstract class YmerMigrationTestBase {
 	}
 	
 	@Test
-	public void migratesTheOldDocumentToTheNextDocumentVersion() throws Exception {
-		getMirroredObjects().getMirroredObject(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
-		
-		MirroredObject<?> mirroredDocument = getMirroredObjects().getMirroredObject(migrationTest.spaceObjectType);
-		
+	public void migratesTheOldDocumentToTheNextDocumentVersion() {
+		MirroredObjectTestHelper mirroredDocument = getMirroredObjectsHelper(migrationTest.spaceObjectType);
+
+		mirroredDocument.setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
+
 		Document patched = new Document(migrationTest.toBePatched);
 		mirroredDocument.patchToNextVersion(patched);
-		
+
 		mirroredDocument.setDocumentVersion(migrationTest.expectedPatchedVersion, migrationTest.fromVersion + 1);
 		
 		assertEquals(migrationTest.expectedPatchedVersion, patched);
@@ -95,21 +94,22 @@ public abstract class YmerMigrationTestBase {
 	
 	@Test
 	public void oldVersionShouldRequirePatching() {
-		getMirroredObjects().getMirroredObject(migrationTest.spaceObjectType).setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
-		assertTrue("Should reqiure patching: " + migrationTest.toBePatched, getMirroredObjects().getMirroredObject(migrationTest.spaceObjectType).requiresPatching(migrationTest.toBePatched));
+		MirroredObjectTestHelper mirroredDocument = getMirroredObjectsHelper(migrationTest.spaceObjectType);
+		mirroredDocument.setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
+		assertTrue("Should require patching: " + migrationTest.toBePatched, mirroredDocument.requiresPatching(migrationTest.toBePatched));
 	}
 	
 	@Test
 	public void targetSpaceTypeShouldBeAMirroredType() {
-		assertTrue("Mirroring of " + migrationTest.getClass(), getMirroredObjects().isMirroredType(migrationTest.spaceObjectType));
+		MirroredObjectTestHelper mirroredDocument = getMirroredObjectsHelper(migrationTest.spaceObjectType);
+		assertTrue("Mirroring of " + migrationTest.getClass(), mirroredDocument.isMirroredType());
 	}
 	
-	private MirroredObjects getMirroredObjects() {
-		return new MirroredObjects(getMirroredObjectDefinitions().stream(), MirroredObjectDefinitionsOverride.noOverride());
+	private MirroredObjectTestHelper getMirroredObjectsHelper(Class<?> mirroredType) {
+		return MirroredObjectTestHelper.fromDefinitions(getMirroredObjectDefinitions(), mirroredType);
 	}
 	
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
-	
 	
 	protected static List<Object[]> buildTestCases(MigrationTest... list) {
 		List<Object[]> result = new ArrayList<>();
@@ -128,7 +128,7 @@ public abstract class YmerMigrationTestBase {
 
 		/**
 		 * 
-		 * @param oldVersionDoc The document to be patched (one step)t
+		 * @param oldVersionDoc The document to be patched (one step)
 		 */
 		public MigrationTest(Document oldVersionDoc, Document expectedPatchedVersion, int oldVersion, Class<?> spaceObjectType) {
 			this.toBePatched = oldVersionDoc;
