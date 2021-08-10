@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package com.avanza.ymer.junit4;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -27,6 +27,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.MirroredObjectTestHelper;
 import com.mongodb.BasicDBObject;
 
 /**

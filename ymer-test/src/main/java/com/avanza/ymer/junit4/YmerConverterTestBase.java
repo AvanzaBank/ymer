@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package com.avanza.ymer.junit4;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -38,6 +38,9 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.MirroredObjectTestHelper;
+import com.avanza.ymer.TestDocumentConverter;
 import com.mongodb.DB;
 import com.mongodb.client.MongoDatabase;
 

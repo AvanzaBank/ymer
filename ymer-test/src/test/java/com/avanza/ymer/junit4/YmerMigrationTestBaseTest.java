@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package com.avanza.ymer.junit4;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
@@ -26,7 +26,11 @@ import org.bson.Document;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
-import com.avanza.ymer.YmerMigrationTestBase.MigrationTest;
+import com.avanza.ymer.DocumentPatch;
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.TestSpaceObject;
+import com.avanza.ymer.junit4.YmerMigrationTestBase;
+import com.avanza.ymer.junit4.YmerMigrationTestBase.MigrationTest;
 import com.mongodb.BasicDBObject;
 
 

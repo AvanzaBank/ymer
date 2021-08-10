@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package com.avanza.ymer.junit4;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -24,6 +24,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.junit4.YmerMirroredTypesTestBase;
 import com.gigaspaces.annotation.pojo.SpaceClass;
 
 public class YmerMirroredTypesTestBaseTest {
@@ -46,7 +48,7 @@ public class YmerMirroredTypesTestBaseTest {
 
 			@Override
 			protected String basePackageForScanning() {
-				return "com.avanza.ymer.";
+				return "com.avanza.ymer.junit4";
 			}
 		};
 
@@ -63,7 +65,7 @@ public class YmerMirroredTypesTestBaseTest {
 
 			@Override
 			protected String basePackageForScanning() {
-				return "com.avanza.ymer.";
+				return "com.avanza.ymer.junit4";
 			}
 		};
 
@@ -80,7 +82,7 @@ public class YmerMirroredTypesTestBaseTest {
 
 			@Override
 			protected String basePackageForScanning() {
-				return "com.avanza.ymer.";
+				return "com.avanza.ymer.junit4";
 			}
 
 			@Override

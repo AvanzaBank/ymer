@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package com.avanza.ymer.junit4;
 
 import static org.junit.Assert.fail;
 
@@ -29,6 +29,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
+import com.avanza.ymer.MirroredObjectDefinition;
 import com.gigaspaces.annotation.pojo.SpaceClass;
 
 public abstract class YmerMirroredTypesTestBase {

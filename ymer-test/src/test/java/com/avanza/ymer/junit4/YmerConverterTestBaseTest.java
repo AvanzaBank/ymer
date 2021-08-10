@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package com.avanza.ymer.junit4;
 
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.not;
@@ -34,7 +34,11 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-import com.avanza.ymer.YmerConverterTestBase.ConverterTest;
+import com.avanza.ymer.DocumentPatch;
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.TestSpaceObject;
+import com.avanza.ymer.junit4.YmerConverterTestBase;
+import com.avanza.ymer.junit4.YmerConverterTestBase.ConverterTest;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 
