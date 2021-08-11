@@ -13,22 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package example.mirror;
+package com.avanza.ymer;
 
-import java.util.Collection;
+/**
+ * @deprecated use {@link com.avanza.ymer.junit4.YmerMirroredTypesTestBase} for JUnit 4
+ */
+@Deprecated
+public abstract class YmerMirroredTypesTestBase extends com.avanza.ymer.junit4.YmerMirroredTypesTestBase {
 
-import com.avanza.ymer.MirroredObjectDefinition;
-import com.avanza.ymer.junit5.YmerMirroredTypesTestBase;
-
-class ExampleMirroredTypesTest extends YmerMirroredTypesTestBase {
-
-	@Override
-	protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
-		return ExampleMirrorFactory.getDefinitions();
-	}
-
-	@Override
-	protected String basePackageForScanning() {
-		return "example.domain";
-	}
 }

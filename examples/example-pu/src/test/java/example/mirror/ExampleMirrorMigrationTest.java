@@ -19,27 +19,22 @@ import java.util.Collection;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.runners.Parameterized.Parameters;
 
 import com.avanza.ymer.MirroredObjectDefinition;
-import com.avanza.ymer.YmerMigrationTestBase;
+import com.avanza.ymer.junit5.YmerMigrationTestBase;
 
 import example.domain.SpaceFruit;
 
-public class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
-
-	public ExampleMirrorMigrationTest(MigrationTest testCase) {
-		super(testCase);
-	}
+class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
 
 	@Override
 	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 		return ExampleMirrorFactory.getDefinitions();
 	}
 
-	@Parameters
-	public static List<Object[]> testCases() {
-		return buildTestCases(
+	@Override
+	protected Collection<MigrationTest> testCases() {
+		return List.of(
 				spaceFruitV1ToV2MigrationTest()
 		);
 	}

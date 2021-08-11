@@ -18,20 +18,15 @@ package example.mirror;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.runners.Parameterized.Parameters;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.avanza.ymer.MirroredObjectDefinition;
-import com.avanza.ymer.YmerConverterTestBase;
+import com.avanza.ymer.junit5.YmerConverterTestBase;
 
 import example.domain.SpaceFruit;
 
-public class ExampleMirrorConverterTest extends YmerConverterTestBase {
-
-	public ExampleMirrorConverterTest(ConverterTest<?> testCase) {
-		super(testCase);
-	}
+class ExampleMirrorConverterTest extends YmerConverterTestBase {
 
 	@Override
 	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
@@ -42,10 +37,10 @@ public class ExampleMirrorConverterTest extends YmerConverterTestBase {
 	protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
 		return ExampleMirrorFactory.createMongoConverter(mongoDbFactory);
 	}
-	
-	@Parameters
-	public static List<Object[]> testCases() {
-		return buildTestCases(
+
+	@Override
+	protected Collection<ConverterTest<?>> testCases() {
+		return List.of(
 			new ConverterTest<>(new SpaceFruit("Apple", "France", true))
 		);
 	}

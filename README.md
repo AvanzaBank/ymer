@@ -144,14 +144,14 @@ MirroredObjectDefinition.create(SpaceFruit.class)
 
 
 ## Test support
-Ymer includes three test base classes (located in the `ymer-test` module) which can be used to verify that the defined `MongoConverter` can convert all mirrored space objects to bson, to test that data-migrations are applied as intended and also to check for @SpaceClass annotated classes that are not persisted:
+Ymer includes three test base classes (located in the `ymer-test` module) which can be used to verify that the defined `MongoConverter` can convert all mirrored space objects to bson, to test that data-migrations are applied as intended and also to check for @SpaceClass annotated classes that are not persisted.
+
+These tests are implemented in both `junit4` and `junit5` using optional dependencies.
+`junit4` test cases are located in `com.avanza.junit4` while `junit5` test cases are located in `com.avanza.junit5`.
+The examples provided below are using `junit5`.
 
 ```java
-public class ExampleMirrorConverterTest extends YmerConverterTestBase {
-
-	public ExampleMirrorConverterTest(ConverterTest<?> testCase) {
-		super(testCase);
-	}
+class ExampleMirrorConverterTest extends YmerConverterTestBase {
 
 	@Override
 	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
@@ -162,10 +162,10 @@ public class ExampleMirrorConverterTest extends YmerConverterTestBase {
 	protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
 		return ExampleMirrorFactory.createMongoConverter(mongoDbFactory);
 	}
-	
-	@Parameters
-	public static List<Object[]> testCases() {
-		return buildTestCases(
+
+	@Override
+	protected Collection<ConverterTest<?>> testCases() {
+		return List.of(
 			new ConverterTest<>(new SpaceFruit("Apple", "France", true))
 		);
 	}
@@ -174,20 +174,16 @@ public class ExampleMirrorConverterTest extends YmerConverterTestBase {
 ```
 
 ```java
-public class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
-
-	public ExampleMirrorMigrationTest(MigrationTest testCase) {
-		super(testCase);
-	}
+class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
 
 	@Override
 	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 		return ExampleMirrorFactory.getDefinitions();
 	}
 
-	@Parameters
-	public static List<Object[]> testCases() {
-		return buildTestCases(
+	@Override
+	protected Collection<MigrationTest> testCases() {
+		return List.of(
 				spaceFruitV1ToV2MigrationTest()
 		);
 	}
@@ -210,7 +206,7 @@ public class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
 ```
 
 ```java
-public class ExampleMirroredTypesTest extends YmerMirroredTypesTestBase {
+class ExampleMirroredTypesTest extends YmerMirroredTypesTestBase {
 
 	@Override
 	protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
@@ -242,6 +238,8 @@ The test support is packed in a distinct jar using the following coordinates:
   <version>2.0.0</version>
 </dependency>
 ```
+
+In order to run the tests, `junit4` or `junit5` are also needed.
 
 ## License
 The Ymer Framework is released under version 2.0 of the [Apache License](https://www.apache.org/licenses/LICENSE-2.0).
