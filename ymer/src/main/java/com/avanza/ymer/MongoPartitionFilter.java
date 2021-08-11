@@ -17,6 +17,7 @@ package com.avanza.ymer;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 import com.avanza.ymer.SpaceObjectFilter.PartitionFilter;
 import com.mongodb.BasicDBObject;
@@ -25,6 +26,8 @@ class MongoPartitionFilter {
 
 	private final BasicDBObject filter;
 
+	private static boolean loadByShard = true;
+	
 	public MongoPartitionFilter(BasicDBObject filter) {
 		this.filter = Objects.requireNonNull(filter);
 	}
@@ -38,11 +41,17 @@ class MongoPartitionFilter {
 	}
 
 	private static BasicDBObject buildFilter(PartitionFilter<?> partitionFilter) {
-		return new BasicDBObject("$or", Arrays.asList(
+		if (loadByShard) {
+			int maxShards = 1024;
+			int[] shards = IntStream.range(0, maxShards).filter(i -> i%partitionFilter.getCurrentPartition() == 0).toArray();
+			return new BasicDBObject("_shard", new BasicDBObject("$in", shards));
+		} else {
+			return new BasicDBObject("$or", Arrays.asList(
 				new BasicDBObject(MirroredObject.DOCUMENT_ROUTING_KEY, new BasicDBObject("$mod", Arrays.asList(partitionFilter.getTotalPartitions(), partitionFilter.getCurrentPartition() - 1))),
 				new BasicDBObject(MirroredObject.DOCUMENT_ROUTING_KEY, new BasicDBObject("$mod", Arrays.asList(partitionFilter.getTotalPartitions(), -(partitionFilter.getCurrentPartition() - 1)))),
 				new BasicDBObject(MirroredObject.DOCUMENT_ROUTING_KEY, new BasicDBObject("$exists", false))
 				));
+		}
 	}
 
 	public BasicDBObject toDBObject() {
