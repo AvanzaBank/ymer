@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.extractInstanceIdIdFromSpaceName;
+import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.extractInstanceIdFromSpaceName;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +53,7 @@ final class MirroredObjectWriter {
 	}
 
 	public void executeBulk(OperationsBatchData batch) {
-		Integer instanceId = extractInstanceIdIdFromSpaceName(batch.getSourceDetails().getName()).orElse(null);
+		Integer instanceId = extractInstanceIdFromSpaceName(batch.getSourceDetails().getName()).orElse(null);
 		List<Object> pendingWrites = new ArrayList<>();
 		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
 			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {

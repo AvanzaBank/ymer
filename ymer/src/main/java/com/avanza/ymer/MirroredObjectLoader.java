@@ -93,7 +93,8 @@ final class MirroredObjectLoader<T> {
                 Query query = query(where(DOCUMENT_INSTANCE_ID).is(contextProperties.getInstanceId()));
                 return documentCollection.findByQuery(query);
             } else {
-                log.warn("Configured to load using persisted instance id, but index name indicates number of partitions do not match {}", contextProperties.getPartitionCount());
+                log.warn("Configured to load using persisted instance id, but index name indicates number of partitions do not match {}. Will not use instance id when loading.",
+                         contextProperties.getPartitionCount());
             }
         }
         if (mirroredObject.loadDocumentsRouted()) {

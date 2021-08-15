@@ -42,7 +42,7 @@ public final class GigaSpacesInstanceIdUtil {
 	/**
 	 * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils#extractPartitionIdFromSpaceName(String)
 	 */
-	public static Optional<Integer> extractInstanceIdIdFromSpaceName(@Nullable String spaceName) {
+	public static Optional<Integer> extractInstanceIdFromSpaceName(@Nullable String spaceName) {
 		// Format: qaSpace_container2_1:qaSpace
 		if (StringUtils.isEmpty(spaceName)) {
 			return Optional.empty();

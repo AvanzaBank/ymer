@@ -26,7 +26,7 @@ public class GigaSpacesInstanceIdUtilTest {
 	public void shouldExtractInstanceIdFromSpaceName() {
 		String spaceName = "qaSpace_container2_1:qaSpace";
 
-		int instanceId = GigaSpacesInstanceIdUtil.extractInstanceIdIdFromSpaceName(spaceName).orElseThrow();
+		int instanceId = GigaSpacesInstanceIdUtil.extractInstanceIdFromSpaceName(spaceName).orElseThrow();
 
 		assertThat(instanceId, equalTo(2));
 	}
