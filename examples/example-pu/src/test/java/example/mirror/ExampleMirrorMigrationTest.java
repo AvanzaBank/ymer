@@ -21,7 +21,7 @@ import java.util.List;
 import org.bson.Document;
 
 import com.avanza.ymer.MirroredObjectDefinition;
-import com.avanza.ymer.junit5.YmerMigrationTestBase;
+import com.avanza.ymer.test.YmerMigrationTestBase;
 
 import example.domain.SpaceFruit;
 

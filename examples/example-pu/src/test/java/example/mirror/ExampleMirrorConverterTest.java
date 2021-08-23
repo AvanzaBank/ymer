@@ -22,7 +22,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.avanza.ymer.MirroredObjectDefinition;
-import com.avanza.ymer.junit5.YmerConverterTestBase;
+import com.avanza.ymer.test.YmerConverterTestBase;
 
 import example.domain.SpaceFruit;
 

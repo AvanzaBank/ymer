@@ -19,7 +19,7 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>ymer-test</artifactId>
+			<artifactId>ymer-test-junit5</artifactId>
 			<scope>test</scope>
 			<version>${project.version}</version>
 		</dependency>

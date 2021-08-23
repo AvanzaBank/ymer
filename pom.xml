@@ -53,6 +53,8 @@
 			<modules>
 				<module>ymer</module>
 				<module>ymer-test</module>
+				<module>ymer-test-junit4</module>
+				<module>ymer-test-junit5</module>
 				<module>examples</module>
 			</modules>
    		</profile>
