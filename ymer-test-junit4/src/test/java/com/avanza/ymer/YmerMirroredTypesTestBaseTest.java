@@ -46,7 +46,7 @@ public class YmerMirroredTypesTestBaseTest {
 
 			@Override
 			protected String basePackageForScanning() {
-				return "com.avanza.ymer.";
+				return "com.avanza.ymer";
 			}
 		};
 
@@ -63,7 +63,7 @@ public class YmerMirroredTypesTestBaseTest {
 
 			@Override
 			protected String basePackageForScanning() {
-				return "com.avanza.ymer.";
+				return "com.avanza.ymer";
 			}
 		};
 
@@ -80,7 +80,7 @@ public class YmerMirroredTypesTestBaseTest {
 
 			@Override
 			protected String basePackageForScanning() {
-				return "com.avanza.ymer.";
+				return "com.avanza.ymer";
 			}
 
 			@Override

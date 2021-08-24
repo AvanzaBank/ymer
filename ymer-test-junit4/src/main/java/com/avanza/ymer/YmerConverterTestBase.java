@@ -81,11 +81,11 @@ public abstract class YmerConverterTestBase {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void serializationTest() throws Exception {
+	public void serializationTest() {
 		Object spaceObject = testCase.spaceObject;
-		MirroredObject<?> mirroredDocument = getMirroredObjects().getMirroredObject(spaceObject.getClass());
+		MirroredObjectTestHelper mirroredDocument = getMirroredObjectHelper(spaceObject.getClass());
 
-		DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
+		TestDocumentConverter documentConverter = TestDocumentConverter.create(createMongoConverter(dummyMongoDbFactory));
 		Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
 		Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
 		assertThat(reCreated, testCase.matcher);
@@ -93,20 +93,21 @@ public abstract class YmerConverterTestBase {
 
 	@Test
 	public void canMirrorSpaceObject() {
-		assertTrue("Mirroring of " + testCase.getClass(), getMirroredObjects().isMirroredType(testCase.spaceObject.getClass()));
+		MirroredObjectTestHelper mirroredDocument = getMirroredObjectHelper(testCase.spaceObject.getClass());
+		assertTrue("Mirroring of " + testCase.getClass(), mirroredDocument.isMirroredType());
 	}
 
     @Test
-    public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() throws Exception{
+    public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() {
         Object spaceObject = testCase.spaceObject;
-        MirroredObject<?> mirroredDocument = getMirroredObjects().getMirroredObject(spaceObject.getClass());
+		MirroredObjectTestHelper mirroredDocument = getMirroredObjectHelper(spaceObject.getClass());
 
-        DocumentConverter documentConverter = DocumentConverter.mongoConverter(createMongoConverter(dummyMongoDbFactory));
+		TestDocumentConverter documentConverter = TestDocumentConverter.create(createMongoConverter(dummyMongoDbFactory));
         Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
         Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
         Document recreatedBasicDbObject = documentConverter.convertToBsonDocument(reCreated);
         assertNotNull("No id field defined. @SpaceId annotations are ignored by persistence framework, use @Id for id field (Typically the same as is annotated with @SpaceId)", recreatedBasicDbObject.get("_id"));
-        assertEquals("",basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
+        assertEquals(basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
     }
 
     @Test
@@ -115,16 +116,16 @@ public abstract class YmerConverterTestBase {
     	Field[] fields = spaceObject.getClass().getDeclaredFields();
     	List<String> emptyFields = new LinkedList<>();
 
-    	for (Field field : fields) {
-    		field.setAccessible(true);
+		for (Field field : fields) {
+			field.setAccessible(true);
 			Object fieldValue = field.get(spaceObject);
-			if (fieldValue instanceof Collection){
-				if (((Collection<?>) fieldValue).isEmpty()){
+			if (fieldValue instanceof Collection) {
+				if (((Collection<?>) fieldValue).isEmpty()) {
 					emptyFields.add(field.getName());
 				}
 			}
-			if (fieldValue instanceof Map){
-				if (((Map<?,?>) fieldValue).isEmpty()){
+			if (fieldValue instanceof Map) {
+				if (((Map<?, ?>) fieldValue).isEmpty()) {
 					emptyFields.add(field.getName());
 				}
 			}
@@ -134,8 +135,8 @@ public abstract class YmerConverterTestBase {
     			+ "add at least one element to ensure proper test coverage.: " + emptyFields, emptyFields.isEmpty());
     }
 
-	protected MirroredObjects getMirroredObjects() {
-		return new MirroredObjects(getMirroredObjectDefinitions().stream(), MirroredObjectDefinitionsOverride.noOverride());
+	private MirroredObjectTestHelper getMirroredObjectHelper(Class<?> objectClass) {
+		return MirroredObjectTestHelper.fromDefinitions(getMirroredObjectDefinitions(), objectClass);
 	}
 
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();

@@ -53,6 +53,8 @@
 			<modules>
 				<module>ymer</module>
 				<module>ymer-test</module>
+				<module>ymer-test-junit4</module>
+				<module>ymer-test-junit5</module>
 				<module>examples</module>
 			</modules>
    		</profile>
@@ -114,6 +116,7 @@
 		<gigaspaces.version>14.5.0</gigaspaces.version>
 		<jsr305.version>3.0.2</jsr305.version>
 		<junit.version>4.13.1</junit.version>
+		<junit-jupiter.version>5.7.1</junit-jupiter.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<mockito.version>3.8.0</mockito.version>
 		<gs-test.version>1.0.1</gs-test.version>
@@ -215,19 +218,22 @@
 				<version>${hamcrest.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.hamcrest</groupId>
-				<artifactId>hamcrest-library</artifactId>
-				<version>${hamcrest.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.hamcrest</groupId>
-				<artifactId>hamcrest-core</artifactId>
-				<version>${hamcrest.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>${junit.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.hamcrest</groupId>
+						<artifactId>hamcrest-core</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit-jupiter.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.avanza.gs</groupId>
@@ -517,7 +523,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<includes>
-						<include>**/Test*.java</include>
 						<include>**/*Test.java</include>
 						<include>**/*TestCase.java</include>
 						<include>**/*Tests.java</include>

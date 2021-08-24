@@ -13,27 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package com.avanza.ymer.test;
 
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
-import com.avanza.ymer.YmerMigrationTestBase.MigrationTest;
+import com.avanza.ymer.DocumentPatch;
+import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.test.YmerMigrationTestBase.MigrationTest;
 import com.mongodb.BasicDBObject;
 
+class YmerMigrationTestBaseTest {
 
-public class YmerMigrationTestBaseTest {
-	
 	@Test
-	public void migratesTheOldDocumentToTheNextDocumentVersion_OnePatch_PassesIfNextVersionMatchesExpectedVersion() throws Exception {
+	void migratesTheOldDocumentToTheNextDocumentVersion_OnePatch_PassesIfNextVersionMatchesExpectedVersion() {
 		Document v1 = new Document();
 		v1.put("foo", "bar");
 
@@ -51,15 +52,15 @@ public class YmerMigrationTestBaseTest {
 				return 1;
 			}
 		} };
-		
+
 		final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
-		
+
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
-		assertPasses(() -> new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion());
+		assertPasses(() -> new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion(testCase));
 	}
-	
+
 	@Test
-	public void migratesTheOldDocumentToTheNextDocumentVersion_OnePatch_FailsIfNextVersionDoesNotMatchExpectedVersion() throws Exception {
+	void migratesTheOldDocumentToTheNextDocumentVersion_OnePatch_FailsIfNextVersionDoesNotMatchExpectedVersion() {
 		Document v1 = new Document();
 		v1.put("foo", "bar");
 
@@ -79,13 +80,13 @@ public class YmerMigrationTestBaseTest {
 		} };
 
 		final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
-		
+
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
-		assertFails(() -> new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion());
+		assertFails(() -> new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion(testCase));
 	}
-	
+
 	@Test
-	public void migratesTheOldDocumentToTheNextDocumentVersion_TwoPatch_PassesIfDocumentMatchesTheNextVersion() throws Exception {
+	void migratesTheOldDocumentToTheNextDocumentVersion_TwoPatch_PassesIfDocumentMatchesTheNextVersion() {
 		Document v1 = new Document();
 		v1.put("foo", "foo");
 
@@ -120,18 +121,18 @@ public class YmerMigrationTestBaseTest {
 		} };
 
 		final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
-		
+
 		final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
-		assertPasses(() -> new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion());
+		assertPasses(() -> new FakeTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion(testCase));
 	}
 
 	@Test
-	public void alsoAcceptsDeprecatedBasicDbObjectInMigrationTest() throws Exception {
+	void alsoAcceptsDeprecatedBasicDbObjectInMigrationTest() {
 		// Arrange
-		final BasicDBObject v1 = new BasicDBObject();
+		final Document v1 = new Document();
 		v1.put("foo", "bar");
 
-		final BasicDBObject expectedV2 = new BasicDBObject();
+		final Document expectedV2 = new Document();
 		expectedV2.put("foo", "bar");
 		expectedV2.put("baz", "baz");
 
@@ -152,21 +153,20 @@ public class YmerMigrationTestBaseTest {
 		);
 
 		// Act
-		@SuppressWarnings("deprecation")
 		var suite = new FakeTestSuite(
 				new MigrationTest(v1, expectedV2, 1, TestSpaceObject.class),
 				mirroredObjects);
-		suite.migratesTheOldDocumentToTheNextDocumentVersion();
 
-		// Assert that no exceptions were thrown
+		assertPasses(() -> suite.migratesTheOldDocumentToTheNextDocumentVersion(suite.testCase));
 	}
 
 	static class FakeTestSuite extends YmerMigrationTestBase {
 
-		private final Collection<MirroredObjectDefinition<?>> mirroredObjects;
+		final MigrationTest testCase;
+		final Collection<MirroredObjectDefinition<?>> mirroredObjects;
 
-		public FakeTestSuite(MigrationTest testCase, Collection<MirroredObjectDefinition<?>> mirroredObjects) {
-			super(testCase);
+		FakeTestSuite(MigrationTest testCase, Collection<MirroredObjectDefinition<?>> mirroredObjects) {
+			this.testCase = testCase;
 			this.mirroredObjects = mirroredObjects;
 		}
 
@@ -175,20 +175,23 @@ public class YmerMigrationTestBaseTest {
 			return mirroredObjects;
 		}
 
-	}
-	
-	
-	private static void assertFails(ThrowingRunnable testRun) {
-		assertThrows("Expected test to fail", Throwable.class, testRun);
+		@Override
+		protected Collection<MigrationTest> testCases() {
+			return List.of(testCase);
+		}
 	}
 
-	private static void assertPasses(ThrowingRunnable testRun) {
+	private static void assertFails(Executable testRun) {
+		assertThrows(AssertionError.class, testRun);
+	}
+
+	private static void assertPasses(Executable testRun) {
 		try {
-			testRun.run();
+			testRun.execute();
 		} catch (AssertionError e) {
-			fail("Expected test to pass, failed with: " + e.getMessage());
+			fail("Expected test to pass, but failed with: " + e.getMessage());
 		} catch (Throwable e) {
-			fail("Expected test to pass, but exception thrown");
+			fail("Unexpected exception in test: " + e.getMessage());
 		}
 	}
 

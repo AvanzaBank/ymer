@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package com.avanza.ymer.test;
 
 import org.springframework.data.annotation.Id;
 
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 
-public class TestSpaceOtherObject {
+public class TestSpaceObject {
 
-	@Id
+    @Id
 	private String id;
 	private String message;
 	
-	public TestSpaceOtherObject(String id, String message) {
+	public TestSpaceObject(String id, String message) {
 		this.id = id;
 		this.message = message;
 	}
 	
-	public TestSpaceOtherObject() {
+	public TestSpaceObject() {
 	}
 
 	@SpaceId
@@ -69,7 +69,7 @@ public class TestSpaceOtherObject {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		TestSpaceOtherObject other = (TestSpaceOtherObject) obj;
+		TestSpaceObject other = (TestSpaceObject) obj;
 		if (id == null) {
 			if (other.id != null)
 				return false;
@@ -85,7 +85,7 @@ public class TestSpaceOtherObject {
 
 	@Override
 	public String toString() {
-		return "TestSpaceOtherObject [id=" + id + ", message=" + message + "]";
+		return "TestSpaceObject [id=" + id + ", message=" + message + "]";
 	}
 	
 }
