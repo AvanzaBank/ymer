@@ -63,6 +63,8 @@
 			<modules>
 				<module>ymer</module>
 				<module>ymer-test</module>
+				<module>ymer-test-junit4</module>
+				<module>ymer-test-junit5</module>
 			</modules>
 			<build>
 				<!--  javadoc, source and gpg plugin from above -->
