@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -33,6 +35,7 @@ import com.mongodb.ReadPreference;
  *
  */
 public final class YmerFactory {
+	private static final Logger LOG = LoggerFactory.getLogger(YmerFactory.class);
 
 	private MirrorExceptionListener exceptionListener = (e, failedOperation, failedObjects) -> {};
 	private ReadPreference readPreference = ReadPreference.primary();
@@ -51,6 +54,16 @@ public final class YmerFactory {
 		this.mongoDbFactory = mongoDbFactory;
 		this.mongoConverter = mongoConverter;
 		this.mirroredObjects = new MirroredObjects(definitions.stream(), MirroredObjectDefinitionsOverride.fromSystemProperties());
+		if (mirroredObjects.getMirroredTypes().isEmpty()) {
+			LOG.warn(""
+					+ "The list of mirrored object types is empty. This is "
+					+ "almost always an error since either the app wants to "
+					+ "use Ymer to store or load documents, in which case "
+					+ "there should be at least one type of mirrored object, "
+					+ "or the app does not wish to store or load documents, in "
+					+ "which case it should not instantiate YmerFactory."
+			);
+		}
 	}
 
 	/**
