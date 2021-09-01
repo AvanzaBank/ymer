@@ -15,8 +15,8 @@
  */
 package com.avanza.ymer;
 
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -64,8 +64,7 @@ final class DocumentDb {
 	}
 	
 	private static final class MongoDocumentDb implements DocumentDb.Provider {
-		@SuppressWarnings("deprecation")
-		private static final Set<WriteConcern> EXPECTED_WRITE_CONCERNS = new HashSet<>(Arrays.asList(WriteConcern.SAFE, WriteConcern.ACKNOWLEDGED));
+		private static final Set<WriteConcern> EXPECTED_WRITE_CONCERNS = new HashSet<>(List.of(WriteConcern.ACKNOWLEDGED));
 		private static final Logger LOGGER = LoggerFactory.getLogger(MongoDocumentDb.class);
 
 		private final MongoDatabase mongoDatabase;
