@@ -110,21 +110,20 @@
 		<java.version>11</java.version>
 
 		<spring.version>5.1.7.RELEASE</spring.version>
-		<spring.groupId>org.springframework</spring.groupId>
-		<spring-data-mongodb.version>2.0.14.RELEASE</spring-data-mongodb.version>
+		<spring-data-mongodb.version>2.1.8.RELEASE</spring-data-mongodb.version>
 
-		<slf4j.version>1.7.30</slf4j.version>
-		<log4j.version>2.14.0</log4j.version>
+		<slf4j.version>1.7.32</slf4j.version>
+		<log4j.version>2.14.1</log4j.version>
 		<gigaspaces.version>14.5.0</gigaspaces.version>
 		<jsr305.version>3.0.2</jsr305.version>
-		<junit.version>4.13.1</junit.version>
-		<junit-jupiter.version>5.7.1</junit-jupiter.version>
+		<junit.version>4.13.2</junit.version>
+		<junit-jupiter.version>5.7.2</junit-jupiter.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<mockito.version>3.8.0</mockito.version>
+		<mockito.version>3.12.4</mockito.version>
 		<gs-test.version>1.0.1</gs-test.version>
-		<mongo-java-driver.version>3.4.3</mongo-java-driver.version>
+		<mongo-java-driver.version>3.8.2</mongo-java-driver.version>
 		<mongo-java-server.version>1.34.0</mongo-java-server.version>
-		<awaitility.version>3.1.6</awaitility.version>
+		<awaitility.version>4.1.0</awaitility.version>
 
 		<!-- Maven plugins -->
 		<maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
