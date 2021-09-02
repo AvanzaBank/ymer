@@ -50,6 +50,7 @@ public abstract class YmerConverterTestBase {
 	private final MongoDbFactory dummyMongoDbFactory;
 
 	public YmerConverterTestBase() {
+		// The MongoDbFactory is never used during the tests.
 		this.dummyMongoDbFactory = new SimpleMongoClientDbFactory("mongodb://xxx/unused");
 	}
 
