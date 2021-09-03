@@ -32,16 +32,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.avanza.ymer.MirroredObjectDefinition;
 import com.avanza.ymer.MirroredObjectTestHelper;
 import com.avanza.ymer.TestDocumentConverter;
-import com.mongodb.DB;
-import com.mongodb.client.MongoDatabase;
 
 /**
  * Base class for testing that objects may be marshalled to a mongo document and
@@ -53,28 +50,8 @@ public abstract class YmerConverterTestBase {
 	private final MongoDbFactory dummyMongoDbFactory;
 
 	public YmerConverterTestBase() {
-		this.dummyMongoDbFactory = new MongoDbFactory() {
-			// The MongoDbFactory is never used during the tests.
-			@Override
-			public MongoDatabase getDb(String dbName) throws DataAccessException {
-				return null;
-			}
-
-			@Override
-			public MongoDatabase getDb() throws DataAccessException {
-				return null;
-			}
-
-			@Override
-			public PersistenceExceptionTranslator getExceptionTranslator() {
-				return null;
-			}
-
-			@Override
-			public DB getLegacyDb() {
-				return null;
-			}
-		};
+		// The MongoDbFactory is never used during the tests.
+		this.dummyMongoDbFactory = new SimpleMongoClientDbFactory("mongodb://xxx/unused");
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

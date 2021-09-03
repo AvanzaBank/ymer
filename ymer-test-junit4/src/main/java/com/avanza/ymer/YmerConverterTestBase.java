@@ -33,13 +33,9 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-
-import com.mongodb.DB;
-import com.mongodb.client.MongoDatabase;
 
 /**
  * Base class for testing that objects may be marshalled to a mongo document and
@@ -57,26 +53,8 @@ public abstract class YmerConverterTestBase {
 
 	public YmerConverterTestBase(ConverterTest<?> testCase) {
 		this.testCase = testCase;
-		this.dummyMongoDbFactory = new MongoDbFactory() {
-			// The MongoDbFactory is never used during the tests.
-			@Override
-			public MongoDatabase getDb(String dbName) throws DataAccessException {
-				return null;
-			}
-			@Override
-			public MongoDatabase getDb() throws DataAccessException {
-				return null;
-			}
-			@Override
-			public PersistenceExceptionTranslator getExceptionTranslator() {
-				return null;
-			}
-
-			@Override
-			public DB getLegacyDb() {
-				return null;
-			}
-		};
+		// The MongoDbFactory is never used during the tests.
+		this.dummyMongoDbFactory = new SimpleMongoClientDbFactory("mongodb://xxx/unused");
 	}
 
 	@SuppressWarnings("unchecked")

@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
 
 /**
  *
@@ -85,7 +85,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 	public void update(Document newVersion) {
 		collection.replaceOne(Filters.eq("_id", newVersion.get("_id")),
 				newVersion,
-				new UpdateOptions().upsert(true));
+				new ReplaceOptions().upsert(true));
 	}
 
 	@Override

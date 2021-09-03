@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,8 @@ import com.avanza.ymer.plugin.Plugin;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.MongoDatabase;
+
 /**
  * @author Elias Lindholm (elilin)
  *
@@ -45,13 +48,12 @@ public final class YmerFactory {
 
 	private final MirroredObjects mirroredObjects;
 	private final MongoConverter mongoConverter;
-	private final MongoDbFactory mongoDbFactory;
+	private final Supplier<MongoDatabase> mongoDatabaseSupplier;
 
-
-	public YmerFactory(MongoDbFactory mongoDbFactory,
+	public YmerFactory(Supplier<MongoDatabase> mongoDatabaseSupplier,
 					   MongoConverter mongoConverter,
 					   Collection<MirroredObjectDefinition<?>> definitions) {
-		this.mongoDbFactory = mongoDbFactory;
+		this.mongoDatabaseSupplier = mongoDatabaseSupplier;
 		this.mongoConverter = mongoConverter;
 		this.mirroredObjects = new MirroredObjects(definitions.stream(), MirroredObjectDefinitionsOverride.fromSystemProperties());
 		if (mirroredObjects.getMirroredTypes().isEmpty()) {
@@ -64,6 +66,12 @@ public final class YmerFactory {
 					+ "which case it should not instantiate YmerFactory."
 			);
 		}
+	}
+
+	public YmerFactory(MongoDbFactory mongoDbFactory,
+					   MongoConverter mongoConverter,
+					   Collection<MirroredObjectDefinition<?>> definitions) {
+		this(mongoDbFactory::getDb, mongoConverter, definitions);
 	}
 
 	/**
@@ -122,7 +130,7 @@ public final class YmerFactory {
 	}
 
 	private SpaceMirrorContext createSpaceMirrorContext() {
-		DocumentDb documentDb = DocumentDb.mongoDb(this.mongoDbFactory.getDb(), readPreference);
+		DocumentDb documentDb = DocumentDb.mongoDb(mongoDatabaseSupplier.get(), readPreference);
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(mongoConverter);
 		// Set the event publisher to null to avoid deadlocks when loading data in parallel
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
