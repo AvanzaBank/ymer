@@ -35,8 +35,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-
 /**
  * Base class for testing that objects may be marshalled to a mongo document and
  * then unmarshalled back into an object. <p>
@@ -63,7 +63,7 @@ public abstract class YmerConverterTestBase {
 		Object spaceObject = testCase.spaceObject;
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectHelper(spaceObject.getClass());
 
-		TestDocumentConverter documentConverter = TestDocumentConverter.create(createMongoConverter(dummyMongoDbFactory));
+		TestDocumentConverter documentConverter = TestDocumentConverter.create(createMongoConverter());
 		Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
 		Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
 		assertThat(reCreated, testCase.matcher);
@@ -80,7 +80,7 @@ public abstract class YmerConverterTestBase {
         Object spaceObject = testCase.spaceObject;
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectHelper(spaceObject.getClass());
 
-		TestDocumentConverter documentConverter = TestDocumentConverter.create(createMongoConverter(dummyMongoDbFactory));
+		TestDocumentConverter documentConverter = TestDocumentConverter.create(createMongoConverter());
         Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
         Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
         Document recreatedBasicDbObject = documentConverter.convertToBsonDocument(reCreated);
@@ -120,6 +120,20 @@ public abstract class YmerConverterTestBase {
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 
 	protected abstract MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory);
+
+	private MongoConverter createMongoConverter() {
+		MongoConverter converter = createMongoConverter(dummyMongoDbFactory);
+		if (converter instanceof AbstractMongoConverter) {
+			// In a real app, the instance of MongoConverter is usually
+			// registered as a spring bean, which will make "afterPropertiesSet"
+			// be called automatically. But here, we are not in a spring context
+			// and therefore will need to call it manually since
+			// MappingMongoConverter only updates its internal state of
+			// "conversionService" once this is called.
+			((AbstractMongoConverter) converter).afterPropertiesSet();
+		}
+		return converter;
+	}
 
 	protected static List<Object[]> buildTestCases(ConverterTest<?>... list) {
 		List<Object[]> result = new ArrayList<>();
