@@ -20,6 +20,7 @@ import static java.util.Collections.singleton;
 import static org.junit.Assert.assertThrows;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
@@ -41,7 +42,10 @@ public class YmerMirroredTypesTestBaseTest {
 		YmerMirroredTypesTestBase testInstance = new YmerMirroredTypesTestBase() {
 			@Override
 			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
-				return singleton(new MirroredObjectDefinition<>(TestSpaceClass.class));
+				return List.of(
+						new MirroredObjectDefinition<>(TestSpaceClass.class),
+						new MirroredObjectDefinition<>(ExampleSpaceObjWithInstant.class)
+				);
 			}
 
 			@Override
@@ -58,7 +62,9 @@ public class YmerMirroredTypesTestBaseTest {
 		YmerMirroredTypesTestBase testInstance = new YmerMirroredTypesTestBase() {
 			@Override
 			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
-				return emptySet();
+				return List.of(
+						new MirroredObjectDefinition<>(ExampleSpaceObjWithInstant.class)
+				);
 			}
 
 			@Override
@@ -75,7 +81,9 @@ public class YmerMirroredTypesTestBaseTest {
 		YmerMirroredTypesTestBase testInstance = new YmerMirroredTypesTestBase() {
 			@Override
 			protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {
-				return emptySet();
+				return List.of(
+						new MirroredObjectDefinition<>(ExampleSpaceObjWithInstant.class)
+				);
 			}
 
 			@Override
