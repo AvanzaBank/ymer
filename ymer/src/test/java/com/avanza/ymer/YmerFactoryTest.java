@@ -35,6 +35,7 @@ import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import com.avanza.ymer.MongoDocumentCollectionTest.FakeSpaceObject;
+import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -102,6 +103,7 @@ public class YmerFactoryTest {
 		doReturn(mongoCursor).when(findIterable).iterator();
 		doCallRealMethod().when(findIterable).spliterator();
 		doReturn(findIterable).when(collection).find();
+		doReturn(new MongoNamespace("test.1")).when(collection).getNamespace();
 		return collection;
 	}
 }
