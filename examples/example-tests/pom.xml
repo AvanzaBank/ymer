@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.avanza.ymer</groupId>
 		<artifactId>examples</artifactId>
-		<version>1.4.2-SNAPSHOT</version>
+		<version>1.4.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>example-tests</artifactId>
 	<dependencies>
