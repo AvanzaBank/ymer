@@ -21,7 +21,7 @@ import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 
 class IdValidatorImpl implements MongoDocumentCollection.IdValidator {
-	private static final Logger LOG = LoggerFactory.getLogger(MongoDocumentCollection.class);
+	private static final Logger LOG = LoggerFactory.getLogger(IdValidatorImpl.class);
 	private static final String ID_FIELD = "_id";
 	private final String collectionName;
 
