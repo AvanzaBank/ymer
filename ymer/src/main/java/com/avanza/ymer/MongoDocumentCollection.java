@@ -25,6 +25,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.WriteResult;
 
 /**
  *
@@ -34,9 +35,20 @@ import com.mongodb.DuplicateKeyException;
 final class MongoDocumentCollection implements DocumentCollection {
 
 	private final DBCollection dbCollection;
+	private final IdValidator idValidator;
+
+	interface IdValidator {
+		void validateHasIdField(String operation, DBObject obj);
+		void validateTouchedExistingDocument(String operation, WriteResult result, DBObject obj);
+	}
 
 	public MongoDocumentCollection(DBCollection dbCollection) {
+		this(dbCollection, new IdValidatorImpl(dbCollection.getName()));
+	}
+
+	MongoDocumentCollection(DBCollection dbCollection, IdValidator idValidator) {
 		this.dbCollection = Objects.requireNonNull(dbCollection);
+		this.idValidator = Objects.requireNonNull(idValidator);
 	}
 
 	@Override
@@ -70,21 +82,29 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public void replace(DBObject oldVersion, DBObject newVersion) {
+		final WriteResult result;
+		idValidator.validateHasIdField("replace", newVersion);
 		if (!oldVersion.get("_id").equals(newVersion.get("_id"))) {
 			dbCollection.insert(newVersion);
-            dbCollection.remove(new BasicDBObject("_id", oldVersion.get("_id")));
+			result = dbCollection.remove(new BasicDBObject("_id", oldVersion.get("_id")));
         } else {
-            dbCollection.update(new BasicDBObject("_id", oldVersion.get("_id")), newVersion);
-        }
+			result = dbCollection.update(new BasicDBObject("_id", oldVersion.get("_id")), newVersion);
+		}
+		idValidator.validateTouchedExistingDocument("replace", result, oldVersion);
 	}
 
 	@Override
 	public void update(DBObject newVersion) {
-        dbCollection.save(newVersion);
+		idValidator.validateHasIdField("update", newVersion);
+		// ".save()" might set the id if missing, so keep a copy of the original
+		final DBObject original = new BasicDBObject(newVersion.toMap());
+		WriteResult result = dbCollection.save(newVersion);
+		idValidator.validateTouchedExistingDocument("update", result, original);
 	}
 
 	@Override
 	public void insert(DBObject dbObject) {
+		idValidator.validateHasIdField("insert", dbObject);
         try {
 			dbCollection.insert(dbObject);
 		} catch (DuplicateKeyException e) {
@@ -94,11 +114,16 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public void delete(BasicDBObject dbObject) {
-        dbCollection.remove(dbObject);
+		idValidator.validateHasIdField("delete", dbObject);
+		WriteResult result = dbCollection.remove(dbObject);
+		idValidator.validateTouchedExistingDocument("delete", result, dbObject);
 	}
 
 	@Override
 	public void insertAll(DBObject... dbObjects) {
+		if (dbObjects.length != 0) {
+			idValidator.validateHasIdField("insert", dbObjects[0]);
+		}
         dbCollection.insert(dbObjects); // TODO: test for this method
 	}
 
