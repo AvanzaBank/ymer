@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.avanza.ymer</groupId>
 	<artifactId>ymer-parent</artifactId>
-	<version>2.0.5-SNAPSHOT</version>
+	<version>2.0.9-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>${project.artifactId}</name>
 	<description>${project.artifactId}</description>
@@ -53,6 +53,8 @@
 			<modules>
 				<module>ymer</module>
 				<module>ymer-test</module>
+				<module>ymer-test-junit4</module>
+				<module>ymer-test-junit5</module>
 				<module>examples</module>
 			</modules>
    		</profile>
@@ -61,6 +63,8 @@
 			<modules>
 				<module>ymer</module>
 				<module>ymer-test</module>
+				<module>ymer-test-junit4</module>
+				<module>ymer-test-junit5</module>
 			</modules>
 			<build>
 				<!--  javadoc, source and gpg plugin from above -->
@@ -106,20 +110,20 @@
 		<java.version>11</java.version>
 
 		<spring.version>5.1.7.RELEASE</spring.version>
-		<spring.groupId>org.springframework</spring.groupId>
-		<spring-data-mongodb.version>2.0.14.RELEASE</spring-data-mongodb.version>
+		<spring-data-mongodb.version>2.1.8.RELEASE</spring-data-mongodb.version>
 
-		<slf4j.version>1.7.30</slf4j.version>
-		<log4j.version>2.14.0</log4j.version>
+		<slf4j.version>1.7.32</slf4j.version>
+		<log4j.version>2.14.1</log4j.version>
 		<gigaspaces.version>14.5.0</gigaspaces.version>
 		<jsr305.version>3.0.2</jsr305.version>
-		<junit.version>4.13.1</junit.version>
+		<junit.version>4.13.2</junit.version>
+		<junit-jupiter.version>5.7.2</junit-jupiter.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<mockito.version>3.8.0</mockito.version>
+		<mockito.version>3.12.4</mockito.version>
 		<gs-test.version>1.0.1</gs-test.version>
-		<mongo-java-driver.version>3.4.3</mongo-java-driver.version>
-		<testcontainers.version>1.16.0</testcontainers.version>
-		<awaitility.version>3.1.6</awaitility.version>
+		<mongo-java-driver.version>3.8.2</mongo-java-driver.version>
+		<testcontainers.version>1.16.2</testcontainers.version>
+		<awaitility.version>4.1.0</awaitility.version>
 
 		<!-- Maven plugins -->
 		<maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
@@ -131,7 +135,7 @@
 		<maven-install-plugin.version>3.0.0-M1</maven-install-plugin.version>
 		<maven-release-plugin.version>3.0.0-M1</maven-release-plugin.version>
 		<maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
-		<maven-javadoc-plugin.version>3.2.0</maven-javadoc-plugin.version>
+		<maven-javadoc-plugin.version>2.10.4</maven-javadoc-plugin.version>
 		<maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
 		<maven-source-plugin.version>3.2.0</maven-source-plugin.version>
 		<maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
@@ -145,7 +149,7 @@
 		<license-maven-plugin.version>2.11</license-maven-plugin.version>
 		<maven-scm-publish-plugin.version>3.0.0</maven-scm-publish-plugin.version>
 		<nexus-staging-maven-plugin.version>1.6.7</nexus-staging-maven-plugin.version>
-		<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+		<maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
 	</properties>
 	
 	<dependencyManagement>
@@ -215,19 +219,22 @@
 				<version>${hamcrest.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.hamcrest</groupId>
-				<artifactId>hamcrest-library</artifactId>
-				<version>${hamcrest.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.hamcrest</groupId>
-				<artifactId>hamcrest-core</artifactId>
-				<version>${hamcrest.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>${junit.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.hamcrest</groupId>
+						<artifactId>hamcrest-core</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit-jupiter.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.avanza.gs</groupId>
@@ -517,7 +524,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<includes>
-						<include>**/Test*.java</include>
 						<include>**/*Test.java</include>
 						<include>**/*TestCase.java</include>
 						<include>**/*Tests.java</include>

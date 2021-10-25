@@ -18,9 +18,9 @@ package example.mirror;
 import java.util.Collection;
 
 import com.avanza.ymer.MirroredObjectDefinition;
-import com.avanza.ymer.YmerMirroredTypesTestBase;
+import com.avanza.ymer.test.YmerMirroredTypesTestBase;
 
-public class ExampleMirroredTypesTest extends YmerMirroredTypesTestBase {
+class ExampleMirroredTypesTest extends YmerMirroredTypesTestBase {
 
 	@Override
 	protected Collection<MirroredObjectDefinition<?>> mirroredObjectDefinitions() {

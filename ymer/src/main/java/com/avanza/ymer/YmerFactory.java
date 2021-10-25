@@ -19,7 +19,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -28,11 +31,14 @@ import com.avanza.ymer.plugin.Plugin;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.MongoDatabase;
+
 /**
  * @author Elias Lindholm (elilin)
  *
  */
 public final class YmerFactory {
+	private static final Logger LOG = LoggerFactory.getLogger(YmerFactory.class);
 
 	private MirrorExceptionListener exceptionListener = (e, failedOperation, failedObjects) -> {};
 	private ReadPreference readPreference = ReadPreference.primary();
@@ -42,15 +48,30 @@ public final class YmerFactory {
 
 	private final MirroredObjects mirroredObjects;
 	private final MongoConverter mongoConverter;
-	private final MongoDbFactory mongoDbFactory;
+	private final Supplier<MongoDatabase> mongoDatabaseSupplier;
 
+	public YmerFactory(Supplier<MongoDatabase> mongoDatabaseSupplier,
+					   MongoConverter mongoConverter,
+					   Collection<MirroredObjectDefinition<?>> definitions) {
+		this.mongoDatabaseSupplier = mongoDatabaseSupplier;
+		this.mongoConverter = mongoConverter;
+		this.mirroredObjects = new MirroredObjects(definitions.stream(), MirroredObjectDefinitionsOverride.fromSystemProperties());
+		if (mirroredObjects.getMirroredTypes().isEmpty()) {
+			LOG.warn(""
+					+ "The list of mirrored object types is empty. This is "
+					+ "almost always an error since either the app wants to "
+					+ "use Ymer to store or load documents, in which case "
+					+ "there should be at least one type of mirrored object, "
+					+ "or the app does not wish to store or load documents, in "
+					+ "which case it should not instantiate YmerFactory."
+			);
+		}
+	}
 
 	public YmerFactory(MongoDbFactory mongoDbFactory,
 					   MongoConverter mongoConverter,
 					   Collection<MirroredObjectDefinition<?>> definitions) {
-		this.mongoDbFactory = mongoDbFactory;
-		this.mongoConverter = mongoConverter;
-		this.mirroredObjects = new MirroredObjects(definitions.stream(), MirroredObjectDefinitionsOverride.fromSystemProperties());
+		this(mongoDbFactory::getDb, mongoConverter, definitions);
 	}
 
 	/**
@@ -112,7 +133,7 @@ public final class YmerFactory {
 	}
 
 	private SpaceMirrorContext createSpaceMirrorContext() {
-		DocumentDb documentDb = DocumentDb.mongoDb(this.mongoDbFactory.getDb(), readPreference);
+		DocumentDb documentDb = DocumentDb.mongoDb(mongoDatabaseSupplier.get(), readPreference);
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(mongoConverter);
 		// Set the event publisher to null to avoid deadlocks when loading data in parallel
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {

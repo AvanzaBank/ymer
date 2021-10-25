@@ -32,7 +32,9 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 
 /**
  *
@@ -42,9 +44,21 @@ import com.mongodb.client.model.UpdateOptions;
 final class MongoDocumentCollection implements DocumentCollection {
 
 	private final MongoCollection<Document> collection;
+	private final IdValidator idValidator;
+
+	interface IdValidator {
+		void validateHasIdField(String operation, Document obj);
+		void validateUpdatedExistingDocument(String operation, UpdateResult result, Document obj);
+		void validateDeletedExistingDocument(String operation, DeleteResult result, Document obj);
+	}
 
 	public MongoDocumentCollection(MongoCollection<Document> collection) {
+		this(collection, new IdValidatorImpl(collection.getNamespace().getCollectionName()));
+	}
+
+	MongoDocumentCollection(MongoCollection<Document> collection, IdValidator idValidator) {
 		this.collection = Objects.requireNonNull(collection);
+		this.idValidator = Objects.requireNonNull(idValidator);
 	}
 
 	@Override
@@ -79,24 +93,30 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public void replace(Document oldVersion, Document newVersion) {
+		idValidator.validateHasIdField("replace", newVersion);
 		if (!Objects.equals(oldVersion.get("_id"), newVersion.get("_id"))) {
 			insert(newVersion);
-			collection.deleteOne(new Document("_id", oldVersion.get("_id")));
+			DeleteResult deleteResult = collection.deleteOne(new Document("_id", oldVersion.get("_id")));
+			idValidator.validateDeletedExistingDocument("replace", deleteResult, oldVersion);
 		} else {
-			collection.replaceOne(Filters.eq("_id", oldVersion.get("_id")),
-								 newVersion);
+			UpdateResult updateResult = collection.replaceOne(Filters.eq("_id", oldVersion.get("_id")),
+					newVersion);
+			idValidator.validateUpdatedExistingDocument("replace", updateResult, oldVersion);
 		}
 	}
 
 	@Override
 	public void update(Document newVersion) {
-		collection.replaceOne(Filters.eq("_id", newVersion.get("_id")),
+		idValidator.validateHasIdField("update", newVersion);
+		UpdateResult updateResult = collection.replaceOne(Filters.eq("_id", newVersion.get("_id")),
 				newVersion,
-				new UpdateOptions().upsert(true));
+				new ReplaceOptions().upsert(true));
+		idValidator.validateUpdatedExistingDocument("update", updateResult, newVersion);
 	}
 
 	@Override
 	public void insert(Document document) {
+		idValidator.validateHasIdField("insert", document);
 		try {
 			collection.insertOne(document);
 		} catch (MongoWriteException e) {
@@ -110,11 +130,16 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public void delete(Document document) {
-		collection.deleteOne(document);
+		idValidator.validateHasIdField("delete", document);
+		DeleteResult deleteResult = collection.deleteOne(document);
+		idValidator.validateDeletedExistingDocument("delete", deleteResult, document);
 	}
 
 	@Override
 	public void insertAll(Document... documents) {
+		if (documents.length != 0) {
+			idValidator.validateHasIdField("insert", documents[0]);
+		}
 		collection.insertMany(Arrays.asList(documents)); // TODO: test for this method
 	}
 
