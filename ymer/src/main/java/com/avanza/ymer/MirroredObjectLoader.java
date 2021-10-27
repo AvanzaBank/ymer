@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.plugin.PostReadProcessor;
@@ -90,7 +91,7 @@ final class MirroredObjectLoader<T> {
                     .filter(index -> index.isIndexForFields(List.of(DOCUMENT_INSTANCE_ID)))
                     .anyMatch(index -> index.getName().endsWith(expectedSuffix));
             if (indexExists) {
-                Query query = query(where(DOCUMENT_INSTANCE_ID).is(contextProperties.getInstanceId()));
+                Query query = query(new Criteria().orOperator(where(DOCUMENT_INSTANCE_ID).is(contextProperties.getInstanceId()), where(DOCUMENT_INSTANCE_ID).exists(false)));
                 return documentCollection.findByQuery(query);
             } else {
                 log.warn("Configured to load using persisted instance id, but index name indicates number of partitions do not match {}. Will not use instance id when loading.",
