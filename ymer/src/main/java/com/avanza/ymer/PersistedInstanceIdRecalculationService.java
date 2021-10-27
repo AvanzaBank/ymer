@@ -76,8 +76,8 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 		} else {
 			String indexName = "_index" + DOCUMENT_INSTANCE_ID + "_numberOfInstances" + indexSuffix;
 			log.info("Step 3/3\tCreating index {}", indexName);
-			IndexOptions background = new IndexOptions().name(indexName).background(true);
-			collection.createIndex(new Document(DOCUMENT_INSTANCE_ID, 1), background);
+			IndexOptions options = new IndexOptions().name(indexName).background(true);
+			collection.createIndex(new Document(DOCUMENT_INSTANCE_ID, 1), options);
 			log.info("Step 3/3\tDone creating index");
 		}
 	}
