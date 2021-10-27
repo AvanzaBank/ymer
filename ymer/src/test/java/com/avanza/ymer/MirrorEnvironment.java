@@ -18,9 +18,8 @@ package com.avanza.ymer;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.unset;
 
-import java.util.function.Consumer;
-
 import org.bson.Document;
+import org.junit.rules.ExternalResource;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -37,21 +36,20 @@ import com.mongodb.client.MongoDatabase;
  * @author Elias Lindholm (elilin)
  *
  */
-public class MirrorEnvironment implements AutoCloseable{
+public class MirrorEnvironment extends ExternalResource {
 
 	public static final String TEST_MIRROR_DB_NAME = "mirror_test_db";
-	private final MongoDBContainer mongoDBContainer;
+	private final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
 	private final MongoClient mongoClient;
 
 	public MirrorEnvironment() {
-		mongoDBContainer = new MongoDBContainer("mongo:3.6");
 		mongoDBContainer.start();
 
 		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
 	}
 
 	@Override
-	public void close() {
+	protected void after() {
 		mongoDBContainer.stop();
 	}
 
@@ -64,13 +62,9 @@ public class MirrorEnvironment implements AutoCloseable{
 		return this.mongoClient.getDatabase(TEST_MIRROR_DB_NAME);
 	}
 
-	public void dropAllMongoCollections() {
-		getMongoDatabase().listCollectionNames()
-						  .forEach((Consumer<? super String>) this::dropCollection);
-	}
+	public void reset() {
+		getMongoDatabase().drop();
 
-	private void dropCollection(String collectionName) {
-		getMongoDatabase().getCollection(collectionName).drop();
 	}
 
 	public ApplicationContext getMongoClientContext() {

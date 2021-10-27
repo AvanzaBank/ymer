@@ -28,15 +28,11 @@ import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
-import org.testcontainers.containers.MongoDBContainer;
 
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 
 /**
  *
@@ -46,28 +42,19 @@ import com.mongodb.client.MongoDatabase;
 public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	@ClassRule
-	public static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+	public static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
-	private static final String DBNAME = "testdb";
 	private static final String COLLECTION_NAME = "testcollection";
-
-	private final MongoClient mongoClient;
-
-	public MongoDocumentCollectionTest() {
-		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
-	}
 
 	@After
 	public void cleanDatabase() {
-		mongoClient.getDatabase(DBNAME).drop();
+		mirrorEnvironment.reset();
 	}
 
 	@Override
 	protected DocumentCollection createEmptyCollection() {
-		MongoDatabase database = mongoClient.getDatabase(DBNAME);
-		database.drop();
-
-		MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
+		MongoCollection<Document> collection = mirrorEnvironment.getMongoTemplate().getCollection(COLLECTION_NAME);
+		collection.drop();
 
 		return new MongoDocumentCollection(collection);
 	}

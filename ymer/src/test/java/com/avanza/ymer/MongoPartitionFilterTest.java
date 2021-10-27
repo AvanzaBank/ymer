@@ -23,31 +23,25 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.testcontainers.containers.MongoDBContainer;
 
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 
 public class MongoPartitionFilterTest {
 
-	@Rule
-	public final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+	@ClassRule
+	public static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
 	private final MirroredObject<TestSpaceObject> mirroredObject = 
 		MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-
-	private MongoClient mongoClient;
-
-	@Before
-	public void setUp() {
-		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
+	@After
+	public void tearDown() {
+		mirrorEnvironment.reset();
 	}
 
 	@Test
@@ -56,7 +50,7 @@ public class MongoPartitionFilterTest {
 		final int ID_LOWER_BOUND = -100;
 		final int ID_UPPER_BOUND = 100;
 
-		MongoCollection<Document> collection = mongoClient.getDatabase("_test")
+		MongoCollection<Document> collection = mirrorEnvironment.getMongoTemplate()
 														  .getCollection("testCollection");
 		for (int i = ID_LOWER_BOUND; i < ID_UPPER_BOUND; i++) {
 			collection.insertOne(new Document(Map.of("_id", i,

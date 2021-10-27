@@ -37,7 +37,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.hamcrest.Matcher;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -69,7 +68,7 @@ public class YmerMirrorIntegrationTest {
 											   	     .configure();
 
 	@ClassRule
-	public static TestRule spaces = RuleChain.outerRule(pu).around(mirrorPu);
+	public static TestRule spaces = RuleChain.outerRule(mirrorEnvironment).around(pu).around(mirrorPu);
 
 	@Before
 	public void setUp() {
@@ -81,13 +80,8 @@ public class YmerMirrorIntegrationTest {
 
 	@After
 	public void cleanup() {
-		mirrorEnvironment.dropAllMongoCollections();
+		mirrorEnvironment.reset();
 		gigaSpace.clear(null);
-	}
-
-	@AfterClass
-	public static void shutdown() {
-		mirrorEnvironment.close();
 	}
 
 	@Test

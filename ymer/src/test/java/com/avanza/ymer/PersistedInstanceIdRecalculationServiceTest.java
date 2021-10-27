@@ -26,43 +26,43 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import org.bson.Document;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.testcontainers.containers.MongoDBContainer;
 
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
-import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 
 public class PersistedInstanceIdRecalculationServiceTest {
 
 	private static final String COLLECTION_NAME = "test_collection";
 
 	@ClassRule
-	public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+	public static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
-	private final MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
-	private final MongoDatabase database = mongoDbFactory.getDb();
-	private final MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
+	private MongoCollection<Document> collection;
 
 	private final PersistedInstanceIdRecalculationService target;
 
 	public PersistedInstanceIdRecalculationServiceTest() {
-		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mongoDbFactory);
+		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
 		SpaceSynchronizationEndpoint spaceSynchronizationEndpoint = testSpaceMirrorFactory.createSpaceSynchronizationEndpoint();
 		target = ((YmerSpaceSynchronizationEndpoint) spaceSynchronizationEndpoint).getPersistedInstanceIdRecalculationService();
 	}
 
 	@Before
 	public void setUp() {
+		collection = mirrorEnvironment.getMongoTemplate().getCollection(COLLECTION_NAME);
 		List<Document> documents = IntStream.rangeClosed(1, 1_000)
 				.mapToObj(this::createDocument)
 				.collect(toList());
 		collection.insertMany(documents);
+	}
+
+	@After
+	public void tearDown() {
+		mirrorEnvironment.reset();
 	}
 
 	@Test

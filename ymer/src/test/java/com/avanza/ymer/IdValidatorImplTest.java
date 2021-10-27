@@ -23,31 +23,31 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.bson.Document;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.testcontainers.containers.MongoDBContainer;
-
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 
 
 public class IdValidatorImplTest {
 
-	@Rule
-	public final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+	@ClassRule
+	public static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
 	private final IdValidatorImpl idValidator = spy(new IdValidatorImpl("collectionName"));
 	private DocumentCollection collection;
 
 	@Before
 	public void beforeEachTest() {
-		MongoClient mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
 		collection = new MongoDocumentCollection(
-				mongoClient.getDatabase("db-name")
-						.getCollection("collectionName"),
+				mirrorEnvironment.getMongoTemplate().getCollection("collectionName"),
 				idValidator
 		);
+	}
+
+	@After
+	public void tearDown() {
+		mirrorEnvironment.reset();
 	}
 
 	@Test

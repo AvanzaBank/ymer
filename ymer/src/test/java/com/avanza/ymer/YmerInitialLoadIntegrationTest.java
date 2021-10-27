@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.After;
-import org.junit.AfterClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -37,22 +37,18 @@ public class YmerInitialLoadIntegrationTest {
 	private static final MirroredObject<TestSpaceOtherObject> mirroredOtherDocument = TestSpaceMirrorObjectDefinitions.TEST_SPACE_OTHER_OBJECT
 			.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-	public static MirrorEnvironment mirrorEnv = new MirrorEnvironment();
-	
-	public RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
+	@ClassRule
+	public static final MirrorEnvironment mirrorEnv = new MirrorEnvironment();
+
+	private final RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
 									   .numberOfPrimaries(1)
 									   .startAsync(false)
 									   .parentContext(mirrorEnv.getMongoClientContext())
 									   .configure();
 	@After
 	public void cleanup() throws Exception {
-		mirrorEnv.dropAllMongoCollections();
+		mirrorEnv.reset();
 		pu.close();
-	}
-
-	@AfterClass
-	public static void shutdown() {
-		mirrorEnv.close();
 	}
 
 	@Test
