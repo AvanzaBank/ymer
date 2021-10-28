@@ -15,9 +15,11 @@
  */
 package com.avanza.ymer;
 
+import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static java.util.Spliterators.spliteratorUnknownSize;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -33,6 +35,7 @@ import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -78,7 +81,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public Document findById(Object id) {
-		return collection.find(new Document("_id", id)).first();
+		return collection.find(Filters.eq(id)).first();
 	}
 
 	@Override
@@ -96,10 +99,10 @@ final class MongoDocumentCollection implements DocumentCollection {
 		idValidator.validateHasIdField("replace", newVersion);
 		if (!Objects.equals(oldVersion.get("_id"), newVersion.get("_id"))) {
 			insert(newVersion);
-			DeleteResult deleteResult = collection.deleteOne(new Document("_id", oldVersion.get("_id")));
+			DeleteResult deleteResult = collection.deleteOne(Filters.eq(oldVersion.get("_id")));
 			idValidator.validateDeletedExistingDocument("replace", deleteResult, oldVersion);
 		} else {
-			UpdateResult updateResult = collection.replaceOne(Filters.eq("_id", oldVersion.get("_id")),
+			UpdateResult updateResult = collection.replaceOne(Filters.eq(oldVersion.get("_id")),
 					newVersion);
 			idValidator.validateUpdatedExistingDocument("replace", updateResult, oldVersion);
 		}
@@ -108,10 +111,19 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public void update(Document newVersion) {
 		idValidator.validateHasIdField("update", newVersion);
-		UpdateResult updateResult = collection.replaceOne(Filters.eq("_id", newVersion.get("_id")),
+		UpdateResult updateResult = collection.replaceOne(Filters.eq(newVersion.get("_id")),
 				newVersion,
 				new ReplaceOptions().upsert(true));
 		idValidator.validateUpdatedExistingDocument("update", updateResult, newVersion);
+	}
+
+	@Override
+	public void updateById(Object id, Map<String, Object> fieldsAndValuesToSet) {
+		fieldsAndValuesToSet.entrySet().stream().map(entry -> Updates.set(entry.getKey(), entry.getValue())).reduce(Updates::combine)
+				.ifPresent(updates -> {
+					UpdateResult updateResult = collection.updateOne(Filters.eq(id), updates);
+					idValidator.validateUpdatedExistingDocument("update", updateResult, new Document("_id", id));
+				});
 	}
 
 	@Override
@@ -120,7 +132,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 		try {
 			collection.insertOne(document);
 		} catch (MongoWriteException e) {
-			if(e.getMessage().contains("E11000")) { // duplicate key error
+			if(e.getError().getCategory() == DUPLICATE_KEY) {
 				throw new DuplicateDocumentKeyException(e.getMessage());
 			} else {
 				throw e;

@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,6 +33,7 @@ import static org.springframework.data.domain.Sort.Direction.ASC;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
@@ -261,6 +263,24 @@ public abstract class DocumentCollectionContract {
 
 		assertThat(documentCollection.findAll(), hasCount(1));
 		assertEquals(d1, documentCollection.findAll().iterator().next());
+	}
+
+	@Test
+	public void updateFieldById() throws Exception {
+		String id = "1";
+		Document document = new Document();
+		document.put("_id", id);
+		document.put("first_field", "a");
+		document.put("second_field", "b");
+		documentCollection.insert(document);
+		document.put("first_field", "AA");
+		documentCollection.update(document);
+
+		documentCollection.updateById(id, Map.of("second_field", "BB"));
+
+		Document updatedDocument = documentCollection.findById(id);
+		assertThat(updatedDocument, hasEntry("first_field", "AA"));
+		assertThat(updatedDocument, hasEntry("second_field", "BB"));
 	}
 
 	@Test

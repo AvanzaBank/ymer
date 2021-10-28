@@ -41,7 +41,7 @@ public class PersistedInstanceIdRecalculationServiceTest {
 	@ClassRule
 	public static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
-	private MongoCollection<Document> collection;
+	private final MongoCollection<Document> collection = mirrorEnvironment.getMongoTemplate().getCollection(COLLECTION_NAME);
 
 	private final PersistedInstanceIdRecalculationService target;
 
@@ -53,7 +53,6 @@ public class PersistedInstanceIdRecalculationServiceTest {
 
 	@Before
 	public void setUp() {
-		collection = mirrorEnvironment.getMongoTemplate().getCollection(COLLECTION_NAME);
 		List<Document> documents = IntStream.rangeClosed(1, 1_000)
 				.mapToObj(this::createDocument)
 				.collect(toList());

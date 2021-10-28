@@ -21,6 +21,7 @@ import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -64,8 +65,12 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 						log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
 					}
 				})
-				.peek(document -> document.put(DOCUMENT_INSTANCE_ID, getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances)))
-				.forEach(collection::update);
+				.forEach(document -> {
+					Object id = document.get("_id");
+					int instanceId = getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
+					collection.updateById(id, Map.of(DOCUMENT_INSTANCE_ID, instanceId));
+				});
+
 		log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
 
 		boolean indexExists = collection.getIndexes()

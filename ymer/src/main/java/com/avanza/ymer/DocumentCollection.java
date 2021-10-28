@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.bson.Document;
@@ -63,6 +64,11 @@ interface DocumentCollection {
 	 * Updates a given document (identified by id) in the underlying mongo collection. <p>
 	 */
 	void update(Document document);
+
+	/**
+	 * Updates a given document, identified by id, setting only the specified fields.
+	 */
+	void updateById(Object id, Map<String, Object> fieldsAndValuesToSet);
 
 	/**
 	 * Inserts the given object into the underlying mongo collection. <p>
