@@ -27,9 +27,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
+import org.assertj.core.matcher.AssertionMatcher;
 import org.bson.Document;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -37,12 +38,12 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+
 /**
  * Base class for testing that objects may be marshalled to a mongo document and
  * then unmarshalled back into an object. <p>
  *
  * @author Elias Lindholm (elilin)
- *
  */
 @RunWith(Parameterized.class)
 public abstract class YmerConverterTestBase {
@@ -150,20 +151,25 @@ public abstract class YmerConverterTestBase {
 
 		/**
 		 * Creates a converter test that serializes and deserializes the given space-object.
-		 *
+		 * <p>
 		 * Matching for determining if deserialized object is 'correct' will be made using
-		 * Matchers.samePropertyValuesAs(spaceObject).
-		 *
+		 * AssertJ recursive comparison equals.
 		 */
 		public ConverterTest(T spaceObject) {
-			this(spaceObject, Matchers.samePropertyValuesAs(spaceObject));
+			this(spaceObject, new AssertionMatcher<>() {
+				@Override
+				public void assertion(T deserializedObject) throws AssertionError {
+					Assertions.assertThat(deserializedObject)
+							.usingRecursiveComparison()
+							.isEqualTo(spaceObject);
+				}
+			});
 		}
 
 		/**
 		 * Creates a converter test that serializes and deserializes the given space-object.
-		 *
-		 * Uses given matcher to check if deserialized version is correct. <p>
-		 *
+		 * <p>
+		 * Uses given matcher to check if deserialized version is correct.
 		 */
 		public ConverterTest(T spaceObject, Matcher<T> matcher) {
 			this.spaceObject = spaceObject;

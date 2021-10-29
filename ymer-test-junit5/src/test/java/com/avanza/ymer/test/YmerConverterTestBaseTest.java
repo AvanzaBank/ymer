@@ -15,11 +15,14 @@
  */
 package com.avanza.ymer.test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,10 +35,13 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.DocumentPatch;
 import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.support.JavaLocalDateReadConverter;
+import com.avanza.ymer.support.JavaLocalDateWriteConverter;
 import com.avanza.ymer.test.YmerConverterTestBase.ConverterTest;
 import com.gigaspaces.annotation.pojo.SpaceId;
 
@@ -68,6 +74,38 @@ class YmerConverterTestBaseTest {
 		final FakeTestSuite test1 = new FakeTestSuite(
 				new ConverterTest<>(new TestSpaceObject("foo", "message"), not(anything())));
 		assertFails(() -> test1.serializationTest(test1.converterTest));
+	}
+
+	@Test
+	void nestedSpaceObjectSerializationComparisonSucceeds() {
+		final TestNestedSpaceClass nestedObject = new TestNestedSpaceClass();
+		nestedObject.setId("test");
+		nestedObject.setNestedClass(new TestNestedSpaceClass.NestedClass(123, LocalDate.parse("2021-01-01")));
+
+		final FakeTestSuiteWithNestedObject test1 = new FakeTestSuiteWithNestedObject(new ConverterTest<>(nestedObject), List.of(
+				new JavaLocalDateReadConverter(),
+				new JavaLocalDateWriteConverter()
+		));
+		assertPasses(() -> test1.serializationTest(test1.converterTest));
+	}
+
+	@Test
+	void nestedSpaceObjectSerializationComparisonFails() {
+		final TestNestedSpaceClass nestedObject = new TestNestedSpaceClass();
+		nestedObject.setId("test");
+		nestedObject.setNestedClass(new TestNestedSpaceClass.NestedClass(123, LocalDate.parse("2021-01-01")));
+
+		final FakeTestSuiteWithNestedObject test1 = new FakeTestSuiteWithNestedObject(new ConverterTest<>(nestedObject), List.of(
+				new JavaLocalDateReadConverter(),
+				new JavaLocalDateWriteConverter() {
+					// make sure conversion fails to convert object properly
+					@Override
+					public String convert(LocalDate localDate) {
+						return "2021-12-31";
+					}
+				}
+		));
+		assertFailsWithAssertionErrorContaining(() -> test1.serializationTest(test1.converterTest), "field/property 'nestedClass.date' differ");
 	}
 
 	@Test
@@ -182,6 +220,30 @@ class YmerConverterTestBaseTest {
 
 	}
 
+	static class FakeTestSuiteWithNestedObject extends FakeYmerConverterTestBase {
+
+		private final List<?> mongoConverters;
+
+		public FakeTestSuiteWithNestedObject(ConverterTest<?> testCase, List<?> mongoConverters) {
+			super(testCase);
+			this.mongoConverters = mongoConverters;
+		}
+
+		@Override
+		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
+			DocumentPatch[] patches = {};
+			return List.of(MirroredObjectDefinition.create(TestNestedSpaceClass.class).documentPatches(patches));
+		}
+
+		@Override
+		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+			MappingMongoConverter mongoConverter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
+			mongoConverter.setCustomConversions(new MongoCustomConversions(mongoConverters));
+			return mongoConverter;
+		}
+
+	}
+
 	static class TestSpaceObjectWithEmptyCollection {
 		@Id
 		String id;
@@ -248,8 +310,48 @@ class YmerConverterTestBaseTest {
 		}
 	}
 
+	static class TestNestedSpaceClass {
+		@Id
+		String id;
+
+		private NestedClass nestedClass;
+
+		@SpaceId
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public NestedClass getNestedClass() {
+			return nestedClass;
+		}
+
+		public void setNestedClass(NestedClass nestedClass) {
+			this.nestedClass = nestedClass;
+		}
+
+		static class NestedClass {
+			private final int id;
+			private final LocalDate date;
+
+			public NestedClass(int id, LocalDate date) {
+				this.id = id;
+				this.date = date;
+			}
+		}
+
+	}
+
 	private static void assertFails(Executable testRun) {
 		assertThrows(Throwable.class, testRun);
+	}
+
+	private static void assertFailsWithAssertionErrorContaining(Executable testRun, String messageContaining) {
+		AssertionError ae = assertThrows(AssertionError.class, testRun);
+		assertThat(ae.getMessage(), containsString(messageContaining));
 	}
 
 	private static void assertPasses(Executable testRun) {
@@ -257,6 +359,8 @@ class YmerConverterTestBaseTest {
 			testRun.execute();
 		} catch (AssertionError e) {
 			fail("Expected test to pass, but failed with: " + e.getMessage());
+		} catch (RuntimeException e) {
+			throw e;
 		} catch (Throwable e) {
 			fail("Unexpected exception in test: " + e.getMessage());
 		}
