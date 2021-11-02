@@ -124,6 +124,7 @@
 		<mongo-java-driver.version>3.8.2</mongo-java-driver.version>
 		<mongo-java-server.version>1.38.0</mongo-java-server.version>
 		<awaitility.version>4.1.0</awaitility.version>
+		<assertj.version>3.21.0</assertj.version>
 
 		<!-- Maven plugins -->
 		<maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
@@ -217,6 +218,11 @@
 				<groupId>org.hamcrest</groupId>
 				<artifactId>hamcrest</artifactId>
 				<version>${hamcrest.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>${assertj.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>junit</groupId>
