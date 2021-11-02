@@ -16,6 +16,7 @@
 package com.avanza.ymer.test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,10 +26,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
+import org.assertj.core.matcher.AssertionMatcher;
 import org.bson.Document;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -86,7 +87,7 @@ public abstract class YmerConverterTestBase {
 		Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
 		Document recreatedBasicDbObject = documentConverter.convertToBsonDocument(reCreated);
 		assertNotNull(recreatedBasicDbObject.get("_id"), "No id field defined. @SpaceId annotations are ignored by persistence framework, use @Id for id field (Typically the same as is annotated with @SpaceId)");
-		Assertions.assertEquals(basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
+		assertEquals(basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
 	}
 
 	@ParameterizedTest
@@ -148,10 +149,17 @@ public abstract class YmerConverterTestBase {
 		 * Creates a converter test that serializes and deserializes the given space-object.
 		 * <p>
 		 * Matching for determining if deserialized object is 'correct' will be made using
-		 * Matchers.samePropertyValuesAs(spaceObject).
+		 * AssertJ recursive comparison equals.
 		 */
 		public ConverterTest(T spaceObject) {
-			this(spaceObject, Matchers.samePropertyValuesAs(spaceObject));
+			this(spaceObject, new AssertionMatcher<>() {
+				@Override
+				public void assertion(T deserializedObject) throws AssertionError {
+					Assertions.assertThat(deserializedObject)
+							.usingRecursiveComparison()
+							.isEqualTo(spaceObject);
+				}
+			});
 		}
 
 		/**

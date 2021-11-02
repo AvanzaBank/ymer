@@ -1,5 +1,5 @@
 # Ymer Framework
-[![][travis img]][travis]
+[![][build img]][build]
 [![][maven img]][maven]
 [![][license img]][license]
 [![Average time to resolve an issue](https://isitmaintained.com/badge/resolution/AvanzaBank/ymer.svg)](https://isitmaintained.com/project/AvanzaBank/Ymer "Average time to resolve an issue")
@@ -243,8 +243,8 @@ The `junit5` test support is packed in a distinct jar using the following coordi
 ## License
 The Ymer Framework is released under version 2.0 of the [Apache License](https://www.apache.org/licenses/LICENSE-2.0).
 
-[travis]:https://travis-ci.org/AvanzaBank/ymer
-[travis img]:https://api.travis-ci.org/AvanzaBank/ymer.svg
+[build]:https://github.com/AvanzaBank/ymer/actions/workflows/build.yml
+[build img]:https://github.com/AvanzaBank/ymer/actions/workflows/build.yml/badge.svg
 
 [release]:https://github.com/avanzabank/ymer/releases
 [release img]:https://img.shields.io/github/release/avanzabank/ymer.svg
