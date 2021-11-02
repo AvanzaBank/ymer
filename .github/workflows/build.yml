@@ -52,10 +52,10 @@ jobs:
       - name: Compile
         run: mvn -T 1C --batch-mode -Dstyle.color=always --fail-at-end -DskipTests package
       - name: Test
-        if: ${{ success() }}
+        if: success()
         run: mvn --batch-mode -Dstyle.color=always -Dmaven.test.failure.ignore=true verify
       - name: Publish Test Report
-        if: ${{ success() }}
+        if: success()
         uses: scacap/action-surefire-report@v1
         with:
           fail_on_test_failures: true
