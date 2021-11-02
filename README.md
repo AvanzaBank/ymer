@@ -243,7 +243,7 @@ The `junit5` test support is packed in a distinct jar using the following coordi
 ## License
 The Ymer Framework is released under version 2.0 of the [Apache License](https://www.apache.org/licenses/LICENSE-2.0).
 
-[build]:ttps://github.com/AvanzaBank/ymer/actions/workflows/build.yml
+[build]:https://github.com/AvanzaBank/ymer/actions/workflows/build.yml
 [build img]:https://github.com/AvanzaBank/ymer/actions/workflows/build.yml/badge.svg
 
 [release]:https://github.com/avanzabank/ymer/releases
