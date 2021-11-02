@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch'
+        required: true
+        default: 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      - name: Compile
+        run: mvn --batch-mode -Dstyle.color=always --fail-at-end -DskipTests package
+      - name: Test
+        if: ${{ success() }}
+        run: mvn --batch-mode -Dstyle.color=always -Dmaven.test.failure.ignore=true verify
+      - name: Publish Test Report
+        if: ${{ success() }}
+        uses: scacap/action-surefire-report@v1
+        with:
+          fail_on_test_failures: true
+          fail_if_no_tests: false
