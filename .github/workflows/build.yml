@@ -23,6 +23,7 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'maven'
       - name: Maven setup
         uses: s4u/maven-settings-action@v2.4.1
         with:
@@ -49,7 +50,7 @@ jobs:
               "blocked": false
             }]
       - name: Compile
-        run: mvn --batch-mode -Dstyle.color=always --fail-at-end -DskipTests package
+        run: mvn -T 1C --batch-mode -Dstyle.color=always --fail-at-end -DskipTests package
       - name: Test
         if: ${{ success() }}
         run: mvn --batch-mode -Dstyle.color=always -Dmaven.test.failure.ignore=true verify
