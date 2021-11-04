@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.time.Instant;
 
 import org.springframework.data.annotation.Id;
+
 import com.gigaspaces.annotation.pojo.SpaceClass;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;

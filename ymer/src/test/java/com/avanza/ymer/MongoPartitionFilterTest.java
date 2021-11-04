@@ -17,36 +17,31 @@ package com.avanza.ymer;
 
 import static org.junit.Assert.assertTrue;
 
-import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import org.bson.Document;
+import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Test;
+
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
-import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
-
-
 public class MongoPartitionFilterTest {
+
+	@ClassRule
+	public static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
 	private final MirroredObject<TestSpaceObject> mirroredObject = 
 		MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-	private final MongoServer mongoServer;
-	private final MongoClient mongoClient;
-
-	public MongoPartitionFilterTest() {
-		mongoServer = new MongoServer(new MemoryBackend());
-		InetSocketAddress serverAddress = mongoServer.bind();
-		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+	@After
+	public void tearDown() {
+		mirrorEnvironment.reset();
 	}
 
 	@Test
@@ -55,7 +50,7 @@ public class MongoPartitionFilterTest {
 		final int ID_LOWER_BOUND = -100;
 		final int ID_UPPER_BOUND = 100;
 
-		MongoCollection<Document> collection = mongoClient.getDatabase("_test")
+		MongoCollection<Document> collection = mirrorEnvironment.getMongoTemplate()
 														  .getCollection("testCollection");
 		for (int i = ID_LOWER_BOUND; i < ID_UPPER_BOUND; i++) {
 			collection.insertOne(new Document(Map.of("_id", i,

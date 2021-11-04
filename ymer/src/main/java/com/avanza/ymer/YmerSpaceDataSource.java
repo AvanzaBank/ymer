@@ -65,7 +65,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         logger.info("Loading all documents for type: {}", mirroredObject.getMirroredType().getName());
         MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(
                 mirroredObject,
-                getPartitionId(),
+                getInstanceId(),
                 getPartitionCount());
 
         AtomicInteger counter = new AtomicInteger(0);
@@ -104,7 +104,7 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
     @Override
     public <T> T loadObject(Class<T> spaceType, Object documentId) {
         MirroredObject<T> mirroredObject = spaceMirrorContext.getMirroredDocument(spaceType);
-        MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getPartitionId(), getPartitionCount());
+        MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getInstanceId(), getPartitionCount());
         Optional<LoadedDocument<T>> loadDocument = documentLoader.loadById(documentId);
         writeBackPatchedDocuments(mirroredObject, loadDocument.map(Arrays::asList).orElse(Collections.emptyList()));
         return loadDocument
@@ -116,14 +116,14 @@ final class YmerSpaceDataSource extends AbstractSpaceDataSource {
         return clusterInfo.getNumberOfInstances();
     }
 
-    private Integer getPartitionId() {
+    private Integer getInstanceId() {
         return clusterInfo.getInstanceId();
     }
 
     @Override
     public <T> Collection<T> loadObjects(Class<T> spaceType, T template) {
         MirroredObject<T> mirroredObject = spaceMirrorContext.getMirroredDocument(spaceType);
-        MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getPartitionId(), getPartitionCount());
+        MirroredObjectLoader<T> documentLoader = spaceMirrorContext.createDocumentLoader(mirroredObject, getInstanceId(), getPartitionCount());
         List<LoadedDocument<T>> loadedDocuments = documentLoader.loadByQuery(template);
         writeBackPatchedDocuments(mirroredObject, loadedDocuments);
         return loadedDocuments

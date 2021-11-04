@@ -16,20 +16,33 @@
 package com.avanza.ymer;
 
 import static com.avanza.ymer.StreamMatchers.hasCount;
+import static java.util.Collections.singleton;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static org.springframework.data.domain.Sort.Direction.ASC;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.data.mongodb.core.index.IndexField;
+import org.springframework.data.mongodb.core.index.IndexInfo;
+
+import com.mongodb.client.model.IndexOptions;
 
 /**
  * @author Elias Lindholm (elilin)
@@ -250,6 +263,57 @@ public abstract class DocumentCollectionContract {
 
 		assertThat(documentCollection.findAll(), hasCount(1));
 		assertEquals(d1, documentCollection.findAll().iterator().next());
+	}
+
+	@Test
+	public void updateFieldById() throws Exception {
+		String id = "1";
+		Document document = new Document();
+		document.put("_id", id);
+		document.put("first_field", "a");
+		document.put("second_field", "b");
+		documentCollection.insert(document);
+		document.put("first_field", "AA");
+		documentCollection.update(document);
+
+		documentCollection.updateById(id, Map.of("second_field", "BB"));
+
+		Document updatedDocument = documentCollection.findById(id);
+		assertThat(updatedDocument, hasEntry("first_field", "AA"));
+		assertThat(updatedDocument, hasEntry("second_field", "BB"));
+	}
+
+	@Test
+	public void shouldReturnOnlyTheDefaultIndex() throws Exception {
+		documentCollection.insert(new Document("_id", 1));
+		List<IndexInfo> indexes = documentCollection.getIndexes().collect(toList());
+
+		assertThat(indexes, hasSize(1));
+		assertThat(indexes.get(0).isIndexForFields(singleton("_id")), equalTo(true));
+	}
+
+	@Test
+	public void shouldCreateIndex() throws Exception {
+		String fieldName = "myField";
+		String indexName = "myIndex";
+
+		documentCollection.createIndex(new Document(fieldName, 1), new IndexOptions().name(indexName));
+
+		List<IndexInfo> indexes = documentCollection.getIndexes().filter(index -> !index.isIndexForFields(singleton("_id"))).collect(toList());
+		assertThat(indexes, hasSize(1));
+		assertThat(indexes.get(0).getName(), equalTo(indexName));
+		assertThat(indexes.get(0).getIndexFields(), contains(IndexField.create(fieldName, ASC)));
+	}
+
+	@Test
+	public void shouldDropIndex() throws Exception {
+		String indexName = "myIndex";
+		documentCollection.createIndex(new Document("myField", 1), new IndexOptions().name(indexName));
+
+		documentCollection.dropIndex(indexName);
+
+		List<IndexInfo> indexes = documentCollection.getIndexes().filter(index -> !index.isIndexForFields(singleton("_id"))).collect(toList());
+		assertThat(indexes, empty());
 	}
 
 	private Document firstElementWithId(List<Document> all, final String id) {

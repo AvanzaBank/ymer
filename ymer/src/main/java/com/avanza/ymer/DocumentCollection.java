@@ -15,11 +15,16 @@
  */
 package com.avanza.ymer;
 
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
+
 import com.mongodb.DBCollection;
+import com.mongodb.client.model.IndexOptions;
+
 /**
  * Abstraction over {@link DBCollection}. <p>
  *
@@ -61,6 +66,11 @@ interface DocumentCollection {
 	void update(Document document);
 
 	/**
+	 * Updates a given document, identified by id, setting only the specified fields.
+	 */
+	void updateById(Object id, Map<String, Object> fieldsAndValuesToSet);
+
+	/**
 	 * Inserts the given object into the underlying mongo collection. <p>
 	 */
 	void insert(Document dbObject);
@@ -72,4 +82,9 @@ interface DocumentCollection {
 	 */
 	void insertAll(Document... documents);
 
+	Stream<IndexInfo> getIndexes();
+
+	void dropIndex(String name);
+
+	void createIndex(Document keys, IndexOptions indexOptions);
 }

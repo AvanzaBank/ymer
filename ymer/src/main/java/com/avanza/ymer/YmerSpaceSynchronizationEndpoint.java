@@ -26,24 +26,30 @@ import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
 final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(YmerSpaceSynchronizationEndpoint.class);
-	
+
 	private final MirroredObjectWriter mirroredObjectWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
+	private final PersistedInstanceIdRecalculationService persistedInstanceIdRecalculationService;
 
 	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());
 		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler);
+		this.persistedInstanceIdRecalculationService = new PersistedInstanceIdRecalculationService(spaceMirror);
 	}
 
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
 		mirroredObjectWriter.executeBulk(batchData);
 	}
-	
+
+	public PersistedInstanceIdRecalculationService getPersistedInstanceIdRecalculationService() {
+		return persistedInstanceIdRecalculationService;
+	}
+
 	void registerExceptionHandlerMBean() {
 		try {
 			String name = "se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler";
@@ -54,4 +60,13 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 		}
 	}
 
+	void registerPersistedInstanceIdRecalculationServiceMBean() {
+		try {
+			String name = "se.avanzabank.space.mirror:type=PersistedInstanceIdRecalculationService,name=persistedInstanceIdRecalculationService";
+			log.info("Registering mbean with name {}", name);
+			ManagementFactory.getPlatformMBeanServer().registerMBean(persistedInstanceIdRecalculationService, ObjectName.getInstance(name));
+		} catch (Exception e) {
+			log.warn("Exception handler MBean registration failed", e);
+		}
+	}
 }

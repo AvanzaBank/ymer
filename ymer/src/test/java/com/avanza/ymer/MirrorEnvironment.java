@@ -18,37 +18,39 @@ package com.avanza.ymer;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.unset;
 
-import java.net.InetSocketAddress;
-import java.util.function.Consumer;
-
 import org.bson.Document;
+import org.junit.rules.ExternalResource;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.testcontainers.containers.MongoDBContainer;
+
 import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 
 /**
  *
  * @author Elias Lindholm (elilin)
  *
  */
-public class MirrorEnvironment {
+public class MirrorEnvironment extends ExternalResource {
 
 	public static final String TEST_MIRROR_DB_NAME = "mirror_test_db";
-	private final MongoServer mongoServer;
+	private final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
 	private final MongoClient mongoClient;
 
 	public MirrorEnvironment() {
-		mongoServer = new MongoServer(new MemoryBackend());
-		InetSocketAddress serverAddress = mongoServer.bind();
-		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+		mongoDBContainer.start();
+
+		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
+	}
+
+	@Override
+	protected void after() {
+		mongoDBContainer.stop();
 	}
 
 	public MongoTemplate getMongoTemplate() {
@@ -60,13 +62,9 @@ public class MirrorEnvironment {
 		return this.mongoClient.getDatabase(TEST_MIRROR_DB_NAME);
 	}
 
-	public void dropAllMongoCollections() {
-		getMongoDatabase().listCollectionNames()
-						  .forEach((Consumer<? super String>) this::dropCollection);
-	}
+	public void reset() {
+		getMongoDatabase().drop();
 
-	private void dropCollection(String collectionName) {
-		getMongoDatabase().getCollection(collectionName).drop();
 	}
 
 	public ApplicationContext getMongoClientContext() {

@@ -122,7 +122,7 @@
 		<mockito.version>3.12.4</mockito.version>
 		<gs-test.version>1.0.1</gs-test.version>
 		<mongo-java-driver.version>3.8.2</mongo-java-driver.version>
-		<mongo-java-server.version>1.38.0</mongo-java-server.version>
+		<testcontainers.version>1.16.2</testcontainers.version>
 		<awaitility.version>4.1.0</awaitility.version>
 		<assertj.version>3.21.0</assertj.version>
 
@@ -256,9 +256,9 @@
 				<type>test-jar</type>
 			</dependency>
 			<dependency>
-				<groupId>de.bwaldvogel</groupId>
-				<artifactId>mongo-java-server</artifactId>
-				<version>${mongo-java-server.version}</version>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>mongodb</artifactId>
+				<version>${testcontainers.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.awaitility</groupId>

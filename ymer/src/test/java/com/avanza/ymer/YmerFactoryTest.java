@@ -34,6 +34,7 @@ import org.mockito.ArgumentCaptor;
 import org.openspaces.core.cluster.ClusterInfo;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+
 import com.avanza.ymer.MongoDocumentCollectionTest.FakeSpaceObject;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;

@@ -15,17 +15,27 @@
  */
 package com.avanza.ymer;
 
+import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
+import static java.util.Spliterators.spliteratorUnknownSize;
+
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
+
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -58,29 +68,30 @@ final class MongoDocumentCollection implements DocumentCollection {
 	public Stream<Document> findAll(SpaceObjectFilter<?> objectFilter) {
 		if (MongoPartitionFilter.canCreateFrom(objectFilter)) {
 			MongoPartitionFilter mongoPartitionFilter = MongoPartitionFilter.createBsonFilter(objectFilter);
-			return StreamSupport.stream(collection.find(mongoPartitionFilter.toBson()).spliterator(), false);
+			return toStream(collection.find(mongoPartitionFilter.toBson()));
 		}
 		return findAll();
 	}
 
 	@Override
 	public Stream<Document> findAll() {
-		return StreamSupport.stream(collection.find().spliterator(), false);
+		return toStream(collection.find());
 	}
+
 
 	@Override
 	public Document findById(Object id) {
-		return collection.find(new Document("_id", id)).first();
+		return collection.find(Filters.eq(id)).first();
 	}
 
 	@Override
 	public Stream<Document> findByQuery(Query query) {
-		return StreamSupport.stream(collection.find(query.getQueryObject()).spliterator(), false);
+		return toStream(collection.find(query.getQueryObject()));
 	}
 
 	@Override
 	public Stream<Document> findByTemplate(Document template) {
-		return StreamSupport.stream(collection.find(template).spliterator(), false);
+		return toStream(collection.find(template));
 	}
 
 	@Override
@@ -88,10 +99,10 @@ final class MongoDocumentCollection implements DocumentCollection {
 		idValidator.validateHasIdField("replace", newVersion);
 		if (!Objects.equals(oldVersion.get("_id"), newVersion.get("_id"))) {
 			insert(newVersion);
-			DeleteResult deleteResult = collection.deleteOne(new Document("_id", oldVersion.get("_id")));
+			DeleteResult deleteResult = collection.deleteOne(Filters.eq(oldVersion.get("_id")));
 			idValidator.validateDeletedExistingDocument("replace", deleteResult, oldVersion);
 		} else {
-			UpdateResult updateResult = collection.replaceOne(Filters.eq("_id", oldVersion.get("_id")),
+			UpdateResult updateResult = collection.replaceOne(Filters.eq(oldVersion.get("_id")),
 					newVersion);
 			idValidator.validateUpdatedExistingDocument("replace", updateResult, oldVersion);
 		}
@@ -100,10 +111,19 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public void update(Document newVersion) {
 		idValidator.validateHasIdField("update", newVersion);
-		UpdateResult updateResult = collection.replaceOne(Filters.eq("_id", newVersion.get("_id")),
+		UpdateResult updateResult = collection.replaceOne(Filters.eq(newVersion.get("_id")),
 				newVersion,
 				new ReplaceOptions().upsert(true));
 		idValidator.validateUpdatedExistingDocument("update", updateResult, newVersion);
+	}
+
+	@Override
+	public void updateById(Object id, Map<String, Object> fieldsAndValuesToSet) {
+		fieldsAndValuesToSet.entrySet().stream().map(entry -> Updates.set(entry.getKey(), entry.getValue())).reduce(Updates::combine)
+				.ifPresent(updates -> {
+					UpdateResult updateResult = collection.updateOne(Filters.eq(id), updates);
+					idValidator.validateUpdatedExistingDocument("update", updateResult, new Document("_id", id));
+				});
 	}
 
 	@Override
@@ -112,7 +132,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 		try {
 			collection.insertOne(document);
 		} catch (MongoWriteException e) {
-			if(e.getMessage().contains("E11000")) { // duplicate key error
+			if(e.getError().getCategory() == DUPLICATE_KEY) {
 				throw new DuplicateDocumentKeyException(e.getMessage());
 			} else {
 				throw e;
@@ -133,5 +153,26 @@ final class MongoDocumentCollection implements DocumentCollection {
 			idValidator.validateHasIdField("insert", documents[0]);
 		}
 		collection.insertMany(Arrays.asList(documents)); // TODO: test for this method
+	}
+
+	@Override
+	public Stream<IndexInfo> getIndexes() {
+		return toStream(collection.listIndexes().map(IndexInfo::indexInfoOf));
+	}
+
+	@Override
+	public void dropIndex(String name) {
+		collection.dropIndex(name);
+	}
+
+	@Override
+	public void createIndex(Document keys, IndexOptions indexOptions) {
+		collection.createIndex(keys, indexOptions);
+	}
+
+	private static <T> Stream<T> toStream(MongoIterable<T> mongoIterable) {
+		MongoCursor<T> iterator = mongoIterable.iterator();
+		return StreamSupport.stream(spliteratorUnknownSize(iterator, 0), false)
+				.onClose(iterator::close);
 	}
 }

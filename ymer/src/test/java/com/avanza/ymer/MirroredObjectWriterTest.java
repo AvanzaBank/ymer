@@ -16,6 +16,9 @@
 package com.avanza.ymer;
 
 import static java.util.stream.Collectors.toList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
@@ -58,6 +61,7 @@ public class MirroredObjectWriterTest {
 		anotherMirroredDocument =
 				MirroredObjectDefinition.create(TestSpaceOtherObject.class)
 										.keepPersistent(true)
+										.persistInstanceId(true)
 										.documentPatches(patches2)
 										.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		DocumentPatch[] patches1 = {};
@@ -99,6 +103,16 @@ public class MirroredObjectWriterTest {
 
 		List<Document> persisted = documentDb.getCollection(mirroredObject.getCollectionName()).findAll().collect(toList());
 		assertEquals(3, persisted.size());
+	}
+
+	@Test
+	public void writesInstanceId() throws Exception {
+		TestSpaceOtherObject item = new TestSpaceOtherObject("1", "message");
+		mirroredObjectWriter.executeBulk(FakeBatchData.create(new FakeBulkItem(item, DataSyncOperationType.WRITE)));
+
+		List<Document> persisted = documentDb.getCollection(anotherMirroredDocument.getCollectionName()).findAll().collect(toList());
+		assertThat(persisted, hasSize(1));
+		assertThat(persisted.get(0).getInteger(MirroredObject.DOCUMENT_INSTANCE_ID), equalTo(1));
 	}
 
 	@Test
@@ -167,13 +181,13 @@ public class MirroredObjectWriterTest {
 	@Test
 	public void documentsWithKeepPersistentFlagAreNotRemovedFromDb() throws Exception {
 		TestSpaceOtherObject item1 = new TestSpaceOtherObject("1", "hello");
-		documentDb.getCollection(mirroredObject.getCollectionName()).insert(documentConverter.convertToBsonDocument(item1));
+		documentDb.getCollection(anotherMirroredDocument.getCollectionName()).insert(documentConverter.convertToBsonDocument(item1));
 
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.REMOVE);
 		mirroredObjectWriter.executeBulk(FakeBatchData.create(bulkItem));
 		Document expected = documentConverter.convertToBsonDocument(item1);
 
-		List<Document> persisted = documentDb.getCollection(mirroredObject.getCollectionName()).findAll().collect(toList());
+		List<Document> persisted = documentDb.getCollection(anotherMirroredDocument.getCollectionName()).findAll().collect(toList());
 		assertEquals(1, persisted.size());
 		assertEquals(expected, persisted.get(0));
 	}
@@ -312,7 +326,7 @@ public class MirroredObjectWriterTest {
 
 		@Override
 		public SynchronizationSourceDetails getSourceDetails() {
-			throw new UnsupportedOperationException("Not implemented by FakeBatchData (yet)");
+			return () -> "spaceName_container1_1:spaceName";
 		}
 
 	}

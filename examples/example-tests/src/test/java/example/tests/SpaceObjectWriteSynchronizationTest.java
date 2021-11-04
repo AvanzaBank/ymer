@@ -32,39 +32,40 @@ package example.tests;
 
 import static org.junit.Assert.assertEquals;
 
-import java.net.InetSocketAddress;
 import java.util.stream.StreamSupport;
 
 import org.bson.Document;
 import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.testcontainers.containers.MongoDBContainer;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
 import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
 
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import example.domain.SpaceFruit;
 
 public class SpaceObjectWriteSynchronizationTest {
 
+	@Rule
+	public final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+
 	private RunningPu pu;
 	private RunningPu mirrorPu;
 
-	private final MongoServer mongoServer;
-	private final MongoClient mongoClient;
+	private MongoClient mongoClient;
 
-	public SpaceObjectWriteSynchronizationTest() {
-		mongoServer = new MongoServer(new MemoryBackend());
-		InetSocketAddress serverAddress = mongoServer.bind();
-		mongoClient = new MongoClient(new ServerAddress(serverAddress));
+	@Before
+	public void setUp() {
+		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
 	}
 
 	@After

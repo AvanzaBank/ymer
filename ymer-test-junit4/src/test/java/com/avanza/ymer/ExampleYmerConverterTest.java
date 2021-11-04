@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+
 import com.avanza.ymer.support.JavaInstantReadConverter;
 import com.avanza.ymer.support.JavaInstantWriteConverter;
 

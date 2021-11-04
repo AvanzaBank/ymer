@@ -325,7 +325,7 @@ public class MirroredObjectTest {
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
-		document.setDocumentAttributes(dbObject, new MirroredType(23));
+		document.setDocumentAttributes(dbObject, new MirroredType(23), null);
 		assertEquals(23, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
 	}
 
@@ -335,8 +335,35 @@ public class MirroredObjectTest {
 		MirroredObject<RoutedType> document = MirroredObjectDefinition.create(RoutedType.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
-		document.setDocumentAttributes(dbObject, new RoutedType(23, "bananskal"));
+		document.setDocumentAttributes(dbObject, new RoutedType(23, "bananskal"), null);
 		assertEquals("bananskal".hashCode(), dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
+	}
+
+	@Test
+	public void setsInstanceIdAndRoutingKeyForPersistInstanceId() throws Exception {
+		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
+				.persistInstanceId(true)
+				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+		Document dbObject = new Document();
+
+		int routingKey = 23;
+		int instanceId = 2;
+		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), instanceId);
+		assertEquals(routingKey, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
+		assertEquals(instanceId, dbObject.get(MirroredObject.DOCUMENT_INSTANCE_ID));
+	}
+
+	@Test
+	public void doesNotSetInstanceIdWhenNull() throws Exception {
+		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
+				.persistInstanceId(true)
+				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+		Document dbObject = new Document();
+
+		int routingKey = 23;
+		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), null);
+		assertEquals(routingKey, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
+		assertFalse(dbObject.containsKey(MirroredObject.DOCUMENT_INSTANCE_ID));
 	}
 
 	@Test
@@ -344,19 +371,23 @@ public class MirroredObjectTest {
 		MirroredObjectDefinition<RoutedType> definition = MirroredObjectDefinition.create(RoutedType.class)
 				.loadDocumentsRouted(true)
 				.writeBackPatchedDocuments(true)
-				.excludeFromInitialLoad(true);
+				.excludeFromInitialLoad(true)
+				.persistInstanceId(true);
 
 		assertTrue(definition.buildMirroredDocument(fromSystemProperties()).loadDocumentsRouted());
 		assertTrue(definition.buildMirroredDocument(fromSystemProperties()).writeBackPatchedDocuments());
 		assertTrue(definition.buildMirroredDocument(fromSystemProperties()).excludeFromInitialLoad());
+		assertTrue(definition.buildMirroredDocument(fromSystemProperties()).persistInstanceId());
 
 		System.setProperty("ymer.com.avanza.ymer.MirroredObjectTest.RoutedType.loadDocumentsRouted", "false");
 		System.setProperty("ymer.com.avanza.ymer.MirroredObjectTest.RoutedType.writeBackPatchedDocuments", "false");
 		System.setProperty("ymer.com.avanza.ymer.MirroredObjectTest.RoutedType.excludeFromInitialLoad", "false");
+		System.setProperty("ymer.com.avanza.ymer.MirroredObjectTest.RoutedType.persistInstanceId", "false");
 
 		assertFalse(definition.buildMirroredDocument(fromSystemProperties()).loadDocumentsRouted());
 		assertFalse(definition.buildMirroredDocument(fromSystemProperties()).writeBackPatchedDocuments());
 		assertFalse(definition.buildMirroredDocument(fromSystemProperties()).excludeFromInitialLoad());
+		assertFalse(definition.buildMirroredDocument(fromSystemProperties()).persistInstanceId());
 	}
 
 	static class MirroredType {

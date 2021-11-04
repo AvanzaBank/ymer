@@ -126,6 +126,9 @@ public final class YmerFactory {
 		if (this.exportExceptionHandleMBean) {
 			ymerSpaceSynchronizationEndpoint.registerExceptionHandlerMBean();
 		}
+		if (mirroredObjects.getMirroredObjects().stream().anyMatch(MirroredObject::persistInstanceId)) {
+			ymerSpaceSynchronizationEndpoint.registerPersistedInstanceIdRecalculationServiceMBean();
+		}
 		return ymerSpaceSynchronizationEndpoint;
 	}
 
