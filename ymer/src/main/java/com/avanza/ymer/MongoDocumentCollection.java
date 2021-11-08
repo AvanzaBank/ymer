@@ -17,12 +17,15 @@ package com.avanza.ymer;
 
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static java.util.Spliterators.spliteratorUnknownSize;
+import static java.util.stream.Collectors.toList;
 
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import javax.annotation.Nullable;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.index.IndexInfo;
@@ -32,9 +35,11 @@ import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -90,6 +95,11 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
+	public Stream<Document> findByQuery(Query query, int batchSize) {
+		return toStream(collection.find(query.getQueryObject()).batchSize(batchSize));
+	}
+
+	@Override
 	public Stream<Document> findByTemplate(Document template) {
 		return toStream(collection.find(template));
 	}
@@ -118,12 +128,14 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void updateById(Object id, Map<String, Object> fieldsAndValuesToSet) {
-		fieldsAndValuesToSet.entrySet().stream().map(entry -> Updates.set(entry.getKey(), entry.getValue())).reduce(Updates::combine)
-				.ifPresent(updates -> {
-					UpdateResult updateResult = collection.updateOne(Filters.eq(id), updates);
-					idValidator.validateUpdatedExistingDocument("update", updateResult, new Document("_id", id));
-				});
+	public void updateAllPartial(List<Document> documents) {
+		List<UpdateOneModel<Document>> updates = documents.stream()
+				.peek(it -> idValidator.validateHasIdField("update", it))
+				.map(this::toUpdateOneModel)
+				.collect(toList());
+		if (!updates.isEmpty()) {
+			collection.bulkWrite(updates, new BulkWriteOptions().ordered(false));
+		}
 	}
 
 	@Override
@@ -168,6 +180,20 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public void createIndex(Document keys, IndexOptions indexOptions) {
 		collection.createIndex(keys, indexOptions);
+	}
+
+	@Nullable
+	private UpdateOneModel<Document> toUpdateOneModel(Document document) {
+		Object id = document.get("_id");
+		if (id == null) {
+			return null;
+		}
+		return document.entrySet().stream()
+				.filter(entry -> !entry.getKey().equals("_id"))
+				.map(entry -> Updates.set(entry.getKey(), entry.getValue()))
+				.reduce(Updates::combine)
+				.map(update -> new UpdateOneModel<Document>(Filters.eq(id), update))
+				.orElse(null);
 	}
 
 	private static <T> Stream<T> toStream(MongoIterable<T> mongoIterable) {

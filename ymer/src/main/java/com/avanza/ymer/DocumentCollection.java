@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.bson.Document;
@@ -50,6 +50,8 @@ interface DocumentCollection {
 
 	Stream<Document> findByQuery(Query query);
 
+	Stream<Document> findByQuery(Query query, int batchSize);
+
 	/**
 	 * Replaces a given document in the underlying mongo collection with a new
 	 * document. <p>
@@ -68,7 +70,7 @@ interface DocumentCollection {
 	/**
 	 * Updates a given document, identified by id, setting only the specified fields.
 	 */
-	void updateById(Object id, Map<String, Object> fieldsAndValuesToSet);
+	void updateAllPartial(List<Document> documents);
 
 	/**
 	 * Inserts the given object into the underlying mongo collection. <p>

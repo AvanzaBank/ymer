@@ -21,7 +21,8 @@ import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -57,20 +58,31 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 		if (!indexDropped) {
 			log.info("Step 1/3\tNo index to drop");
 		}
+		int batchSize = 1_000;
+		List<Document> batch = new ArrayList<>(batchSize);
 		AtomicInteger count = new AtomicInteger();
-		collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)))
+		collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), batchSize)
+				.map(it -> {
+					Object id = it.get("_id");
+					int instanceId = getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
+					return new Document("_id", id).append(DOCUMENT_INSTANCE_ID, instanceId);
+				})
 				.peek(it -> {
+					batch.add(it);
+					if (batch.size() >= batchSize) {
+						collection.updateAllPartial(batch);
+						batch.clear();
+					}
+				})
+				.forEach(it -> {
 					int currentCount = count.incrementAndGet();
 					if (currentCount % 10_000 == 0) {
 						log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
 					}
-				})
-				.forEach(document -> {
-					Object id = document.get("_id");
-					int instanceId = getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
-					collection.updateById(id, Map.of(DOCUMENT_INSTANCE_ID, instanceId));
 				});
-
+		if (!batch.isEmpty()) {
+			collection.updateAllPartial(batch);
+		}
 		log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
 
 		boolean indexExists = collection.getIndexes()

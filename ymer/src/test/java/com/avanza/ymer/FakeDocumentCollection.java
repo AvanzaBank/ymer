@@ -22,6 +22,7 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -92,10 +93,13 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void updateById(Object id, Map<String, Object> fieldsAndValuesToSet) {
-		collection.stream()
-				.filter(it -> Objects.equals(it.get("_id"), id))
-				.forEach(it -> it.putAll(fieldsAndValuesToSet));
+	public void updateAllPartial(List<Document> documents) {
+		for (Document document : documents) {
+			Map<String, Object> updates = new LinkedHashMap<>(document);
+			Optional.ofNullable(updates.remove("_id"))
+					.map(this::findById)
+					.ifPresent(it -> it.putAll(updates));
+		}
 	}
 
 	@Override
@@ -163,6 +167,11 @@ class FakeDocumentCollection implements DocumentCollection {
 
 	@Override
 	public Stream<Document> findByQuery(Query query) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Stream<Document> findByQuery(Query query, int batchSize) {
 		throw new UnsupportedOperationException();
 	}
 

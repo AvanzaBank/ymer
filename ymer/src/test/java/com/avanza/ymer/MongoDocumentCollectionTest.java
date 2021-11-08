@@ -15,8 +15,14 @@
  */
 package com.avanza.ymer;
 
+import static java.util.stream.Collectors.toList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import java.util.List;
 import java.util.Objects;
@@ -155,6 +161,29 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(2, "b")));
 		assertTrue(loadedSpaceObjects.toString(), loadedSpaceObjects.contains(new FakeSpaceObject(4, "d")));
 		assertEquals(2, loadedSpaceObjects.size());
+	}
+
+	@Test
+	public void findByQueryAndBatchSizeReturnsExpectedDocument() {
+		MongoDocumentCollectionTest testCollection = new MongoDocumentCollectionTest();
+		DocumentCollection documentCollection = testCollection.createEmptyCollection();
+		Document d1 = new Document();
+		d1.put("_id", "id_1");
+		d1.put("count", 21);
+
+		Document d2 = new Document();
+		d2.put("_id", "id_2");
+		d2.put("count", 55);
+
+		documentCollection.insertAll(d1, d2);
+
+		List<Document> results = documentCollection.findByQuery(query(where("count").is(21))).collect(toList());
+
+		assertThat(results, hasSize(1));
+		assertThat(results.get(0).get("_id"), is(d1.get("_id")));
+
+		assertEquals(d1, documentCollection.findById("id_1"));
+		assertEquals(d2, documentCollection.findById("id_2"));
 	}
 
 	static class FakeSpaceObject {
