@@ -133,6 +133,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 		List<UpdateOneModel<Document>> updates = documents.stream()
 				.peek(it -> idValidator.validateHasIdField("update", it))
 				.map(this::toUpdateOneModel)
+				.filter(Objects::nonNull)
 				.collect(toList());
 		if (!updates.isEmpty()) {
 			collection.bulkWrite(updates, new BulkWriteOptions().ordered(false));
