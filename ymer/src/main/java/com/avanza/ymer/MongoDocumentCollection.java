@@ -31,6 +31,7 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.avanza.ymer.util.StreamUtils;
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -95,8 +96,8 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public Stream<Document> findByQuery(Query query, int batchSize) {
-		return toStream(collection.find(query.getQueryObject()).batchSize(batchSize));
+	public Stream<List<Document>> findByQuery(Query query, int batchSize) {
+		return StreamUtils.buffer(toStream(collection.find(query.getQueryObject()).batchSize(batchSize)), batchSize);
 	}
 
 	@Override

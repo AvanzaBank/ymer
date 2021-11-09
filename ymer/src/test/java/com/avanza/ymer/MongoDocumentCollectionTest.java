@@ -177,7 +177,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 		documentCollection.insertAll(d1, d2);
 
-		List<Document> results = documentCollection.findByQuery(query(where("count").is(21))).collect(toList());
+		List<Document> results = documentCollection.findByQuery(query(where("count").is(21)), 10).flatMap(List::stream).collect(toList());
 
 		assertThat(results, hasSize(1));
 		assertThat(results.get(0).get("_id"), is(d1.get("_id")));

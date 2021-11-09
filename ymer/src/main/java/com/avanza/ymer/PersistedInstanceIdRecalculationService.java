@@ -18,10 +18,10 @@ package com.avanza.ymer;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
+import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.mongodb.client.model.IndexOptions;
 
 public class PersistedInstanceIdRecalculationService implements PersistedInstanceIdRecalculationServiceMBean {
+	private static final int BATCH_SIZE = 1_000;
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final SpaceMirrorContext spaceMirror;
@@ -58,31 +59,25 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 		if (!indexDropped) {
 			log.info("Step 1/3\tNo index to drop");
 		}
-		int batchSize = 1_000;
-		List<Document> batch = new ArrayList<>(batchSize);
 		AtomicInteger count = new AtomicInteger();
-		collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), batchSize)
-				.map(it -> {
-					Object id = it.get("_id");
-					int instanceId = getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
-					return new Document("_id", id).append(DOCUMENT_INSTANCE_ID, instanceId);
-				})
-				.peek(it -> {
-					batch.add(it);
-					if (batch.size() >= batchSize) {
-						collection.updateAllPartial(batch);
-						batch.clear();
-					}
-				})
-				.forEach(it -> {
-					int currentCount = count.incrementAndGet();
+		collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), BATCH_SIZE)
+				.forEach(batch -> {
+					List<Document> updates = batch.stream()
+							.map(it -> {
+								Object id = it.get("_id");
+								int instanceId = getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
+								return new Document("_id", id).append(DOCUMENT_INSTANCE_ID, instanceId);
+							})
+							.collect(toList());
+
+					collection.updateAllPartial(updates);
+
+					int currentCount = count.addAndGet(updates.size());
 					if (currentCount % 10_000 == 0) {
 						log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
 					}
 				});
-		if (!batch.isEmpty()) {
-			collection.updateAllPartial(batch);
-		}
+
 		log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
 
 		boolean indexExists = collection.getIndexes()

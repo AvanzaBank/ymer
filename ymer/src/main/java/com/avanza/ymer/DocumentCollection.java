@@ -50,7 +50,12 @@ interface DocumentCollection {
 
 	Stream<Document> findByQuery(Query query);
 
-	Stream<Document> findByQuery(Query query, int batchSize);
+	/**
+	 * Find by query and a given batch size. Data will be read from the underlying
+	 * mongo collection in batches of {@code batchSize} and returned as a stream of lists,
+	 * where each list is of (at most) {@code batchSize}
+	 */
+	Stream<List<Document>> findByQuery(Query query, int batchSize);
 
 	/**
 	 * Replaces a given document in the underlying mongo collection with a new
