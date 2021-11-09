@@ -8,6 +8,7 @@ import static org.junit.Assert.assertThrows;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -73,5 +74,17 @@ public class StreamUtilsTest {
 		StreamUtils.buffer(source, 10).map(List::size);
 
 		source.forEach(it -> {});
+	}
+
+	@Test
+	public void closingBufferedStreamShouldCloseSourceStream() {
+		AtomicBoolean sourceClosed = new AtomicBoolean(false);
+		Stream<Integer> source = Stream.of(1).onClose(() -> sourceClosed.set(true));
+
+		Stream<List<Integer>> bufferingStream = StreamUtils.buffer(source, 1);
+
+		bufferingStream.close();
+
+		assertThat(sourceClosed.get(), is(true));
 	}
 }

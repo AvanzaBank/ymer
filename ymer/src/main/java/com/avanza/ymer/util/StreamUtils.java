@@ -15,16 +15,17 @@ public final class StreamUtils {
 	/**
 	 * Returns a stream with connected, non-overlapping buffers from the {@code source} stream.
 	 * The buffers will be of size {@code bufferSize} maximum, where the last one might be smaller.
-	 * The {@code source} stream will only be consumed according to the resulting stream,
-	 * i.e. if the resulting stream is limited to 2 elements, only at most {@code 2 *  bufferSize} elements will be consumed
+	 * The {@code source} stream will only be consumed according to the buffering stream,
+	 * i.e. if the buffering stream is limited to 2 elements, only at most {@code 2 *  bufferSize} elements will be consumed
 	 * from the {@code source} stream.
 	 * <p>
-	 * Note: if the resulting stream is consumed (a terminal operation is used), the {@code source} stream will also be consumed.
-	 * If the resulting stream is not consumed, the {@code source} stream will not be either.
+	 * Note: if the buffering stream is consumed (a terminal operation is used), the {@code source} stream will also be consumed.
+	 * If the buffering stream is not consumed, the {@code source} stream will not be either.
 	 */
 	public static <T> Stream<List<T>> buffer(Stream<T> source, int bufferSize) {
 		return StreamSupport.stream(() -> {
 			Spliterator<T> spliterator = source.spliterator();
+			//noinspection Convert2Diamond
 			return new AbstractSpliterator<List<T>>(Long.MAX_VALUE, spliterator.characteristics()) {
 				@Override
 				public boolean tryAdvance(Consumer<? super List<T>> action) {
@@ -43,6 +44,6 @@ public final class StreamUtils {
 					}
 				}
 			};
-		}, 0, false);
+		}, 0, false).onClose(source::close);
 	}
 }
