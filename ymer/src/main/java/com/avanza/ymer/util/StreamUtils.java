@@ -40,8 +40,11 @@ public final class StreamUtils {
 	public static <T> Stream<List<T>> buffer(Stream<T> source, int bufferSize) {
 		return StreamSupport.stream(() -> {
 			Spliterator<T> spliterator = source.spliterator();
-			//noinspection Convert2Diamond
-			return new AbstractSpliterator<List<T>>(Long.MAX_VALUE, spliterator.characteristics()) {
+			long estimatedSize = spliterator.estimateSize();
+			if (estimatedSize != Long.MAX_VALUE) {
+				estimatedSize = (int) Math.ceil((double) estimatedSize / (double) bufferSize);
+			}
+			return new AbstractSpliterator<List<T>>(estimatedSize, 0) {
 				@Override
 				public boolean tryAdvance(Consumer<? super List<T>> action) {
 					List<T> batch = new ArrayList<>(bufferSize);
@@ -61,4 +64,5 @@ public final class StreamUtils {
 			};
 		}, 0, false).onClose(source::close);
 	}
+
 }

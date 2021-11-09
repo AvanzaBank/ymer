@@ -15,7 +15,9 @@
  */
 package com.avanza.ymer.util;
 
+import static java.util.Collections.emptyIterator;
 import static java.util.Collections.emptyList;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -27,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.junit.Test;
 
@@ -92,7 +95,7 @@ public class StreamUtilsTest {
 	}
 
 	@Test
-	public void closingBufferedStreamShouldCloseSourceStream() {
+	public void closingBufferingStreamShouldCloseSourceStream() {
 		AtomicBoolean sourceClosed = new AtomicBoolean(false);
 		Stream<Integer> source = Stream.of(1).onClose(() -> sourceClosed.set(true));
 
@@ -102,4 +105,23 @@ public class StreamUtilsTest {
 
 		assertThat(sourceClosed.get(), is(true));
 	}
+
+	@Test
+	public void shouldEstimateSizeOfBufferingStreamWhenAvailableOnSourceStream() {
+		Stream<Integer> source = IntStream.rangeClosed(1, 33).boxed();
+
+		Stream<List<Integer>> bufferingStream = StreamUtils.buffer(source, 10);
+
+		assertThat(bufferingStream.spliterator().estimateSize(), is(4L));
+	}
+
+	@Test
+	public void shouldNotEstimateSizeOfBufferingStreamWhenNotAvailableOnSourceStream() {
+		Stream<Integer> source = StreamSupport.stream(spliteratorUnknownSize(emptyIterator(), 0), false);
+
+		Stream<List<Integer>> bufferingStream = StreamUtils.buffer(source, 10);
+
+		assertThat(bufferingStream.spliterator().estimateSize(), is(Long.MAX_VALUE));
+	}
+
 }
