@@ -25,6 +25,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -59,26 +60,27 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 		if (!indexDropped) {
 			log.info("Step 1/3\tNo index to drop");
 		}
-		AtomicInteger count = new AtomicInteger();
-		collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), BATCH_SIZE)
-				.forEach(batch -> {
-					List<Document> updates = batch.stream()
-							.map(it -> {
-								Object id = it.get("_id");
-								int instanceId = getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
-								return new Document("_id", id).append(DOCUMENT_INSTANCE_ID, instanceId);
-							})
-							.collect(toList());
 
-					collection.updateAllPartial(updates);
+		try (Stream<List<Document>> batches = collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), BATCH_SIZE)) {
+			AtomicInteger count = new AtomicInteger();
+			batches.forEach(batch -> {
+				List<Document> updates = batch.stream()
+						.map(it -> {
+							Object id = it.get("_id");
+							int instanceId = getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
+							return new Document("_id", id).append(DOCUMENT_INSTANCE_ID, instanceId);
+						})
+						.collect(toList());
 
-					int currentCount = count.addAndGet(updates.size());
-					if (currentCount % 10_000 == 0) {
-						log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
-					}
-				});
+				collection.updateAllPartial(updates);
 
-		log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
+				int currentCount = count.addAndGet(updates.size());
+				if (currentCount % 10_000 == 0) {
+					log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
+				}
+			});
+			log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
+		}
 
 		boolean indexExists = collection.getIndexes()
 				.filter(index -> index.isIndexForFields(Set.of(DOCUMENT_INSTANCE_ID)))
