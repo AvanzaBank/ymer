@@ -39,18 +39,18 @@ public final class StreamUtils {
 	 */
 	public static <T> Stream<List<T>> buffer(Stream<T> source, int bufferSize) {
 		return StreamSupport.stream(() -> {
-			Spliterator<T> spliterator = source.spliterator();
-			long estimatedSize = spliterator.estimateSize();
+			Spliterator<T> sourceSpliterator = source.spliterator();
+			long estimatedSize = sourceSpliterator.estimateSize();
 			if (estimatedSize != Long.MAX_VALUE) {
-				estimatedSize = (int) Math.ceil((double) estimatedSize / (double) bufferSize);
+				estimatedSize = (long) Math.ceil(estimatedSize / (double) bufferSize);
 			}
 			return new AbstractSpliterator<List<T>>(estimatedSize, 0) {
+
 				@Override
 				public boolean tryAdvance(Consumer<? super List<T>> action) {
 					List<T> batch = new ArrayList<>(bufferSize);
-
 					for (int i = 0; i < bufferSize; i++) {
-						if (!spliterator.tryAdvance(batch::add)) {
+						if (!sourceSpliterator.tryAdvance(batch::add)) {
 							break;
 						}
 					}
@@ -61,6 +61,7 @@ public final class StreamUtils {
 						return true;
 					}
 				}
+
 			};
 		}, 0, false).onClose(source::close);
 	}
