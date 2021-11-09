@@ -65,19 +65,19 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 			AtomicInteger count = new AtomicInteger();
 			batches.forEach(batch -> {
 				List<Document> updates = batch.stream()
+						.peek(it -> {
+							int currentCount = count.incrementAndGet();
+							if (currentCount % 10_000 == 0) {
+								log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
+							}
+						})
 						.map(it -> {
 							Object id = it.get("_id");
 							int instanceId = getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
 							return new Document("_id", id).append(DOCUMENT_INSTANCE_ID, instanceId);
 						})
 						.collect(toList());
-
 				collection.updateAllPartial(updates);
-
-				int currentCount = count.addAndGet(updates.size());
-				if (currentCount % 10_000 == 0) {
-					log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
-				}
 			});
 			log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
 		}
