@@ -18,11 +18,13 @@ package com.avanza.ymer;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,27 +66,25 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 
 		try (Stream<List<Document>> batches = collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), BATCH_SIZE, DOCUMENT_ROUTING_KEY, DOCUMENT_INSTANCE_ID)) {
 			AtomicInteger count = new AtomicInteger();
-			batches.forEach(batch -> {
-				List<Document> updates = batch.stream()
-						.peek(it -> {
-							int currentCount = count.incrementAndGet();
-							if (currentCount % 10_000 == 0) {
-								log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
-							}
-						})
-						.map(it -> {
-							Object previousInstanceId = it.get(DOCUMENT_INSTANCE_ID);
-							int instanceId = getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
-							if (Objects.equals(instanceId, previousInstanceId)) {
-								return null;
-							} else {
-								return new Document("_id", it.get("_id")).append(DOCUMENT_INSTANCE_ID, instanceId);
-							}
-						})
-						.filter(Objects::nonNull)
-						.collect(toList());
-				collection.updateAllPartial(updates);
-			});
+			batches.forEach(batch -> collection.bulkUpdate(bulkUpdater -> {
+				Map<Integer, List<Document>> updatesByInstanceId = batch.stream()
+						.collect(groupingBy(it -> getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances)));
+
+				updatesByInstanceId.forEach((instanceId, documents) -> {
+					Set<Object> ids = documents.stream()
+							.filter(document -> !Objects.equals(instanceId, document.get(DOCUMENT_INSTANCE_ID)))
+							.map(document -> document.get("_id"))
+							.filter(Objects::nonNull)
+							.peek(it -> {
+								int currentCount = count.incrementAndGet();
+								if (currentCount % 10_000 == 0) {
+									log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
+								}
+							})
+							.collect(toSet());
+					bulkUpdater.updatePartialByIds(ids, Map.of(DOCUMENT_INSTANCE_ID, instanceId));
+				});
+			}));
 			log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
 		}
 

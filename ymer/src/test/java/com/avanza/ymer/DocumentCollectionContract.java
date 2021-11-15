@@ -33,6 +33,8 @@ import static org.springframework.data.domain.Sort.Direction.ASC;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
@@ -275,7 +277,7 @@ public abstract class DocumentCollectionContract {
 		document.put("first_field", "AA");
 		documentCollection.update(document);
 
-		documentCollection.updateAllPartial(List.of(new Document("_id", id).append("second_field", "BB")));
+		documentCollection.bulkUpdate(bulkUpdater -> bulkUpdater.updatePartialByIds(Set.of(id), Map.of("second_field", "BB")));
 
 		Document updatedDocument = documentCollection.findById(id);
 		assertThat(updatedDocument, hasEntry("first_field", "AA"));

@@ -17,17 +17,22 @@ package com.avanza.ymer;
 
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static java.util.Spliterators.spliteratorUnknownSize;
-import static java.util.stream.Collectors.toList;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -42,8 +47,9 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -53,7 +59,7 @@ import com.mongodb.client.result.UpdateResult;
  *
  */
 final class MongoDocumentCollection implements DocumentCollection {
-
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final MongoCollection<Document> collection;
 	private final IdValidator idValidator;
 
@@ -135,14 +141,24 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void updateAllPartial(List<Document> documents) {
-		List<UpdateOneModel<Document>> updates = documents.stream()
-				.peek(it -> idValidator.validateHasIdField("update", it))
-				.map(this::toUpdateOneModel)
-				.filter(Objects::nonNull)
-				.collect(toList());
-		if (!updates.isEmpty()) {
-			collection.bulkWrite(updates, new BulkWriteOptions().ordered(false));
+	public void bulkUpdate(Consumer<BulkUpdater> bulkUpdater) {
+		List<WriteModel<Document>> writeModels = new ArrayList<>();
+		bulkUpdater.accept((ids, fieldsToSet) -> {
+			Bson updates = toUpdates(fieldsToSet);
+			if (ids.isEmpty()) {
+				log.warn("Skipping updates because no ids provided");
+			} else if (updates == null) {
+				log.warn("Skipping updates because no fields to update provided");
+			} else {
+				Bson filter = Filters.in("_id", ids);
+				UpdateManyModel<Document> updateManyModel = new UpdateManyModel<>(filter, updates);
+				writeModels.add(updateManyModel);
+			}
+		});
+		if (writeModels.isEmpty()) {
+			log.warn("Skipping bulkWrite because no updates provided");
+		} else {
+			collection.bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
 		}
 	}
 
@@ -191,16 +207,10 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Nullable
-	private UpdateOneModel<Document> toUpdateOneModel(Document document) {
-		Object id = document.get("_id");
-		if (id == null) {
-			return null;
-		}
-		return document.entrySet().stream()
-				.filter(entry -> !entry.getKey().equals("_id"))
+	private static Bson toUpdates(Map<String, Object> fieldsToSet) {
+		return fieldsToSet.entrySet().stream()
 				.map(entry -> Updates.set(entry.getKey(), entry.getValue()))
 				.reduce(Updates::combine)
-				.map(update -> new UpdateOneModel<Document>(Filters.eq(id), update))
 				.orElse(null);
 	}
 

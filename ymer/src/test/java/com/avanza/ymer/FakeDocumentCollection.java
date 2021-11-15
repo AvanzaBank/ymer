@@ -22,15 +22,14 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -93,13 +92,11 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void updateAllPartial(List<Document> documents) {
-		for (Document document : documents) {
-			Map<String, Object> updates = new LinkedHashMap<>(document);
-			Optional.ofNullable(updates.remove("_id"))
-					.map(this::findById)
-					.ifPresent(it -> it.putAll(updates));
-		}
+	public void bulkUpdate(Consumer<BulkUpdater> bulkUpdater) {
+		bulkUpdater.accept((ids, fieldsToSet) -> ids.stream()
+				.map(this::findById)
+				.filter(Objects::nonNull)
+				.forEach(it -> it.putAll(fieldsToSet)));
 	}
 
 	@Override
