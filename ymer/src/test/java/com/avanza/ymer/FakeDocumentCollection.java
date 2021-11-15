@@ -171,7 +171,7 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public Stream<List<Document>> findByQuery(Query query, int batchSize) {
+	public Stream<List<Document>> findByQuery(Query query, int batchSize, String... includeFields) {
 		throw new UnsupportedOperationException();
 	}
 

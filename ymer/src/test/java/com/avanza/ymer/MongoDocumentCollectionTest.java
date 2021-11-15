@@ -17,8 +17,8 @@ package com.avanza.ymer;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -177,13 +177,9 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 		documentCollection.insertAll(d1, d2);
 
-		List<Document> results = documentCollection.findByQuery(query(where("count").is(21)), 10).flatMap(List::stream).collect(toList());
+		List<Document> results = documentCollection.findByQuery(query(where("count").is(21)), 10, "count").flatMap(List::stream).collect(toList());
 
-		assertThat(results, hasSize(1));
-		assertThat(results.get(0).get("_id"), is(d1.get("_id")));
-
-		assertEquals(d1, documentCollection.findById("id_1"));
-		assertEquals(d2, documentCollection.findById("id_2"));
+		assertThat(results, contains(samePropertyValuesAs(d1)));
 	}
 
 	static class FakeSpaceObject {

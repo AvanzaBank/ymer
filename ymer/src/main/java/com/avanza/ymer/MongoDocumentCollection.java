@@ -33,12 +33,14 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.util.StreamUtils;
 import com.mongodb.MongoWriteException;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.Updates;
@@ -96,8 +98,12 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public Stream<List<Document>> findByQuery(Query query, int batchSize) {
-		return StreamUtils.buffer(toStream(collection.find(query.getQueryObject()).batchSize(batchSize)), batchSize);
+	public Stream<List<Document>> findByQuery(Query query, int batchSize, String... includeFields) {
+		FindIterable<Document> iterable = collection.find(query.getQueryObject()).batchSize(batchSize);
+		if(includeFields.length > 0) {
+			iterable = iterable.projection(Projections.include(includeFields));
+		}
+		return StreamUtils.buffer(toStream(iterable), batchSize);
 	}
 
 	@Override

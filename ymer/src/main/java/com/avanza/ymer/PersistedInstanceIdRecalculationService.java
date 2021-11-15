@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -61,7 +62,7 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 			log.info("Step 1/3\tNo index to drop");
 		}
 
-		try (Stream<List<Document>> batches = collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), BATCH_SIZE)) {
+		try (Stream<List<Document>> batches = collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), BATCH_SIZE, DOCUMENT_ROUTING_KEY, DOCUMENT_INSTANCE_ID)) {
 			AtomicInteger count = new AtomicInteger();
 			batches.forEach(batch -> {
 				List<Document> updates = batch.stream()
@@ -72,10 +73,15 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 							}
 						})
 						.map(it -> {
-							Object id = it.get("_id");
+							Object previousInstanceId = it.get(DOCUMENT_INSTANCE_ID);
 							int instanceId = getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
-							return new Document("_id", id).append(DOCUMENT_INSTANCE_ID, instanceId);
+							if (Objects.equals(instanceId, previousInstanceId)) {
+								return null;
+							} else {
+								return new Document("_id", it.get("_id")).append(DOCUMENT_INSTANCE_ID, instanceId);
+							}
 						})
+						.filter(Objects::nonNull)
 						.collect(toList());
 				collection.updateAllPartial(updates);
 			});

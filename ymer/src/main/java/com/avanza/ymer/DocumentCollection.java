@@ -54,8 +54,12 @@ interface DocumentCollection {
 	 * Find by query and a given batch size. Data will be read from the underlying
 	 * mongo collection in batches of {@code batchSize} and returned as a stream of lists,
 	 * where each list is of (at most) {@code batchSize}
+	 *
+	 * @param query the query to filter by
+	 * @param batchSize used for MongoDB cursor and the size of the lists to return
+	 * @param includeFields fields to include. If not specified, all fields will be included. The {@code _id} field is always included.
 	 */
-	Stream<List<Document>> findByQuery(Query query, int batchSize);
+	Stream<List<Document>> findByQuery(Query query, int batchSize, String... includeFields);
 
 	/**
 	 * Replaces a given document in the underlying mongo collection with a new
