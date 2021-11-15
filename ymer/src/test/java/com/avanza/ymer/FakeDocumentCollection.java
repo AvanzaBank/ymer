@@ -92,8 +92,8 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void bulkUpdate(Consumer<BulkUpdater> bulkUpdater) {
-		bulkUpdater.accept((ids, fieldsToSet) -> ids.stream()
+	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
+		bulkWriter.accept((ids, fieldsToSet) -> ids.stream()
 				.map(this::findById)
 				.filter(Objects::nonNull)
 				.forEach(it -> it.putAll(fieldsToSet)));

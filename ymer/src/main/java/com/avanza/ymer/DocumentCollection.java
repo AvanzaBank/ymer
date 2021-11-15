@@ -80,9 +80,9 @@ interface DocumentCollection {
 	void update(Document document);
 
 	/**
-	 * Perform multiple updates in bulk
+	 * Perform multiple write operations in bulk
 	 */
-	void bulkUpdate(Consumer<BulkUpdater> bulkUpdater);
+	void bulkWrite(Consumer<BulkWriter> bulkWriter);
 
 	/**
 	 * Inserts the given object into the underlying mongo collection. <p>
@@ -102,7 +102,7 @@ interface DocumentCollection {
 
 	void createIndex(Document keys, IndexOptions indexOptions);
 
-	interface BulkUpdater {
+	interface BulkWriter {
 
 		void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet);
 

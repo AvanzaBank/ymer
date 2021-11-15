@@ -141,9 +141,9 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void bulkUpdate(Consumer<BulkUpdater> bulkUpdater) {
+	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
 		List<WriteModel<Document>> writeModels = new ArrayList<>();
-		bulkUpdater.accept((ids, fieldsToSet) -> {
+		bulkWriter.accept((ids, fieldsToSet) -> {
 			Bson updates = toUpdates(fieldsToSet);
 			if (ids.isEmpty()) {
 				log.warn("Skipping updates because no ids provided");

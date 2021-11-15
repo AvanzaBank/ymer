@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 import com.mongodb.client.model.IndexOptions;
 
 public class PersistedInstanceIdRecalculationService implements PersistedInstanceIdRecalculationServiceMBean {
-	private static final int BATCH_SIZE = 1_000;
+	private static final int BATCH_SIZE = 10_000;
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final SpaceMirrorContext spaceMirror;
@@ -64,9 +64,10 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 			log.info("Step 1/3\tNo index to drop");
 		}
 
+		log.debug("Using batch size {}", BATCH_SIZE);
 		try (Stream<List<Document>> batches = collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), BATCH_SIZE, DOCUMENT_ROUTING_KEY, DOCUMENT_INSTANCE_ID)) {
 			AtomicInteger count = new AtomicInteger();
-			batches.forEach(batch -> collection.bulkUpdate(bulkUpdater -> {
+			batches.forEach(batch -> collection.bulkWrite(bulkWriter -> {
 				Map<Integer, List<Document>> updatesByInstanceId = batch.stream()
 						.collect(groupingBy(it -> getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfInstances)));
 
@@ -82,7 +83,7 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 								}
 							})
 							.collect(toSet());
-					bulkUpdater.updatePartialByIds(ids, Map.of(DOCUMENT_INSTANCE_ID, instanceId));
+					bulkWriter.updatePartialByIds(ids, Map.of(DOCUMENT_INSTANCE_ID, instanceId));
 				});
 			}));
 			log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());

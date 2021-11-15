@@ -277,7 +277,7 @@ public abstract class DocumentCollectionContract {
 		document.put("first_field", "AA");
 		documentCollection.update(document);
 
-		documentCollection.bulkUpdate(bulkUpdater -> bulkUpdater.updatePartialByIds(Set.of(id), Map.of("second_field", "BB")));
+		documentCollection.bulkWrite(bulkWriter -> bulkWriter.updatePartialByIds(Set.of(id), Map.of("second_field", "BB")));
 
 		Document updatedDocument = documentCollection.findById(id);
 		assertThat(updatedDocument, hasEntry("first_field", "AA"));
