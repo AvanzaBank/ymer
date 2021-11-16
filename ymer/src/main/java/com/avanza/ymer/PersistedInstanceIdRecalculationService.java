@@ -85,7 +85,9 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 								}
 							})
 							.collect(toSet());
-					bulkWriter.updatePartialByIds(ids, Map.of(DOCUMENT_INSTANCE_ID, instanceId));
+					if (!ids.isEmpty()) {
+						bulkWriter.updatePartialByIds(ids, Map.of(DOCUMENT_INSTANCE_ID, instanceId));
+					}
 				});
 			}));
 			log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
