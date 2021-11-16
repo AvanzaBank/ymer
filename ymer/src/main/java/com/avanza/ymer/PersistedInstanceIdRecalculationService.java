@@ -33,7 +33,9 @@ import java.util.stream.Stream;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.query.Query;
 
+import com.avanza.ymer.util.StreamUtils;
 import com.mongodb.client.model.IndexOptions;
 
 public class PersistedInstanceIdRecalculationService implements PersistedInstanceIdRecalculationServiceMBean {
@@ -64,8 +66,8 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 			log.info("Step 1/3\tNo index to drop");
 		}
 
-		log.debug("Using batch size {}", BATCH_SIZE);
-		try (Stream<List<Document>> batches = collection.findByQuery(query(where(DOCUMENT_ROUTING_KEY).exists(true)), BATCH_SIZE, DOCUMENT_ROUTING_KEY, DOCUMENT_INSTANCE_ID)) {
+		log.info("Using batch size {}", BATCH_SIZE);
+		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(createQuery(BATCH_SIZE)), BATCH_SIZE)) {
 			AtomicInteger count = new AtomicInteger();
 			batches.forEach(batch -> collection.bulkWrite(bulkWriter -> {
 				Map<Integer, List<Document>> updatesByInstanceId = batch.stream()
@@ -101,6 +103,13 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 			collection.createIndex(new Document(DOCUMENT_INSTANCE_ID, 1), options);
 			log.info("Step 3/3\tDone creating index");
 		}
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private Query createQuery(int batchSize) {
+		Query query = query(where(DOCUMENT_ROUTING_KEY).exists(true));
+		query.fields().include(DOCUMENT_ROUTING_KEY).include(DOCUMENT_INSTANCE_ID);
+		return query.cursorBatchSize(batchSize);
 	}
 
 }

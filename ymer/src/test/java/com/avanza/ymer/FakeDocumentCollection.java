@@ -168,11 +168,6 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public Stream<List<Document>> findByQuery(Query query, int batchSize, String... includeFields) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Stream<Document> findByTemplate(Document template) {
 		throw new UnsupportedOperationException();
 	}

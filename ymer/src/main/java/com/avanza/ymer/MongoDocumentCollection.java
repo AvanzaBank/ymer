@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.avanza.ymer.util.StreamUtils;
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -45,7 +44,6 @@ import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.Updates;
@@ -100,16 +98,17 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public Stream<Document> findByQuery(Query query) {
-		return toStream(collection.find(query.getQueryObject()));
-	}
-
-	@Override
-	public Stream<List<Document>> findByQuery(Query query, int batchSize, String... includeFields) {
-		FindIterable<Document> iterable = collection.find(query.getQueryObject()).batchSize(batchSize);
-		if(includeFields.length > 0) {
-			iterable = iterable.projection(Projections.include(includeFields));
+		FindIterable<Document> iterable = collection.find(query.getQueryObject());
+		Document fieldsObject = query.getFieldsObject();
+		if (!fieldsObject.isEmpty()) {
+			iterable = iterable.projection(fieldsObject);
 		}
-		return StreamUtils.buffer(toStream(iterable), batchSize);
+		Integer batchSize = query.getMeta().getCursorBatchSize();
+		if (batchSize != null) {
+			iterable = iterable.batchSize(batchSize);
+		}
+
+		return toStream(iterable);
 	}
 
 	@Override

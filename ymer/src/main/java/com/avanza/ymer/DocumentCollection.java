@@ -15,7 +15,6 @@
  */
 package com.avanza.ymer;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -52,17 +51,6 @@ interface DocumentCollection {
 	Document findById(Object id);
 
 	Stream<Document> findByQuery(Query query);
-
-	/**
-	 * Find by query and a given batch size. Data will be read from the underlying
-	 * mongo collection in batches of {@code batchSize} and returned as a stream of lists,
-	 * where each list is of (at most) {@code batchSize}
-	 *
-	 * @param query the query to filter by
-	 * @param batchSize used for MongoDB cursor and the size of the lists to return
-	 * @param includeFields fields to include. If not specified, all fields will be included. The {@code _id} field is always included.
-	 */
-	Stream<List<Document>> findByQuery(Query query, int batchSize, String... includeFields);
 
 	/**
 	 * Replaces a given document in the underlying mongo collection with a new

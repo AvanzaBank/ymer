@@ -177,7 +177,10 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 		documentCollection.insertAll(d1, d2);
 
-		List<Document> results = documentCollection.findByQuery(query(where("count").is(21)), 10, "count").flatMap(List::stream).collect(toList());
+		Query query = query(where("count").is(21)).cursorBatchSize(10);
+		query.fields().include("count");
+
+		List<Document> results = documentCollection.findByQuery(query).collect(toList());
 
 		assertThat(results, contains(samePropertyValuesAs(d1)));
 	}
