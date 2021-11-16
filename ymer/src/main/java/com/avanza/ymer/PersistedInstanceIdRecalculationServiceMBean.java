@@ -17,6 +17,6 @@ package com.avanza.ymer;
 
 public interface PersistedInstanceIdRecalculationServiceMBean {
 
-	void recalculatePersistedInstanceId(String collectionName, int numberOfInstances);
+	void recalculatePersistedInstanceId();
 
 }

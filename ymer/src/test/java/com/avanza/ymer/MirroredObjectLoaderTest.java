@@ -118,7 +118,7 @@ public class MirroredObjectLoaderTest {
 		doc4.put("spaceRouting", 2);
 		doc4.remove(DOCUMENT_INSTANCE_ID); // documents with no instance id should be loaded then filtered in java
 
-		documentCollection.createIndex(new Document(DOCUMENT_INSTANCE_ID, 1), new IndexOptions().name("_index" + DOCUMENT_INSTANCE_ID + "_numberOfInstances_" + contextProperties.getPartitionCount()));
+		documentCollection.createIndex(new Document(DOCUMENT_INSTANCE_ID, 1), new IndexOptions().name("_index" + DOCUMENT_INSTANCE_ID + "_numberOfPartitions_" + contextProperties.getPartitionCount()));
 
 		documentCollection.insertAll(doc1, doc2, doc3, doc4);
 

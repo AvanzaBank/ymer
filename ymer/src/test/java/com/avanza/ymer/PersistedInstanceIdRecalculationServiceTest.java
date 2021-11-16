@@ -17,31 +17,43 @@ package com.avanza.ymer;
 
 import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
+import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
+import static com.j_spaces.core.Constants.Mirror.FULL_MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThrows;
+import static uk.org.webcompere.systemstubs.SystemStubs.execute;
 
 import java.util.List;
 import java.util.stream.IntStream;
 
 import org.bson.Document;
+import org.hamcrest.CustomTypeSafeMatcher;
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 
+import com.avanza.gs.test.PuConfigurers;
+import com.avanza.gs.test.RunningPu;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.client.MongoCollection;
 
-public class PersistedInstanceIdRecalculationServiceTest {
+import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
-	private static final String COLLECTION_NAME = "test_collection";
+public class PersistedInstanceIdRecalculationServiceTest {
 
 	@ClassRule
 	public static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
-	private final MongoCollection<Document> collection = mirrorEnvironment.getMongoTemplate().getCollection(COLLECTION_NAME);
+	private final MongoCollection<Document> collection = mirrorEnvironment.getMongoTemplate().getCollection(TEST_SPACE_OBJECT.collectionName());
 
 	private final PersistedInstanceIdRecalculationService target;
 
@@ -65,16 +77,49 @@ public class PersistedInstanceIdRecalculationServiceTest {
 	}
 
 	@Test
-	public void shouldUpdateDocumentsWithCorrectInstanceId() {
-		int numberOfInstances = 20;
+	public void shouldRecalculateInstanceIdUsingNumberOfInstancesFromSpaceProperty() throws Exception {
+		int numberOfInstances = 16;
 
-		target.recalculatePersistedInstanceId(COLLECTION_NAME, numberOfInstances);
+		try(RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
+				.contextProperty("exportExceptionHandlerMBean", "true")
+				.contextProperty(FULL_MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT, String.valueOf(numberOfInstances))
+				.parentContext(mirrorEnvironment.getMongoClientContext())
+				.configure()) {
+			mirrorPu.start();
 
+			ApplicationContext applicationContext = (ApplicationContext) mirrorPu.getApplicationContexts().iterator().next();
+			target.setApplicationContext(applicationContext);
+
+			target.recalculatePersistedInstanceId();
+
+			verifyCollection(numberOfInstances);
+		}
+	}
+
+	@Test
+	public void shouldRecalculateInstanceIdUsingNumberOfInstancesFromSystemProperty() throws Exception {
+		int numberOfInstances = 32;
+
+		execute(() -> {
+			target.recalculatePersistedInstanceId();
+
+			verifyCollection(numberOfInstances);
+		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
+	}
+
+	@Test
+	public void shouldThrowExceptionWhenNumberOfInstancesCannotBeDetermined() {
+		assertThrows(IllegalStateException.class, target::recalculatePersistedInstanceId);
+	}
+
+	private void verifyCollection(int numberOfInstances) {
 		MongoDocumentCollection mongoDocumentCollection = new MongoDocumentCollection(collection);
 		mongoDocumentCollection.findAll()
 				.forEach(document ->
-								 assertThat(document.getInteger(DOCUMENT_INSTANCE_ID), equalTo(getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances)))
+								 assertThat(document.getInteger(DOCUMENT_INSTANCE_ID), is(getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances)))
 				);
+		assertThat(mongoDocumentCollection.getIndexes().collect(toList()),
+						   hasItem(both(isIndexForField(DOCUMENT_INSTANCE_ID)).and(nameEndsWith("_" + numberOfInstances))));
 	}
 
 	private Document createDocument(int id) {
@@ -82,4 +127,24 @@ public class PersistedInstanceIdRecalculationServiceTest {
 		document.put(DOCUMENT_ROUTING_KEY, id);
 		return document;
 	}
+
+	@SuppressWarnings("SameParameterValue")
+	private static Matcher<IndexInfo> isIndexForField(String fieldName) {
+		return new CustomTypeSafeMatcher<>("is index for field " + fieldName) {
+			@Override
+			protected boolean matchesSafely(IndexInfo item) {
+				return item.isIndexForFields(List.of(fieldName));
+			}
+		};
+	}
+
+	private static Matcher<IndexInfo> nameEndsWith(String nameSuffix) {
+		return new CustomTypeSafeMatcher<>("index name ends with " + nameSuffix) {
+			@Override
+			protected boolean matchesSafely(IndexInfo item) {
+				return item.getName().endsWith(nameSuffix);
+			}
+		};
+	}
+
 }

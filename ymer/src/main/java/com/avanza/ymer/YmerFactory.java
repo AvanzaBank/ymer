@@ -21,8 +21,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -37,7 +43,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Elias Lindholm (elilin)
  *
  */
-public final class YmerFactory {
+public final class YmerFactory implements ApplicationContextAware {
 	private static final Logger LOG = LoggerFactory.getLogger(YmerFactory.class);
 
 	private MirrorExceptionListener exceptionListener = (e, failedOperation, failedObjects) -> {};
@@ -49,6 +55,9 @@ public final class YmerFactory {
 	private final MirroredObjects mirroredObjects;
 	private final MongoConverter mongoConverter;
 	private final Supplier<MongoDatabase> mongoDatabaseSupplier;
+
+	@Nullable
+	private ApplicationContext applicationContext;
 
 	public YmerFactory(Supplier<MongoDatabase> mongoDatabaseSupplier,
 					   MongoConverter mongoConverter,
@@ -72,6 +81,11 @@ public final class YmerFactory {
 					   MongoConverter mongoConverter,
 					   Collection<MirroredObjectDefinition<?>> definitions) {
 		this(mongoDbFactory::getDb, mongoConverter, definitions);
+	}
+
+	@Override
+	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 	/**
@@ -128,6 +142,9 @@ public final class YmerFactory {
 		}
 		if (mirroredObjects.getMirroredObjects().stream().anyMatch(MirroredObject::persistInstanceId)) {
 			ymerSpaceSynchronizationEndpoint.registerPersistedInstanceIdRecalculationServiceMBean();
+		}
+		if (applicationContext != null) {
+			ymerSpaceSynchronizationEndpoint.setApplicationContext(applicationContext);
 		}
 		return ymerSpaceSynchronizationEndpoint;
 	}
