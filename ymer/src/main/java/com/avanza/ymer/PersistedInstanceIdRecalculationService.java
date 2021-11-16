@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -99,20 +100,22 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 
 		log.info("Using batch size {}", BATCH_SIZE);
 		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(createQuery(BATCH_SIZE)), BATCH_SIZE)) {
-			AtomicInteger count = new AtomicInteger();
+			LongAdder analyzedCount = new LongAdder();
+			AtomicInteger updatedCount = new AtomicInteger();
 			batches.forEach(batch -> collection.bulkWrite(bulkWriter -> {
 				Map<Integer, List<Document>> updatesByInstanceId = batch.stream()
 						.collect(groupingBy(it -> getInstanceId(it.get(DOCUMENT_ROUTING_KEY), numberOfPartitions)));
 
 				updatesByInstanceId.forEach((instanceId, documents) -> {
 					Set<Object> ids = documents.stream()
+							.peek(it -> analyzedCount.increment())
 							.filter(document -> !Objects.equals(instanceId, document.get(DOCUMENT_INSTANCE_ID)))
 							.map(document -> document.get("_id"))
 							.filter(Objects::nonNull)
 							.peek(it -> {
-								int currentCount = count.incrementAndGet();
+								int currentCount = updatedCount.incrementAndGet();
 								if (currentCount % 10_000 == 0) {
-									log.info("Step 2/3\tUpdated persisted instance id for {} documents", currentCount);
+									log.info("Step 2/3\tUpdated persisted instance id for {} documents ({} analyzed)", currentCount, analyzedCount.sum());
 								}
 							})
 							.collect(toSet());
@@ -121,7 +124,7 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 					}
 				});
 			}));
-			log.info("Step 2/3\tUpdated persisted instance id for {} documents", count.get());
+			log.info("Step 2/3\tUpdated persisted instance id for {} documents total ({} analyzed total)", updatedCount.get(), analyzedCount.sum());
 		}
 
 		boolean indexExists = collection.getIndexes()
