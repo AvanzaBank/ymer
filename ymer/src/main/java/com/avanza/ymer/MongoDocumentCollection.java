@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -140,22 +141,26 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
+	@SuppressWarnings("Convert2Lambda")
 	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
 		List<WriteModel<Document>> writeModels = new ArrayList<>();
-		bulkWriter.accept((ids, fieldsToSet) -> {
-			Bson updates = toUpdates(fieldsToSet);
-			if (ids.isEmpty()) {
-				log.warn("Skipping updates because no ids provided");
-			} else if (updates == null) {
-				log.warn("Skipping updates because no fields to update provided");
-			} else {
-				Bson filter = Filters.in("_id", ids);
-				UpdateManyModel<Document> updateManyModel = new UpdateManyModel<>(filter, updates);
-				writeModels.add(updateManyModel);
+		bulkWriter.accept(new BulkWriter() {
+			@Override
+			public void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet) {
+				Bson updates = toUpdates(fieldsToSet);
+				if (ids.isEmpty()) {
+					log.warn("Skipping updates because no ids provided");
+				} else if (updates == null) {
+					log.warn("Skipping updates because no fields to update provided");
+				} else {
+					Bson filter = Filters.in("_id", ids);
+					UpdateManyModel<Document> updateManyModel = new UpdateManyModel<>(filter, updates);
+					writeModels.add(updateManyModel);
+				}
 			}
 		});
 		if (writeModels.isEmpty()) {
-			log.warn("Skipping bulkWrite because no updates provided");
+			log.debug("Skipping bulkWrite because no operations provided");
 		} else {
 			collection.bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
 		}
