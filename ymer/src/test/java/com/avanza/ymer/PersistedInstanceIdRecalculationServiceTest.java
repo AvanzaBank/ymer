@@ -38,7 +38,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 
 import com.avanza.gs.test.PuConfigurers;
@@ -87,10 +87,11 @@ public class PersistedInstanceIdRecalculationServiceTest {
 				.configure()) {
 			mirrorPu.start();
 
-			ApplicationContext applicationContext = (ApplicationContext) mirrorPu.getApplicationContexts().iterator().next();
-			target.setApplicationContext(applicationContext);
+			BeanFactory applicationContext = mirrorPu.getApplicationContexts().iterator().next();
+			YmerSpaceSynchronizationEndpoint spaceSynchronizationEndpoint = applicationContext.getBean(YmerSpaceSynchronizationEndpoint.class);
+			PersistedInstanceIdRecalculationService persistedInstanceIdRecalculationService = spaceSynchronizationEndpoint.getPersistedInstanceIdRecalculationService();
 
-			target.recalculatePersistedInstanceId();
+			persistedInstanceIdRecalculationService.recalculatePersistedInstanceId();
 
 			verifyCollection(numberOfInstances);
 		}
