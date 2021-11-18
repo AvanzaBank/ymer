@@ -17,15 +17,19 @@ package com.avanza.ymer;
 
 import java.lang.management.ManagementFactory;
 
+import javax.annotation.Nonnull;
 import javax.management.ObjectName;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
-final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
+final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint implements ApplicationContextAware {
 
 	private static final Logger log = LoggerFactory.getLogger(YmerSpaceSynchronizationEndpoint.class);
 
@@ -44,6 +48,11 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
 		mirroredObjectWriter.executeBulk(batchData);
+	}
+
+	@Override
+	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
+		persistedInstanceIdRecalculationService.setApplicationContext(applicationContext);
 	}
 
 	public PersistedInstanceIdRecalculationService getPersistedInstanceIdRecalculationService() {

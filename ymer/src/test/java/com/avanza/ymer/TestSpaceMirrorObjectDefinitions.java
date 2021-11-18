@@ -25,6 +25,8 @@ public class TestSpaceMirrorObjectDefinitions  {
 
 	public static final MirroredObjectDefinition<TestSpaceObject> TEST_SPACE_OBJECT =
 			MirroredObjectDefinition.create(TestSpaceObject.class)
+					.loadDocumentsRouted(true)
+					.persistInstanceId(true)
 					.documentPatches(new TestSpaceObjectV1Patch(), new TestSpaceObjectV2Patch());
 
 	public static final MirroredObjectDefinition<TestSpaceOtherObject> TEST_SPACE_OTHER_OBJECT =

@@ -23,13 +23,13 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -92,10 +92,11 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void updateById(Object id, Map<String, Object> fieldsAndValuesToSet) {
-		collection.stream()
-				.filter(it -> Objects.equals(it.get("_id"), id))
-				.forEach(it -> it.putAll(fieldsAndValuesToSet));
+	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
+		bulkWriter.accept((ids, fieldsToSet) -> ids.stream()
+				.map(this::findById)
+				.filter(Objects::nonNull)
+				.forEach(it -> it.putAll(fieldsToSet)));
 	}
 
 	@Override

@@ -18,24 +18,37 @@ package com.avanza.ymer;
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static java.util.Spliterators.spliteratorUnknownSize;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import javax.annotation.Nullable;
+
 import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.MongoWriteException;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -45,7 +58,7 @@ import com.mongodb.client.result.UpdateResult;
  *
  */
 final class MongoDocumentCollection implements DocumentCollection {
-
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final MongoCollection<Document> collection;
 	private final IdValidator idValidator;
 
@@ -86,7 +99,17 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	@Override
 	public Stream<Document> findByQuery(Query query) {
-		return toStream(collection.find(query.getQueryObject()));
+		FindIterable<Document> iterable = collection.find(query.getQueryObject());
+		Document fieldsObject = query.getFieldsObject();
+		if (!fieldsObject.isEmpty()) {
+			iterable = iterable.projection(fieldsObject);
+		}
+		Integer batchSize = query.getMeta().getCursorBatchSize();
+		if (batchSize != null) {
+			iterable = iterable.batchSize(batchSize);
+		}
+
+		return toStream(iterable);
 	}
 
 	@Override
@@ -118,12 +141,29 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void updateById(Object id, Map<String, Object> fieldsAndValuesToSet) {
-		fieldsAndValuesToSet.entrySet().stream().map(entry -> Updates.set(entry.getKey(), entry.getValue())).reduce(Updates::combine)
-				.ifPresent(updates -> {
-					UpdateResult updateResult = collection.updateOne(Filters.eq(id), updates);
-					idValidator.validateUpdatedExistingDocument("update", updateResult, new Document("_id", id));
-				});
+	@SuppressWarnings("Convert2Lambda")
+	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
+		List<WriteModel<Document>> writeModels = new ArrayList<>();
+		bulkWriter.accept(new BulkWriter() {
+			@Override
+			public void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet) {
+				Bson updates = toUpdates(fieldsToSet);
+				if (ids.isEmpty()) {
+					log.warn("Skipping updates because no ids provided");
+				} else if (updates == null) {
+					log.warn("Skipping updates because no fields to update provided");
+				} else {
+					Bson filter = Filters.in("_id", ids);
+					UpdateManyModel<Document> updateManyModel = new UpdateManyModel<>(filter, updates);
+					writeModels.add(updateManyModel);
+				}
+			}
+		});
+		if (writeModels.isEmpty()) {
+			log.debug("Skipping bulkWrite because no operations provided");
+		} else {
+			collection.bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
+		}
 	}
 
 	@Override
@@ -168,6 +208,14 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public void createIndex(Document keys, IndexOptions indexOptions) {
 		collection.createIndex(keys, indexOptions);
+	}
+
+	@Nullable
+	private static Bson toUpdates(Map<String, Object> fieldsToSet) {
+		return fieldsToSet.entrySet().stream()
+				.map(entry -> Updates.set(entry.getKey(), entry.getValue()))
+				.reduce(Updates::combine)
+				.orElse(null);
 	}
 
 	private static <T> Stream<T> toStream(MongoIterable<T> mongoIterable) {

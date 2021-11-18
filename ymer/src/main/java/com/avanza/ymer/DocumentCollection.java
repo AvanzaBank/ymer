@@ -16,6 +16,8 @@
 package com.avanza.ymer;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.bson.Document;
@@ -66,9 +68,9 @@ interface DocumentCollection {
 	void update(Document document);
 
 	/**
-	 * Updates a given document, identified by id, setting only the specified fields.
+	 * Perform multiple write operations in bulk
 	 */
-	void updateById(Object id, Map<String, Object> fieldsAndValuesToSet);
+	void bulkWrite(Consumer<BulkWriter> bulkWriter);
 
 	/**
 	 * Inserts the given object into the underlying mongo collection. <p>
@@ -87,4 +89,10 @@ interface DocumentCollection {
 	void dropIndex(String name);
 
 	void createIndex(Document keys, IndexOptions indexOptions);
+
+	interface BulkWriter {
+
+		void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet);
+
+	}
 }
