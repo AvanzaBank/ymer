@@ -75,6 +75,10 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 	}
 
 	public boolean collectionNeedsCalculation(String collectionName) {
+		if (!collectionIsDefinedInMirroredObjects(collectionName)) {
+			log.warn("No mirrored object definition was found for collection [{}]", collectionName);
+			return false;
+		}
 		try {
 			int numberOfPartitions = determineNumberOfPartitions();
 			DocumentCollection collection = spaceMirror.getDocumentDb().getCollection(collectionName);
@@ -82,9 +86,15 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 					.filter(index -> index.isIndexForFields(Set.of(DOCUMENT_INSTANCE_ID)))
 					.noneMatch(isIndexForNumberOfPartitions(numberOfPartitions));
 		} catch (Exception e) {
-			log.warn("Could not determine whether persisted instance id should be recalculated for collection " + collectionName, e);
+			log.warn("Could not determine whether persisted instance id should be recalculated for collection [{}]", collectionName, e);
 			return false;
 		}
+	}
+
+	private boolean collectionIsDefinedInMirroredObjects(String collectionName) {
+		return spaceMirror.getMirroredDocuments().stream()
+				.map(MirroredObject::getCollectionName)
+				.anyMatch(collectionName::equals);
 	}
 
 	@Override
@@ -99,6 +109,11 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 
 	@Override
 	public void recalculatePersistedInstanceId(String collectionName) {
+		if (!collectionIsDefinedInMirroredObjects(collectionName)) {
+			log.warn("Cannot recalculate persisted instance id for collection [{}], no definition was found in mirrored objects",
+					collectionName);
+			return;
+		}
 		int numberOfPartitions = determineNumberOfPartitions();
 		recalculatePersistedInstanceId(collectionName, numberOfPartitions);
 	}

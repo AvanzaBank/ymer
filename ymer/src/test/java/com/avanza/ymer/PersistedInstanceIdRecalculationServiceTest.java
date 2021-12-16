@@ -26,7 +26,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static uk.org.webcompere.systemstubs.SystemStubs.execute;
 
 import java.util.List;
@@ -129,6 +131,33 @@ public class PersistedInstanceIdRecalculationServiceTest {
 		try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
 			PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
 			assertThrows(IllegalStateException.class, target::recalculatePersistedInstanceId);
+		}
+	}
+
+	@Test
+	public void testCollectionNeedsRecalculation() throws Exception {
+		int numberOfInstances = 1;
+		try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
+			execute(() -> {
+				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
+				assertTrue(target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
+
+				target.recalculatePersistedInstanceId(TEST_SPACE_OBJECT.collectionName());
+				verifyCollection(numberOfInstances);
+
+				assertFalse(target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
+			}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
+		}
+	}
+
+	@Test
+	public void notExistingCollectionShouldReturnFalse() throws Exception {
+		int numberOfInstances = 1;
+		try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
+			execute(() -> {
+				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
+				assertFalse(target.collectionNeedsCalculation("NOT_EXISTING_COLLECTION"));
+			}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
 		}
 	}
 
