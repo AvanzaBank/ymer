@@ -42,6 +42,8 @@ final class MirroredObject<T> {
 	private final boolean writeBackPatchedDocuments;
 	private final boolean loadDocumentsRouted;
 	private final boolean persistInstanceId;
+	private final boolean recalculateInstanceIdOnStartup;
+	private final int recalculateInstanceIdWithDelay;
 	private final boolean keepPersistent;
     private final String collectionName;
 	private final TemplateFactory customInitialLoadTemplateFactory;
@@ -53,7 +55,12 @@ final class MirroredObject<T> {
 		this.excludeFromInitialLoad = override.excludeFromInitialLoad(definition);
         this.writeBackPatchedDocuments = override.writeBackPatchedDocuments(definition);
         this.loadDocumentsRouted = override.loadDocumentsRouted(definition);
-        this.persistInstanceId = override.persistInstanceId(definition);
+
+		PersistInstanceIdDefinition<?> persistInstanceId = override.persistInstanceId(definition);
+        this.persistInstanceId = persistInstanceId.isEnabled();
+		this.recalculateInstanceIdOnStartup = persistInstanceId.isRecalculateOnStartup();
+		this.recalculateInstanceIdWithDelay = persistInstanceId.getRecalculateWithDelay();
+
         this.keepPersistent = definition.keepPersistent();
         this.collectionName = definition.collectionName();
         this.customInitialLoadTemplateFactory = definition.customInitialLoadTemplateFactory();
@@ -205,6 +212,14 @@ final class MirroredObject<T> {
 
 	boolean persistInstanceId() {
 		return persistInstanceId;
+	}
+
+	boolean recalculateInstanceIdOnStartup() {
+		return recalculateInstanceIdOnStartup;
+	}
+
+	int recalculateInstanceIdWithDelay() {
+		return recalculateInstanceIdWithDelay;
 	}
 
 	ReadPreference getReadPreference() {

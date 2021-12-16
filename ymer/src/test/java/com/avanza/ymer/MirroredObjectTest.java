@@ -342,7 +342,8 @@ public class MirroredObjectTest {
 	@Test
 	public void setsInstanceIdAndRoutingKeyForPersistInstanceId() throws Exception {
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
-				.persistInstanceId(true)
+				.persistInstanceId()
+				.and()
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
@@ -356,7 +357,8 @@ public class MirroredObjectTest {
 	@Test
 	public void doesNotSetInstanceIdWhenNull() throws Exception {
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
-				.persistInstanceId(true)
+				.persistInstanceId()
+				.and()
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
@@ -371,8 +373,9 @@ public class MirroredObjectTest {
 		MirroredObjectDefinition<RoutedType> definition = MirroredObjectDefinition.create(RoutedType.class)
 				.loadDocumentsRouted(true)
 				.writeBackPatchedDocuments(true)
-				.excludeFromInitialLoad(true)
-				.persistInstanceId(true);
+				.persistInstanceId()
+				.and()
+				.excludeFromInitialLoad(true);
 
 		assertTrue(definition.buildMirroredDocument(fromSystemProperties()).loadDocumentsRouted());
 		assertTrue(definition.buildMirroredDocument(fromSystemProperties()).writeBackPatchedDocuments());

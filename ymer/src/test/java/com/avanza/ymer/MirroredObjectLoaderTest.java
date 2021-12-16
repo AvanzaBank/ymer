@@ -95,7 +95,8 @@ public class MirroredObjectLoaderTest {
 	@Test
 	public void loadsAllObjectsRoutedToCurrentPartitionByPersistedInstanceId() {
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class)
-				.persistInstanceId(true)
+				.persistInstanceId()
+				.and()
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		Document doc1 = new Document();

@@ -21,6 +21,7 @@ import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
 import static com.j_spaces.core.Constants.Mirror.FULL_MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT;
 import static java.util.stream.Collectors.toList;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.hasItem;
@@ -29,6 +30,8 @@ import static org.junit.Assert.assertThrows;
 import static uk.org.webcompere.systemstubs.SystemStubs.execute;
 
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.bson.Document;
@@ -43,7 +46,6 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
-import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.mongodb.client.MongoCollection;
 
 import uk.org.webcompere.systemstubs.properties.SystemProperties;
@@ -54,14 +56,6 @@ public class PersistedInstanceIdRecalculationServiceTest {
 	public static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
 	private final MongoCollection<Document> collection = mirrorEnvironment.getMongoTemplate().getCollection(TEST_SPACE_OBJECT.collectionName());
-
-	private final PersistedInstanceIdRecalculationService target;
-
-	public PersistedInstanceIdRecalculationServiceTest() {
-		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
-		SpaceSynchronizationEndpoint spaceSynchronizationEndpoint = testSpaceMirrorFactory.createSpaceSynchronizationEndpoint();
-		target = ((YmerSpaceSynchronizationEndpoint) spaceSynchronizationEndpoint).getPersistedInstanceIdRecalculationService();
-	}
 
 	@Before
 	public void setUp() {
@@ -98,19 +92,49 @@ public class PersistedInstanceIdRecalculationServiceTest {
 	}
 
 	@Test
+	public void shouldStartRecalculationJobOnStartup() throws Exception {
+		int numberOfInstances = 14;
+		Properties testProperties = new Properties();
+		testProperties.setProperty("ymer.com.avanza.ymer.TestSpaceObject.recalculateInstanceIdOnStartup", "true");
+		testProperties.setProperty("ymer.com.avanza.ymer.TestSpaceObject.recalculateInstanceIdWithDelay", "1");
+
+		execute(() -> {
+			try (RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
+					.contextProperty("exportExceptionHandlerMBean", "false")
+					.contextProperty(FULL_MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT, String.valueOf(numberOfInstances))
+					.parentContext(mirrorEnvironment.getMongoClientContext())
+					.configure()) {
+				mirrorPu.start();
+
+				await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> verifyCollection(numberOfInstances));
+			}
+		}, new SystemProperties(testProperties));
+	}
+
+	@Test
 	public void shouldRecalculateInstanceIdUsingNumberOfInstancesFromSystemProperty() throws Exception {
 		int numberOfInstances = 32;
 
-		execute(() -> {
-			target.recalculatePersistedInstanceId();
-
-			verifyCollection(numberOfInstances);
-		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
+		try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
+			PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
+			execute(() -> {
+				target.recalculatePersistedInstanceId();
+				verifyCollection(numberOfInstances);
+			}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
+		}
 	}
 
 	@Test
 	public void shouldThrowExceptionWhenNumberOfInstancesCannotBeDetermined() {
-		assertThrows(IllegalStateException.class, target::recalculatePersistedInstanceId);
+		try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
+			PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
+			assertThrows(IllegalStateException.class, target::recalculatePersistedInstanceId);
+		}
+	}
+
+	private static YmerSpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
+		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
+		return (YmerSpaceSynchronizationEndpoint) testSpaceMirrorFactory.createSpaceSynchronizationEndpoint();
 	}
 
 	private void verifyCollection(int numberOfInstances) {

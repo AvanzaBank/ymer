@@ -52,7 +52,7 @@ public final class MirroredObjectDefinition<T> {
 	private boolean excludeFromInitialLoad = false;
 	private boolean writeBackPatchedDocuments = true;
 	private boolean loadDocumentsRouted = false;
-	private boolean persistInstanceId = false;
+	private final PersistInstanceIdDefinition<T> persistInstanceId = new PersistInstanceIdDefinition<>(this);
 	private boolean keepPersistent = false;
 	private TemplateFactory customInitialLoadTemplateFactory;
 	private ReadPreference readPreference;
@@ -148,13 +148,14 @@ public final class MirroredObjectDefinition<T> {
 	 * Whether to persist the current instance id for each document.
 	 * This can increase load speed, but requires all persisted partition numbers to be recalculated
 	 * when the number of partitions change.
+	 *
+	 * This will enable persisting of instance id with default settings.
 	 */
-	public MirroredObjectDefinition<T> persistInstanceId(boolean persistInstanceId) {
-		this.persistInstanceId = persistInstanceId;
-		return this;
+	public PersistInstanceIdDefinition<T> persistInstanceId() {
+		return persistInstanceId.enableWithDefaults();
 	}
 
-	boolean persistInstanceId() {
+	PersistInstanceIdDefinition<T> getPersistInstanceId() {
 		return persistInstanceId;
 	}
 
