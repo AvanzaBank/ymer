@@ -19,6 +19,7 @@ import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
 import static com.j_spaces.core.Constants.Mirror.MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -32,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
@@ -44,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.util.StreamUtils;
@@ -71,6 +74,29 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 		this.applicationContext = applicationContext;
 	}
 
+	public boolean collectionNeedsCalculation(String collectionName) {
+		if (!collectionIsDefinedInMirroredObjects(collectionName)) {
+			log.warn("No mirrored object definition was found for collection [{}]", collectionName);
+			return false;
+		}
+		try {
+			int numberOfPartitions = determineNumberOfPartitions();
+			DocumentCollection collection = spaceMirror.getDocumentDb().getCollection(collectionName);
+			return collection.getIndexes()
+					.filter(index -> index.isIndexForFields(Set.of(DOCUMENT_INSTANCE_ID)))
+					.noneMatch(isIndexForNumberOfPartitions(numberOfPartitions));
+		} catch (Exception e) {
+			log.warn("Could not determine whether persisted instance id should be recalculated for collection [{}]", collectionName, e);
+			return false;
+		}
+	}
+
+	private boolean collectionIsDefinedInMirroredObjects(String collectionName) {
+		return spaceMirror.getMirroredDocuments().stream()
+				.map(MirroredObject::getCollectionName)
+				.anyMatch(collectionName::equals);
+	}
+
 	@Override
 	public void recalculatePersistedInstanceId() {
 		int numberOfPartitions = determineNumberOfPartitions();
@@ -81,13 +107,23 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 				.forEach(collectionName -> recalculatePersistedInstanceId(collectionName, numberOfPartitions));
 	}
 
+	@Override
+	public void recalculatePersistedInstanceId(String collectionName) {
+		if (!collectionIsDefinedInMirroredObjects(collectionName)) {
+			log.warn("Cannot recalculate persisted instance id for collection [{}], no definition was found in mirrored objects",
+					collectionName);
+			return;
+		}
+		int numberOfPartitions = determineNumberOfPartitions();
+		recalculatePersistedInstanceId(collectionName, numberOfPartitions);
+	}
+
 	private void recalculatePersistedInstanceId(String collectionName, int numberOfPartitions) {
 		log.info("Recalculating persisted instance id for collection {} with {} number of partitions", collectionName, numberOfPartitions);
-		String indexSuffix = "_" + numberOfPartitions;
 		DocumentCollection collection = spaceMirror.getDocumentDb().getCollection(collectionName);
 		boolean indexDropped = collection.getIndexes()
 				.filter(index -> index.isIndexForFields(Set.of(DOCUMENT_INSTANCE_ID)))
-				.filter(index -> !index.getName().endsWith(indexSuffix))
+				.filter(not(isIndexForNumberOfPartitions(numberOfPartitions)))
 				.peek(index -> {
 					log.info("Step 1/3\tDropping index {}", index.getName());
 					collection.dropIndex(index.getName());
@@ -129,16 +165,21 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 
 		boolean indexExists = collection.getIndexes()
 				.filter(index -> index.isIndexForFields(Set.of(DOCUMENT_INSTANCE_ID)))
-				.anyMatch(index -> index.getName().endsWith(indexSuffix));
+				.anyMatch(isIndexForNumberOfPartitions(numberOfPartitions));
 		if (indexExists) {
 			log.info("Step 3/3\tIndex does not need to be created because it already exists");
 		} else {
-			String indexName = "_index" + DOCUMENT_INSTANCE_ID + "_numberOfPartitions" + indexSuffix;
+			String indexName = "_index" + DOCUMENT_INSTANCE_ID + "_numberOfPartitions_" + numberOfPartitions;
 			log.info("Step 3/3\tCreating index {}", indexName);
 			IndexOptions options = new IndexOptions().name(indexName).background(true);
 			collection.createIndex(new Document(DOCUMENT_INSTANCE_ID, 1), options);
 			log.info("Step 3/3\tDone creating index");
 		}
+	}
+
+	private Predicate<IndexInfo> isIndexForNumberOfPartitions(int numberOfPartitions) {
+		String indexSuffix = "_numberOfPartitions_" + numberOfPartitions;
+		return index -> index.getName().endsWith(indexSuffix);
 	}
 
 	private int determineNumberOfPartitions() {

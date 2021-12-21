@@ -15,14 +15,20 @@
  */
 package com.avanza.ymer;
 
+import java.time.Duration;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public interface MirroredObjectDefinitionsOverride {
+
+    Logger log = LoggerFactory.getLogger(MirroredObjectDefinitionsOverride.class);
 
     boolean excludeFromInitialLoad(MirroredObjectDefinition<?> definition);
     boolean writeBackPatchedDocuments(MirroredObjectDefinition<?> definition);
     boolean loadDocumentsRouted(MirroredObjectDefinition<?> definition);
-    boolean persistInstanceId(MirroredObjectDefinition<?> definition);
+    PersistInstanceIdDefinition<?> persistInstanceId(MirroredObjectDefinition<?> definition);
 
     static MirroredObjectDefinitionsOverride noOverride() {
         return new MirroredObjectDefinitionsOverrideNone();
@@ -49,8 +55,8 @@ public interface MirroredObjectDefinitionsOverride {
         }
 
         @Override
-        public boolean persistInstanceId(MirroredObjectDefinition<?> definition) {
-            return definition.persistInstanceId();
+        public PersistInstanceIdDefinition<?> persistInstanceId(MirroredObjectDefinition<?> definition) {
+            return definition.getPersistInstanceId();
         }
     }
 
@@ -74,15 +80,32 @@ public interface MirroredObjectDefinitionsOverride {
         }
 
         @Override
-        public boolean persistInstanceId(MirroredObjectDefinition<?> definition) {
-            return getProperty(definition, "persistInstanceId")
-                    .orElse(definition.persistInstanceId());
+        public PersistInstanceIdDefinition<?> persistInstanceId(MirroredObjectDefinition<?> definition) {
+            PersistInstanceIdDefinition<?> persistInstanceId = PersistInstanceIdDefinition.from(definition.getPersistInstanceId());
+            getProperty(definition, "persistInstanceId").ifPresent(persistInstanceId::enabled);
+            getProperty(definition, "recalculateInstanceIdOnStartup").ifPresent(persistInstanceId::recalculateOnStartup);
+            getIntProperty(definition, "recalculateInstanceIdWithDelay")
+                    .map(Duration::ofSeconds)
+                    .ifPresent(persistInstanceId::recalculateWithDelay);
+            return persistInstanceId;
         }
 
         private Optional<Boolean> getProperty(MirroredObjectDefinition<?> definition, String setting) {
             return Optional.ofNullable(System.getProperty(getPropertyName(definition, setting)))
                     .filter(s -> s.equals("true") || s.equals("false"))
                     .map("true"::equals);
+        }
+
+        private Optional<Integer> getIntProperty(MirroredObjectDefinition<?> definition, String setting) {
+            return Optional.ofNullable(System.getProperty(getPropertyName(definition, setting)))
+                    .flatMap(s -> {
+                        try {
+                            return Optional.of(Integer.valueOf(s));
+                        } catch (NumberFormatException e) {
+                            log.warn("Could not parse setting {} with value [{}] as int", setting, s);
+                            return Optional.empty();
+                        }
+                    });
         }
 
         public static String getPropertyName(MirroredObjectDefinition<?> definition, String setting) {

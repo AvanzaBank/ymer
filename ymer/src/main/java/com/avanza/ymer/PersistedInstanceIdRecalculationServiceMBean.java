@@ -19,4 +19,6 @@ public interface PersistedInstanceIdRecalculationServiceMBean {
 
 	void recalculatePersistedInstanceId();
 
+	void recalculatePersistedInstanceId(String collectionName);
+
 }
