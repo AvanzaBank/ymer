@@ -16,6 +16,7 @@
 package com.avanza.ymer;
 
 import java.lang.reflect.Method;
+import java.time.Duration;
 
 import javax.annotation.Nullable;
 
@@ -43,7 +44,7 @@ final class MirroredObject<T> {
 	private final boolean loadDocumentsRouted;
 	private final boolean persistInstanceId;
 	private final boolean recalculateInstanceIdOnStartup;
-	private final int recalculateInstanceIdWithDelay;
+	private final Duration recalculateInstanceIdWithDelay;
 	private final boolean keepPersistent;
     private final String collectionName;
 	private final TemplateFactory customInitialLoadTemplateFactory;
@@ -218,7 +219,7 @@ final class MirroredObject<T> {
 		return recalculateInstanceIdOnStartup;
 	}
 
-	int recalculateInstanceIdWithDelay() {
+	Duration recalculateInstanceIdWithDelay() {
 		return recalculateInstanceIdWithDelay;
 	}
 

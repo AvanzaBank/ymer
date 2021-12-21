@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -83,7 +84,9 @@ public interface MirroredObjectDefinitionsOverride {
             PersistInstanceIdDefinition<?> persistInstanceId = PersistInstanceIdDefinition.from(definition.getPersistInstanceId());
             getProperty(definition, "persistInstanceId").ifPresent(persistInstanceId::enabled);
             getProperty(definition, "recalculateInstanceIdOnStartup").ifPresent(persistInstanceId::recalculateOnStartup);
-            getIntProperty(definition, "recalculateInstanceIdWithDelay").ifPresent(persistInstanceId::recalculateWithDelay);
+            getIntProperty(definition, "recalculateInstanceIdWithDelay")
+                    .map(Duration::ofSeconds)
+                    .ifPresent(persistInstanceId::recalculateWithDelay);
             return persistInstanceId;
         }
 

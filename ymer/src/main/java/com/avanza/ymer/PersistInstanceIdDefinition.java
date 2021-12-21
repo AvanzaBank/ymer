@@ -15,14 +15,16 @@
  */
 package com.avanza.ymer;
 
+import java.time.Duration;
+
 public final class PersistInstanceIdDefinition<T> {
 
-	private static final int DEFAULT_DELAY = 60 * 60;
+	private static final Duration DEFAULT_DELAY = Duration.ofHours(1);
 
 	private final MirroredObjectDefinition<T> parent;
 	private boolean enabled;
 	private boolean recalculateOnStartup;
-	private int recalculateWithDelay = DEFAULT_DELAY;
+	private Duration recalculateWithDelay = DEFAULT_DELAY;
 
 	PersistInstanceIdDefinition(MirroredObjectDefinition<T> parent) {
 		this.parent = parent;
@@ -63,11 +65,11 @@ public final class PersistInstanceIdDefinition<T> {
 	}
 
 	/**
-	 * Delay starting recalculation of persisted instance id with the specified delay after startup (in seconds).
+	 * Delay starting recalculation of persisted instance id with the specified delay after startup.
 	 * This is done to reduce load on database during initial load of data.
 	 */
-	public PersistInstanceIdDefinition<T> recalculateWithDelay(int recalculateOnStartupDelayInSeconds) {
-		this.recalculateWithDelay = recalculateOnStartupDelayInSeconds;
+	public PersistInstanceIdDefinition<T> recalculateWithDelay(Duration recalculateOnStartupDelay) {
+		this.recalculateWithDelay = recalculateOnStartupDelay;
 		return this;
 	}
 
@@ -93,7 +95,7 @@ public final class PersistInstanceIdDefinition<T> {
 		return recalculateOnStartup;
 	}
 
-	int getRecalculateWithDelay() {
+	Duration getRecalculateWithDelay() {
 		return recalculateWithDelay;
 	}
 }

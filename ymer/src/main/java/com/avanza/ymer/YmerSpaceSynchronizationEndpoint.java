@@ -18,6 +18,7 @@ package com.avanza.ymer;
 import static java.util.stream.Collectors.toList;
 
 import java.lang.management.ManagementFactory;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -90,12 +91,13 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 				.collect(toList());
 
 		for (MirroredObject<?> mirroredObject : objectsToRecalculate) {
-			log.info("Will trigger recalculation of persisted instance id for collections [{}] starting in {} seconds",
+			Duration startJobIn = mirroredObject.recalculateInstanceIdWithDelay();
+			log.info("Will trigger recalculation of persisted instance id for collections [{}] starting in {}",
 					objectsToRecalculate.stream().map(MirroredObject::getCollectionName).collect(Collectors.joining(",")),
-					mirroredObject.recalculateInstanceIdWithDelay()
+					startJobIn
 			);
 			Runnable task = () -> persistedInstanceIdRecalculationService.recalculatePersistedInstanceId(mirroredObject.getCollectionName());
-			scheduledExecutorService.schedule(task, mirroredObject.recalculateInstanceIdWithDelay(), TimeUnit.SECONDS);
+			scheduledExecutorService.schedule(task, startJobIn.getSeconds(), TimeUnit.SECONDS);
 		}
 	}
 
