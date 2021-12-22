@@ -15,7 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
@@ -23,9 +22,9 @@ import static com.j_spaces.core.Constants.Mirror.FULL_MIRROR_SERVICE_CLUSTER_PAR
 import static java.util.stream.Collectors.toList;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -89,7 +88,7 @@ public class PersistedInstanceIdRecalculationServiceTest {
 
 			persistedInstanceIdRecalculationService.recalculatePersistedInstanceId();
 
-			verifyCollection(numberOfInstances);
+			verifyCollectionIsCalculatedFor(numberOfInstances);
 		}
 	}
 
@@ -108,7 +107,7 @@ public class PersistedInstanceIdRecalculationServiceTest {
 					.configure()) {
 				mirrorPu.start();
 
-				await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> verifyCollection(numberOfInstances));
+				await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> verifyCollectionIsCalculatedFor(numberOfInstances));
 			}
 		}, new SystemProperties(testProperties));
 	}
@@ -116,14 +115,44 @@ public class PersistedInstanceIdRecalculationServiceTest {
 	@Test
 	public void shouldRecalculateInstanceIdUsingNumberOfInstancesFromSystemProperty() throws Exception {
 		int numberOfInstances = 32;
-
-		try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
-			PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
-			execute(() -> {
+		execute(() -> {
+			try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
+				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
 				target.recalculatePersistedInstanceId();
-				verifyCollection(numberOfInstances);
-			}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
-		}
+				verifyCollectionIsCalculatedFor(numberOfInstances);
+			}
+		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
+	}
+
+	@Test
+	public void testRecalculatingInstanceIdForNextNumberOfInstances() throws Exception {
+		int currentNumberOfInstances = 32;
+
+		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
+		testSpaceMirrorFactory.setNextNumberOfInstances(38);
+		execute(() -> {
+			try (YmerSpaceSynchronizationEndpoint endpoint = (YmerSpaceSynchronizationEndpoint) testSpaceMirrorFactory.createSpaceSynchronizationEndpoint()) {
+				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
+				target.recalculatePersistedInstanceId();
+				verifyCollectionIsCalculatedFor(32);
+				verifyCollectionIsCalculatedFor(38);
+
+				// Recalculate again, using a different amount of instances
+				testSpaceMirrorFactory.setNextNumberOfInstances(40);
+				target.recalculatePersistedInstanceId();
+
+				verifyCollectionIsCalculatedFor(32);
+				verifyCollectionIsNotCalculatedFor(38);
+				verifyCollectionIsCalculatedFor(40);
+
+				// Recalculate again, without any number of instances, deleting next instance id field
+				testSpaceMirrorFactory.setNextNumberOfInstances(null);
+				target.recalculatePersistedInstanceId();
+
+				verifyCollectionIsCalculatedFor(32);
+				verifyCollectionIsNotCalculatedFor(40);
+			}
+		}, new SystemProperties("cluster.partitions", String.valueOf(currentNumberOfInstances)));
 	}
 
 	@Test
@@ -137,43 +166,53 @@ public class PersistedInstanceIdRecalculationServiceTest {
 	@Test
 	public void testCollectionNeedsRecalculation() throws Exception {
 		int numberOfInstances = 1;
-		try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
-			execute(() -> {
+		execute(() -> {
+			try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
 				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
 				assertTrue(target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
 
 				target.recalculatePersistedInstanceId(TEST_SPACE_OBJECT.collectionName());
-				verifyCollection(numberOfInstances);
+				verifyCollectionIsCalculatedFor(numberOfInstances);
 
 				assertFalse(target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
-			}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
-		}
+			}
+		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
 	}
 
 	@Test
 	public void notExistingCollectionShouldReturnFalse() throws Exception {
 		int numberOfInstances = 1;
-		try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
-			execute(() -> {
+		execute(() -> {
+			try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
 				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
 				assertFalse(target.collectionNeedsCalculation("NOT_EXISTING_COLLECTION"));
-			}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
-		}
+			}
+		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
 	}
 
-	private static YmerSpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
+	private YmerSpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
 		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
 		return (YmerSpaceSynchronizationEndpoint) testSpaceMirrorFactory.createSpaceSynchronizationEndpoint();
 	}
 
-	private void verifyCollection(int numberOfInstances) {
+	private void verifyCollectionIsCalculatedFor(int numberOfInstances) {
 		MongoDocumentCollection mongoDocumentCollection = new MongoDocumentCollection(collection);
+		String fieldName = PersistedInstanceIdUtil.getInstanceIdFieldName(numberOfInstances);
 		mongoDocumentCollection.findAll()
 				.forEach(document ->
-								 assertThat(document.getInteger(DOCUMENT_INSTANCE_ID), is(getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances)))
+								 assertThat(document.getInteger(fieldName), is(getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances)))
 				);
-		assertThat(mongoDocumentCollection.getIndexes().collect(toList()),
-						   hasItem(both(isIndexForField(DOCUMENT_INSTANCE_ID)).and(nameEndsWith("_" + numberOfInstances))));
+		assertThat(mongoDocumentCollection.getIndexes().collect(toList()), hasItem(isIndexForField(fieldName)));
+	}
+
+	private void verifyCollectionIsNotCalculatedFor(int numberOfInstances) {
+		MongoDocumentCollection mongoDocumentCollection = new MongoDocumentCollection(collection);
+		String fieldName = PersistedInstanceIdUtil.getInstanceIdFieldName(numberOfInstances);
+		mongoDocumentCollection.findAll()
+				.forEach(document ->
+						assertThat("Should not contain " + fieldName, document.containsKey(fieldName), is(false))
+				);
+		assertThat(mongoDocumentCollection.getIndexes().collect(toList()), not(hasItem(isIndexForField(fieldName))));
 	}
 
 	private Document createDocument(int id) {
@@ -188,15 +227,6 @@ public class PersistedInstanceIdRecalculationServiceTest {
 			@Override
 			protected boolean matchesSafely(IndexInfo item) {
 				return item.isIndexForFields(List.of(fieldName));
-			}
-		};
-	}
-
-	private static Matcher<IndexInfo> nameEndsWith(String nameSuffix) {
-		return new CustomTypeSafeMatcher<>("index name ends with " + nameSuffix) {
-			@Override
-			protected boolean matchesSafely(IndexInfo item) {
-				return item.getName().endsWith(nameSuffix);
 			}
 		};
 	}

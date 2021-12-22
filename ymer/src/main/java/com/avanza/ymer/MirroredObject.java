@@ -15,10 +15,11 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
+import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
+
 import java.lang.reflect.Method;
 import java.time.Duration;
-
-import javax.annotation.Nullable;
 
 import org.bson.Document;
 
@@ -116,12 +117,12 @@ final class MirroredObject<T> {
 		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, version);
 	}
 
-	void setDocumentAttributes(Document document, T spaceObject, @Nullable Integer instanceId) {
+	void setDocumentAttributes(Document document, T spaceObject, InstanceMetadata metadata) {
 		setDocumentVersion(document);
 		if (loadDocumentsRouted || persistInstanceId) {
 			setRoutingKey(document, spaceObject);
 			if (persistInstanceId) {
-				setInstanceId(document, instanceId);
+				setInstanceIdFields(document, metadata);
 			}
 		}
 	}
@@ -137,10 +138,21 @@ final class MirroredObject<T> {
 		}
 	}
 
-	private void setInstanceId(Document document, @Nullable Integer instanceId) {
-		if (instanceId != null) {
-			document.put(DOCUMENT_INSTANCE_ID, instanceId);
-		}
+	private void setInstanceIdFields(Document document, InstanceMetadata metadata) {
+		// set current instance id for current amount of partitions
+		metadata.getInstanceId().ifPresent(instanceId -> {
+			metadata.getNumberOfInstances().ifPresent(numberOfInstances ->
+					document.put(getInstanceIdFieldName(numberOfInstances), instanceId)
+			);
+		});
+
+		// set instance id calculated using the next amount of partitions
+		metadata.getNextNumberOfInstances().ifPresent(nextNumberOfInstances -> {
+			if (metadata.getNumberOfInstances().isEmpty() || !metadata.getNumberOfInstances().get().equals(nextNumberOfInstances)) {
+				int nextInstanceId = getInstanceId(document.get(DOCUMENT_ROUTING_KEY), nextNumberOfInstances);
+				document.put(getInstanceIdFieldName(nextNumberOfInstances), nextInstanceId);
+			}
+		});
 	}
 
 	int getCurrentVersion() {

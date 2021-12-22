@@ -52,6 +52,8 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	private static final String COLLECTION_NAME = "testcollection";
 
+	private final InstanceMetadata metadata = new InstanceMetadata(2, 2, null);
+
 	@After
 	public void cleanDatabase() {
 		mirrorEnvironment.reset();
@@ -74,12 +76,12 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		Document doc1 = new Document();
 		doc1.put("_id", 1);
 		doc1.put("value", "a");
-		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"), 2);
+		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"), metadata);
 
 		final Document doc2 = new Document();
 		doc2.put("_id", 2);
 		doc2.put("value", "b");
-		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"), 2);
+		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"), metadata);
 
 		// Objects WITHOUT routed field
 		final Document doc3 = new Document();
@@ -125,12 +127,12 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 		Document doc1 = new Document();
 		doc1.put("_id", 1);
 		doc1.put("value", "a");
-		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"), 2);
+		mirroredObject.setDocumentAttributes(doc1, new FakeSpaceObject(1, "a"), metadata);
 
 		final Document doc2 = new Document();
 		doc2.put("_id", 2);
 		doc2.put("value", "b");
-		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"), 2);
+		mirroredObject.setDocumentAttributes(doc2, new FakeSpaceObject(2, "b"), metadata);
 
 		// Objects WITHOUT routed field
 		final Document doc3 = new Document();

@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.lang.management.ManagementFactory;
 import java.util.Set;
@@ -35,6 +36,7 @@ import javax.management.ObjectName;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.bson.Document;
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
@@ -187,6 +189,47 @@ public class YmerMirrorIntegrationTest {
 		assertEventually(() -> mongo.findAll(TestSpaceThirdObject.class), hasItem(new TestSpaceThirdObject("1", "ab|"))); // a is prepended after patching by prewrite processor
 		assertEquals("b|", persister.loadObjects(TestSpaceThirdObject.class, new TestSpaceThirdObject("1", null)).iterator().next().getName()); // nothing happens once patch has been applied
 		assertEventually(() -> mongo.findAll(TestSpaceThirdObject.class), hasItem(new TestSpaceThirdObject("1", "ab|")));  // same in mongo
+	}
+
+	@Test
+	public void testSettingInstanceIdFieldsOnWrite() throws Exception {
+		TestSpaceMirrorFactory spaceMirrorFactory = mirrorPu.getApplicationContexts().iterator().next().getBean(TestSpaceMirrorFactory.class);
+
+		TestSpaceObject object = new TestSpaceObject();
+		object.setId("id_23");
+
+		// First, write a message without setting the next number of instances
+		object.setMessage("mirror_test_1");
+		gigaSpace.write(object, WriteModifiers.WRITE_ONLY);
+		assertEquals(1, gigaSpace.count(new TestSpaceObject()));
+
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(object));
+		Document document = mongo.getCollection(TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT.collectionName()).find().first();
+		assertEquals(1, (int) document.getInteger("_instanceId_1"));
+
+		// Set next number of instances to 4, causing next write to also write id for 4 partitions
+		spaceMirrorFactory.setNextNumberOfInstances(4);
+		object.setMessage("mirror_test_2");
+		gigaSpace.write(object, WriteModifiers.UPDATE_ONLY);
+
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(object));
+
+		document = mongo.getCollection(TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT.collectionName()).find().first();
+		assertEquals(1, (int) document.getInteger("_instanceId_1"));
+		assertEquals(2, (int) document.getInteger("_instanceId_4"));
+
+		// Set next number of instances to 6, causing next write to also write id for 6 partitions & remove id for 4
+		spaceMirrorFactory.setNextNumberOfInstances(6);
+
+		object.setMessage("mirror_test_3");
+		gigaSpace.write(object, WriteModifiers.UPDATE_ONLY);
+
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(object));
+
+		document = mongo.getCollection(TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT.collectionName()).find().first();
+		assertEquals(1, (int) document.getInteger("_instanceId_1"));
+		assertNull(document.get("_instanceId_4"));
+		assertEquals(6, (int) document.getInteger("_instanceId_6"));
 	}
 
 	public static <T> void  assertEventually(Callable<T> poller, Matcher<? super T> matcher) {

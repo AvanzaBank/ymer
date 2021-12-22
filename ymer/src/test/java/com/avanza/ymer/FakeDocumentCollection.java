@@ -23,6 +23,7 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -93,10 +94,23 @@ class FakeDocumentCollection implements DocumentCollection {
 
 	@Override
 	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
-		bulkWriter.accept((ids, fieldsToSet) -> ids.stream()
-				.map(this::findById)
-				.filter(Objects::nonNull)
-				.forEach(it -> it.putAll(fieldsToSet)));
+		bulkWriter.accept(new BulkWriter() {
+			@Override
+			public void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet) {
+				ids.stream()
+						.map(document -> findById(document))
+						.filter(Objects::nonNull)
+						.forEach(it -> it.putAll(fieldsToSet));
+			}
+
+			@Override
+			public void unsetFieldsPartialByIds(Set<Object> ids, Set<String> fieldsToUnset) {
+				ids.stream()
+						.map(document -> findById(document))
+						.filter(Objects::nonNull)
+						.forEach(it -> fieldsToUnset.forEach(it::remove));
+			}
+		});
 	}
 
 	@Override

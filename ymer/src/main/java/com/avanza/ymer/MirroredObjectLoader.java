@@ -16,6 +16,8 @@
 package com.avanza.ymer;
 
 import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
+import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
+import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForNumberOfPartitions;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -86,16 +88,15 @@ final class MirroredObjectLoader<T> {
             return documentCollection.findByTemplate(template);
         }
         if (mirroredObject.persistInstanceId()) {
-            String expectedSuffix = "_" + contextProperties.getPartitionCount();
+            String instanceIdField = getInstanceIdFieldName(contextProperties.getPartitionCount());
             boolean indexExists = documentCollection.getIndexes()
-                    .filter(index -> index.isIndexForFields(List.of(DOCUMENT_INSTANCE_ID)))
-                    .anyMatch(index -> index.getName().endsWith(expectedSuffix));
+                    .anyMatch(isIndexForNumberOfPartitions(contextProperties.getPartitionCount()));
             if (indexExists) {
-                Query query = query(new Criteria().orOperator(where(DOCUMENT_INSTANCE_ID).is(contextProperties.getInstanceId()), where(DOCUMENT_INSTANCE_ID).exists(false)));
+                Query query = query(new Criteria().orOperator(where(instanceIdField).is(contextProperties.getInstanceId()), where(DOCUMENT_INSTANCE_ID).exists(false)));
                 return documentCollection.findByQuery(query);
             } else {
-                log.warn("Configured to load using persisted instance id, but index name indicates number of partitions do not match {}. Will not use instance id when loading.",
-                         contextProperties.getPartitionCount());
+                log.warn("Configured to load using persisted instance id, but no index exists for field {}. Will not use instance id when loading.",
+                        instanceIdField);
             }
         }
         if (mirroredObject.loadDocumentsRouted()) {

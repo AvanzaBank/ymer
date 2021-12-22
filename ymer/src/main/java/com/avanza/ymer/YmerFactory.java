@@ -15,10 +15,12 @@
  */
 package com.avanza.ymer;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
@@ -51,6 +53,7 @@ public final class YmerFactory implements ApplicationContextAware {
 	private boolean exportExceptionHandleMBean = true;
 	private Set<Plugin> plugins = Collections.emptySet();
 	private int numParallelCollections = 1;
+	private ReloadableYmerProperties.ReloadablePropertiesBuilder ymerPropertiesBuilder = ReloadableYmerProperties.builder();
 
 	private final MirroredObjects mirroredObjects;
 	private final MongoConverter mongoConverter;
@@ -127,7 +130,15 @@ public final class YmerFactory implements ApplicationContextAware {
 	 * secondaries. Default is {@link ReadPreference#primary}.
 	 */
 	public YmerFactory withReadPreference(ReadPreference readPreference) {
-		this.readPreference = Objects.requireNonNull(readPreference);
+		this.readPreference = requireNonNull(readPreference);
+		return this;
+	}
+
+	/**
+	 * Configure optional reloadable properties.
+	 */
+	public YmerFactory withProperties(Consumer<ReloadableYmerProperties.ReloadablePropertiesBuilder> ymerPropertiesConfigurer) {
+		ymerPropertiesConfigurer.accept(ymerPropertiesBuilder);
 		return this;
 	}
 
@@ -136,7 +147,10 @@ public final class YmerFactory implements ApplicationContextAware {
 	}
 
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
-		YmerSpaceSynchronizationEndpoint ymerSpaceSynchronizationEndpoint = new YmerSpaceSynchronizationEndpoint(createSpaceMirrorContext());
+		YmerSpaceSynchronizationEndpoint ymerSpaceSynchronizationEndpoint = new YmerSpaceSynchronizationEndpoint(
+				createSpaceMirrorContext(),
+				ymerPropertiesBuilder.build()
+		);
 		if (this.exportExceptionHandleMBean) {
 			ymerSpaceSynchronizationEndpoint.registerExceptionHandlerMBean();
 		}

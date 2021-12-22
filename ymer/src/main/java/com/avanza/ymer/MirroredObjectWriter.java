@@ -15,8 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.extractInstanceIdFromSpaceName;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,8 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Nullable;
 
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -52,8 +48,7 @@ final class MirroredObjectWriter {
 		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
 	}
 
-	public void executeBulk(OperationsBatchData batch) {
-		Integer instanceId = extractInstanceIdFromSpaceName(batch.getSourceDetails().getName()).orElse(null);
+	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
 		List<Object> pendingWrites = new ArrayList<>();
 		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
 			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {
@@ -66,20 +61,20 @@ final class MirroredObjectWriter {
 					break;
 				case UPDATE:
 				case PARTIAL_UPDATE:
-					insertAll(instanceId, pendingWrites);
+					insertAll(metadata, pendingWrites);
 					pendingWrites = new ArrayList<>();
-					update(instanceId, bulkItem.getDataAsObject());
+					update(metadata, bulkItem.getDataAsObject());
 					break;
 				case REMOVE:
-					insertAll(instanceId, pendingWrites);
+					insertAll(metadata, pendingWrites);
 					pendingWrites = new ArrayList<>();
-					remove(instanceId, bulkItem.getDataAsObject());
+					remove(metadata, bulkItem.getDataAsObject());
 					break;
 				default:
 					throw new UnsupportedOperationException("Bulkoperation " + bulkItem.getDataSyncOperationType() + " is not supported");
 			}
 		}
-		insertAll(instanceId, pendingWrites);
+		insertAll(metadata, pendingWrites);
 	}
 
 	private Collection<DataSyncOperation> filterSpaceObjects(DataSyncOperation[] batchDataItems) {
@@ -104,8 +99,8 @@ final class MirroredObjectWriter {
 				&& ReloadableSpaceObjectUtil.isReloaded((ReloadableSpaceObject) item);
 	}
 
-	private void remove(@Nullable Integer instanceId, final Object item) {
-		MongoCommand mongoCommand = new MongoCommand(MirrorOperation.REMOVE, instanceId, item) {
+	private void remove(InstanceMetadata metadata, final Object item) {
+		MongoCommand mongoCommand = new MongoCommand(MirrorOperation.REMOVE, metadata, item) {
 			@Override
 			protected void execute(Document... documents) {
 				Document id = new Document();
@@ -117,8 +112,8 @@ final class MirroredObjectWriter {
 		mongoCommand.execute(item);
 	}
 
-	private void update(@Nullable Integer instanceId, final Object item) {
-		new MongoCommand(MirrorOperation.UPDATE, instanceId, item) {
+	private void update(InstanceMetadata metadata, final Object item) {
+		new MongoCommand(MirrorOperation.UPDATE, metadata, item) {
 			@Override
 			protected void execute(Document... documents) {
 				getDocumentCollection(item).update(documents[0]);
@@ -126,7 +121,7 @@ final class MirroredObjectWriter {
 		}.execute(item);
 	}
 
-	private void insertAll(@Nullable Integer instanceId, List<Object> items) {
+	private void insertAll(InstanceMetadata metadata, List<Object> items) {
 		Map<String, List<Object>> pendingItemsByCollection = new HashMap<>();
 		for (Object item : items) {
 			String collectionName = this.mirror.getCollectionName(item.getClass());
@@ -135,7 +130,7 @@ final class MirroredObjectWriter {
 			documentToBeWrittenToCollection.add(item);
 		}
 		for (final List<Object> pendingObjects : pendingItemsByCollection.values()) {
-			new MongoCommand(MirrorOperation.INSERT, instanceId, pendingObjects) {
+			new MongoCommand(MirrorOperation.INSERT, metadata, pendingObjects) {
 				@Override
 				protected void execute(Document... documents) {
 					DocumentCollection documentCollection = getDocumentCollection(pendingObjects.get(0));
@@ -152,12 +147,12 @@ final class MirroredObjectWriter {
 	abstract class MongoCommand {
 
 		private final MirrorOperation operation;
-		private final Integer instanceId;
+		private final InstanceMetadata metadata;
 		private final Object[] objects;
 
-		public MongoCommand(MirrorOperation operation, @Nullable Integer instanceId, Object... objects) {
+		public MongoCommand(MirrorOperation operation, InstanceMetadata metadata, Object... objects) {
 			this.operation = operation;
-			this.instanceId = instanceId;
+			this.metadata = metadata;
 			this.objects = objects;
 		}
 
@@ -165,7 +160,7 @@ final class MirroredObjectWriter {
 			try {
 				Document[] documents = new Document[items.length];
 				for (int i = 0; i < documents.length; i++) {
-					Document versionedDocument = MirroredObjectWriter.this.mirror.toVersionedDocument(items[i], instanceId);
+					Document versionedDocument = MirroredObjectWriter.this.mirror.toVersionedDocument(items[i], metadata);
 					MirroredObjectWriter.this.mirror.getPreWriteProcessing(items[i].getClass()).preWrite(versionedDocument);
 					documents[i] = versionedDocument;
 				}

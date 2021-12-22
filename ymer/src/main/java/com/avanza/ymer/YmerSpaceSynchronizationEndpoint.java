@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.extractInstanceIdFromSpaceName;
 import static java.util.stream.Collectors.toList;
 
 import java.lang.management.ManagementFactory;
@@ -52,22 +53,32 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	private final SpaceMirrorContext spaceMirror;
 	private final ScheduledExecutorService scheduledExecutorService;
 	private final Set<ObjectName> registeredMbeans = new HashSet<>();
+	private final ReloadableYmerProperties ymerProperties;
+
+	private Integer currentNumberOfPartitions;
 
 	private ApplicationContext applicationContext;
 
-	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
+	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror, ReloadableYmerProperties ymerProperties) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());
 		this.spaceMirror = spaceMirror;
 		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler);
-		this.persistedInstanceIdRecalculationService = new PersistedInstanceIdRecalculationService(spaceMirror);
+		this.persistedInstanceIdRecalculationService = new PersistedInstanceIdRecalculationService(spaceMirror, ymerProperties);
 		this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+		this.ymerProperties = ymerProperties;
 	}
 
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
-		mirroredObjectWriter.executeBulk(batchData);
+		InstanceMetadata metadata = getInstanceMetadata(batchData.getSourceDetails().getName());
+		mirroredObjectWriter.executeBulk(metadata, batchData);
+	}
+
+	private InstanceMetadata getInstanceMetadata(String spaceName) {
+		Integer instanceId = extractInstanceIdFromSpaceName(spaceName).orElse(null);
+		return new InstanceMetadata(instanceId, currentNumberOfPartitions, ymerProperties.getNextNumberOfInstances().orElse(null));
 	}
 
 	@Override
@@ -79,6 +90,12 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	@Override
 	public void onApplicationEvent(@Nonnull ContextRefreshedEvent event) {
 		if (event.getApplicationContext().equals(applicationContext)) {
+			try {
+				// This value should be available once the space is started
+				currentNumberOfPartitions = persistedInstanceIdRecalculationService.determineNumberOfPartitions();
+			} catch (Exception e) {
+				log.warn("Could not determine current number of partitions. Will not be able to persist current instance id", e);
+			}
 			schedulePersistedIdRecalculationIfNecessary();
 		}
 	}
