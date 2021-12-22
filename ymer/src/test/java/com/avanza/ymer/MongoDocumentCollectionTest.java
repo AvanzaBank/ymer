@@ -52,7 +52,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	private static final String COLLECTION_NAME = "testcollection";
 
-	private final InstanceMetadata metadata = new InstanceMetadata(2, 2, null);
+	private final InstanceMetadata metadata = new InstanceMetadata(2, null);
 
 	@After
 	public void cleanDatabase() {

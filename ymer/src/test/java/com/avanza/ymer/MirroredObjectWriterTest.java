@@ -76,7 +76,7 @@ public class MirroredObjectWriterTest {
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
 		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
-		testMetadata = new InstanceMetadata(1, 1, null);
+		testMetadata = new InstanceMetadata(1, null);
 	}
 
 	@Test
@@ -121,7 +121,7 @@ public class MirroredObjectWriterTest {
 	@Test
 	public void writesCurrentAndNextInstanceId() throws Exception {
 		TestSpaceOtherObject item = new TestSpaceOtherObject("1", "message");
-		InstanceMetadata metadataWithNext = new InstanceMetadata(1, 1, 2);
+		InstanceMetadata metadataWithNext = new InstanceMetadata(1, 2);
 		mirroredObjectWriter.executeBulk(metadataWithNext, FakeBatchData.create(new FakeBulkItem(item, DataSyncOperationType.WRITE)));
 
 		List<Document> persisted = documentDb.getCollection(anotherMirroredDocument.getCollectionName()).findAll().collect(toList());
@@ -133,7 +133,7 @@ public class MirroredObjectWriterTest {
 
 	@Test
 	public void writesOnlyOneWhenCurrentAndNextInstanceIdAreTheSame() throws Exception {
-		InstanceMetadata metadataWithNext = new InstanceMetadata(1, 1, 1);
+		InstanceMetadata metadataWithNext = new InstanceMetadata(1, 1);
 		TestSpaceOtherObject item = new TestSpaceOtherObject("1", "message");
 		mirroredObjectWriter.executeBulk(metadataWithNext, FakeBatchData.create(new FakeBulkItem(item, DataSyncOperationType.WRITE)));
 

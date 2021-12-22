@@ -15,7 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.extractInstanceIdFromSpaceName;
 import static java.util.stream.Collectors.toList;
 
 import java.lang.management.ManagementFactory;
@@ -72,13 +71,11 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
-		InstanceMetadata metadata = getInstanceMetadata(batchData.getSourceDetails().getName());
-		mirroredObjectWriter.executeBulk(metadata, batchData);
+		mirroredObjectWriter.executeBulk(getInstanceMetadata(), batchData);
 	}
 
-	private InstanceMetadata getInstanceMetadata(String spaceName) {
-		Integer instanceId = extractInstanceIdFromSpaceName(spaceName).orElse(null);
-		return new InstanceMetadata(instanceId, currentNumberOfPartitions, ymerProperties.getNextNumberOfInstances().orElse(null));
+	private InstanceMetadata getInstanceMetadata() {
+		return new InstanceMetadata(currentNumberOfPartitions, ymerProperties.getNextNumberOfInstances().orElse(null));
 	}
 
 	@Override

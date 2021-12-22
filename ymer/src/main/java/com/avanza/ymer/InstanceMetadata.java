@@ -20,22 +20,15 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 final class InstanceMetadata {
-	private final Integer instanceId;
 	private final Integer numberOfInstances;
 	private final Integer nextNumberOfInstances;
 
 	public InstanceMetadata(
-			@Nullable Integer instanceId,
 			@Nullable Integer numberOfInstances,
 			@Nullable Integer nextNumberOfInstances
 	) {
-		this.instanceId = instanceId;
 		this.numberOfInstances = numberOfInstances;
 		this.nextNumberOfInstances = nextNumberOfInstances;
-	}
-
-	public Optional<Integer> getInstanceId() {
-		return Optional.ofNullable(instanceId);
 	}
 
 	public Optional<Integer> getNumberOfInstances() {

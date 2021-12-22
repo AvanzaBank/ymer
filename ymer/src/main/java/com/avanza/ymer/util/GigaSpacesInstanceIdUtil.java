@@ -15,19 +15,10 @@
  */
 package com.avanza.ymer.util;
 
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
-
-import org.springframework.util.StringUtils;
-
 /**
  * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils
  */
 public final class GigaSpacesInstanceIdUtil {
-	private static final Pattern PARTITION_ID_PATTERN = Pattern.compile("_container(\\d+)");
 
 	private GigaSpacesInstanceIdUtil() {
 	}
@@ -37,23 +28,6 @@ public final class GigaSpacesInstanceIdUtil {
 	 */
 	public static int getInstanceId(Object routingKey, int partitionCount) {
 		return safeAbsoluteValue(routingKey.hashCode()) % partitionCount + 1;
-	}
-
-	/**
-	 * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils#extractPartitionIdFromSpaceName(String)
-	 */
-	public static Optional<Integer> extractInstanceIdFromSpaceName(@Nullable String spaceName) {
-		// Format: qaSpace_container2_1:qaSpace
-		if (StringUtils.isEmpty(spaceName)) {
-			return Optional.empty();
-		}
-
-		Matcher matcher = PARTITION_ID_PATTERN.matcher(spaceName);
-		if (matcher.find()) {
-			return Optional.of(Integer.valueOf(matcher.group(1)));
-		} else {
-			return Optional.empty();
-		}
 	}
 
 	private static int safeAbsoluteValue(int value) {

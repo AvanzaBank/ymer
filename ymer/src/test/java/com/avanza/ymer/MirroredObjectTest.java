@@ -351,7 +351,7 @@ public class MirroredObjectTest {
 		Document dbObject = new Document();
 
 		int routingKey = 23;
-		InstanceMetadata metadata = new InstanceMetadata(2, 2, null);
+		InstanceMetadata metadata = new InstanceMetadata(2, null);
 		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), metadata);
 		assertEquals(routingKey, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
 		assertEquals(2, dbObject.get(getInstanceIdFieldName(2)));
@@ -366,7 +366,7 @@ public class MirroredObjectTest {
 		Document dbObject = new Document();
 
 		int routingKey = 23;
-		InstanceMetadata metadata = new InstanceMetadata(2, 2, 3);
+		InstanceMetadata metadata = new InstanceMetadata(2, 3);
 		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), metadata);
 		assertEquals(routingKey, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
 		assertEquals(2, dbObject.get(getInstanceIdFieldName(2)));
@@ -381,16 +381,8 @@ public class MirroredObjectTest {
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		int routingKey = 23;
 
-		// instanceId null
-		Document nullInstanceId = new Document();
-		InstanceMetadata nullInstanceIdMetadata = new InstanceMetadata(null, 2, null);
-		document.setDocumentAttributes(nullInstanceId, new MirroredType(routingKey), nullInstanceIdMetadata);
-		assertEquals(routingKey, nullInstanceId.get(MirroredObject.DOCUMENT_ROUTING_KEY));
-		assertNoInstanceIdFieldsAreSet(nullInstanceId);
-
-		// numberOfInstances null
 		Document nullNumberOfPartitions = new Document();
-		InstanceMetadata nullNumberOfPartitionsMetadata = new InstanceMetadata(2, null, null);
+		InstanceMetadata nullNumberOfPartitionsMetadata = new InstanceMetadata(null, null);
 		document.setDocumentAttributes(nullNumberOfPartitions, new MirroredType(routingKey), nullNumberOfPartitionsMetadata);
 		assertEquals(routingKey, nullNumberOfPartitions.get(MirroredObject.DOCUMENT_ROUTING_KEY));
 		assertNoInstanceIdFieldsAreSet(nullNumberOfPartitions);
@@ -405,7 +397,7 @@ public class MirroredObjectTest {
 		Document dbObject = new Document();
 
 		int routingKey = 23;
-		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), new InstanceMetadata(null, null, 2));
+		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), new InstanceMetadata(null, 2));
 		assertEquals(routingKey, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
 		assertEquals(2, dbObject.get(getInstanceIdFieldName(2)));
 	}
