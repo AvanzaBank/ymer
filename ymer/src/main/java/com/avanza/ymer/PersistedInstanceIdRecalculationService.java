@@ -20,6 +20,7 @@ import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
 import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForAnyNumberOfPartitionsIn;
 import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForNumberOfPartitions;
+import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
 import static com.j_spaces.core.Constants.Mirror.MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT;
 import static java.util.stream.Collectors.groupingBy;
@@ -56,14 +57,11 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.avanza.ymer.util.GigaSpacesInstanceIdUtil;
 import com.avanza.ymer.util.StreamUtils;
-import com.gigaspaces.internal.client.spaceproxy.IDirectSpaceProxy;
-import com.gigaspaces.internal.server.space.SpaceImpl;
-import com.j_spaces.core.IJSpace;
 import com.mongodb.client.model.IndexOptions;
 
 public class PersistedInstanceIdRecalculationService implements PersistedInstanceIdRecalculationServiceMBean, ApplicationContextAware {
-	private static final String NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY = "cluster.partitions";
 	private static final int BATCH_SIZE = 10_000;
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -136,9 +134,10 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 	}
 
 	private void recalculatePersistedInstanceId(String collectionName, Set<Integer> numberOfPartitionsSet) {
-		log.info("Recalculating persisted instance id for collection {} with {} number of partitions",
+		log.info("Recalculating persisted instance id for collection {} with {} number of partitions and batch size {}",
 				collectionName,
-				numberOfPartitionsSet.stream().sorted().collect(toList())
+				numberOfPartitionsSet.stream().sorted().collect(toList()),
+				BATCH_SIZE
 		);
 		DocumentCollection collection = spaceMirror.getDocumentDb().getCollection(collectionName);
 
@@ -167,11 +166,12 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 			log.info("Step 1/3\tNo index to drop");
 		}
 
+		log.info("Step 2/3\tWill calculate instance id for fields [{}]", String.join(", ", fieldNamesToCalculate));
+
 		if (!noLongerNeededFields.isEmpty()) {
 			log.info("Step 2/3\tWill delete no longer used fields [{}]", String.join(", ", noLongerNeededFields));
 		}
 
-		log.info("Using batch size {}", BATCH_SIZE);
 		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(createQuery(BATCH_SIZE, fieldNamesToCalculate, noLongerNeededFields)), BATCH_SIZE)) {
 			LongAdder analyzedCount = new LongAdder();
 			AtomicInteger updatedCount = new AtomicInteger();
@@ -230,7 +230,7 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 		});
 	}
 
-	int determineNumberOfPartitions() {
+	private int determineNumberOfPartitions() {
 		return getNumberOfPartitionsFromSpaceProperties()
 				.or(this::getNumberOfPartitionsFromSystemProperty)
 				.orElseThrow(() -> new IllegalStateException(
@@ -240,21 +240,14 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 	}
 
 	private Optional<Integer> getNumberOfPartitionsFromSpaceProperties() {
-		return Optional.ofNullable(applicationContext)
-				.map(it -> it.getBeanProvider(IJSpace.class).getIfAvailable())
-				.map(IJSpace::getDirectProxy)
-				.map(IDirectSpaceProxy::getSpaceImplIfEmbedded)
-				.map(SpaceImpl::getConfigReader)
-				.map(it -> it.getIntSpaceProperty(MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT, "0"))
-				.filter(it -> it > 0)
+		return GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSpaceProperties(applicationContext)
 				.map(peek(numberOfPartitions ->
 								  log.info("Using {} number of partitions (from space property \"{}\")", numberOfPartitions, MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT)
 				));
 	}
 
 	private Optional<Integer> getNumberOfPartitionsFromSystemProperty() {
-		return Optional.ofNullable(System.getProperty(NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY))
-				.map(Integer::valueOf)
+		return GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSystemProperty()
 				.map(peek(numberOfPartitions ->
 								  log.info("Using {} number of partitions (from system property \"{}\")", numberOfPartitions, NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY)
 				));

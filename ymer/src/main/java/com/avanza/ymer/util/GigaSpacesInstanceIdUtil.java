@@ -15,10 +15,22 @@
  */
 package com.avanza.ymer.util;
 
+import static com.j_spaces.core.Constants.Mirror.MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT;
+
+import java.util.Optional;
+
+import org.springframework.context.ApplicationContext;
+
+import com.gigaspaces.internal.client.spaceproxy.IDirectSpaceProxy;
+import com.gigaspaces.internal.server.space.SpaceImpl;
+import com.j_spaces.core.IJSpace;
+
 /**
  * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils
  */
 public final class GigaSpacesInstanceIdUtil {
+
+	public static final String NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY = "cluster.partitions";
 
 	private GigaSpacesInstanceIdUtil() {
 	}
@@ -32,6 +44,21 @@ public final class GigaSpacesInstanceIdUtil {
 
 	private static int safeAbsoluteValue(int value) {
 		return value == Integer.MIN_VALUE ? Integer.MAX_VALUE : Math.abs(value);
+	}
+
+	public static Optional<Integer> getNumberOfPartitionsFromSpaceProperties(ApplicationContext applicationContext) {
+		return Optional.ofNullable(applicationContext)
+				.map(it -> it.getBeanProvider(IJSpace.class).getIfAvailable())
+				.map(IJSpace::getDirectProxy)
+				.map(IDirectSpaceProxy::getSpaceImplIfEmbedded)
+				.map(SpaceImpl::getConfigReader)
+				.map(it -> it.getIntSpaceProperty(MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT, "0"))
+				.filter(it -> it > 0);
+	}
+
+	public static Optional<Integer> getNumberOfPartitionsFromSystemProperty() {
+		return Optional.ofNullable(System.getProperty(NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY))
+				.map(Integer::valueOf);
 	}
 
 }

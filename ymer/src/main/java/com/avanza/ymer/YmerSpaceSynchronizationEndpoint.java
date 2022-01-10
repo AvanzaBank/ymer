@@ -38,6 +38,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 
+import com.avanza.ymer.util.GigaSpacesInstanceIdUtil;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
@@ -55,7 +56,6 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	private final ReloadableYmerProperties ymerProperties;
 
 	private Integer currentNumberOfPartitions;
-
 	private ApplicationContext applicationContext;
 
 	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror, ReloadableYmerProperties ymerProperties) {
@@ -67,6 +67,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 		this.persistedInstanceIdRecalculationService = new PersistedInstanceIdRecalculationService(spaceMirror, ymerProperties);
 		this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 		this.ymerProperties = ymerProperties;
+		this.currentNumberOfPartitions = GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSystemProperty().orElse(null);
 	}
 
 	@Override
@@ -87,11 +88,13 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	@Override
 	public void onApplicationEvent(@Nonnull ContextRefreshedEvent event) {
 		if (event.getApplicationContext().equals(applicationContext)) {
-			try {
-				// This value should be available once the space is started
-				currentNumberOfPartitions = persistedInstanceIdRecalculationService.determineNumberOfPartitions();
-			} catch (Exception e) {
-				log.warn("Could not determine current number of partitions. Will not be able to persist current instance id", e);
+			// If number of partitions wasn't available as a system property, set number of partitions
+			// from space properties, which should be available once the space is started
+			if (currentNumberOfPartitions == null) {
+				GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSpaceProperties(applicationContext).ifPresentOrElse(
+						numberOfPartitions -> currentNumberOfPartitions = numberOfPartitions,
+						() -> log.warn("Could not determine current number of partitions. Will not be able to persist current instance id")
+				);
 			}
 			schedulePersistedIdRecalculationIfNecessary();
 		}
