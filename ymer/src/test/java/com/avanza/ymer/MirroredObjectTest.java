@@ -428,7 +428,7 @@ public class MirroredObjectTest {
 	}
 
 	private static void assertNoInstanceIdFieldsAreSet(Document document) {
-		Set<String> fields = document.keySet().stream().filter(it -> it.startsWith(MirroredObject.DOCUMENT_INSTANCE_ID)).collect(Collectors.toSet());
+		Set<String> fields = document.keySet().stream().filter(it -> it.startsWith(MirroredObject.DOCUMENT_INSTANCE_ID_PREFIX)).collect(Collectors.toSet());
 		assertTrue("Expected no instance id fields to exist, but found " + fields, fields.isEmpty());
 	}
 

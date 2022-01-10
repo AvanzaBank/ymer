@@ -141,7 +141,6 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	@SuppressWarnings("Convert2Lambda")
 	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
 		List<WriteModel<Document>> writeModels = new ArrayList<>();
 		bulkWriter.accept(new BulkWriter() {

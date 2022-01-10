@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
+import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID_PREFIX;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
 import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForAnyNumberOfPartitionsIn;
@@ -132,7 +132,7 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 	}
 
 	private Predicate<IndexInfo> isInstanceIdIndex() {
-		return indexInfo -> indexInfo.getIndexFields().size() == 1 && indexInfo.getIndexFields().get(0).getKey().startsWith(DOCUMENT_INSTANCE_ID);
+		return indexInfo -> indexInfo.getIndexFields().size() == 1 && indexInfo.getIndexFields().get(0).getKey().startsWith(DOCUMENT_INSTANCE_ID_PREFIX);
 	}
 
 	private void recalculatePersistedInstanceId(String collectionName, Set<Integer> numberOfPartitionsSet) {

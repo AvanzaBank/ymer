@@ -15,7 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
 import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
 import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForNumberOfPartitions;
 import static java.util.stream.Collectors.toList;
@@ -92,7 +91,7 @@ final class MirroredObjectLoader<T> {
             boolean indexExists = documentCollection.getIndexes()
                     .anyMatch(isIndexForNumberOfPartitions(contextProperties.getPartitionCount()));
             if (indexExists) {
-                Query query = query(new Criteria().orOperator(where(instanceIdField).is(contextProperties.getInstanceId()), where(DOCUMENT_INSTANCE_ID).exists(false)));
+                Query query = query(new Criteria().orOperator(where(instanceIdField).is(contextProperties.getInstanceId()), where(instanceIdField).exists(false)));
                 return documentCollection.findByQuery(query);
             } else {
                 log.warn("Configured to load using persisted instance id, but no index exists for field {}. Will not use instance id when loading.",

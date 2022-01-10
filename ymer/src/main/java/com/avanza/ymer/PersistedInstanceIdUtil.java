@@ -15,7 +15,7 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
+import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID_PREFIX;
 
 import java.util.List;
 import java.util.Set;
@@ -38,6 +38,6 @@ final class PersistedInstanceIdUtil {
 	}
 
 	public static String getInstanceIdFieldName(int numberOfPartitions) {
-		return DOCUMENT_INSTANCE_ID + "_" + numberOfPartitions;
+		return DOCUMENT_INSTANCE_ID_PREFIX + "_" + numberOfPartitions;
 	}
 }

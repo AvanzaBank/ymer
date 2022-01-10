@@ -40,7 +40,7 @@ final class MirroredObject<T> {
 
 	public static final String DOCUMENT_FORMAT_VERSION_PROPERTY = "_formatVersion";
 	public static final String DOCUMENT_ROUTING_KEY = "_routingKey";
-	public static final String DOCUMENT_INSTANCE_ID = "_instanceId";
+	public static final String DOCUMENT_INSTANCE_ID_PREFIX = "_instanceId";
 	private final DocumentPatchChain<T> patchChain;
 	private final RoutingKeyExtractor routingKeyExtractor;
 	private final boolean excludeFromInitialLoad;
