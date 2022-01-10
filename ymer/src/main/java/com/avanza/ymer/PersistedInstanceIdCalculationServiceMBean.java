@@ -15,10 +15,10 @@
  */
 package com.avanza.ymer;
 
-public interface PersistedInstanceIdRecalculationServiceMBean {
+public interface PersistedInstanceIdCalculationServiceMBean {
 
-	void recalculatePersistedInstanceId();
+	void calculatePersistedInstanceId();
 
-	void recalculatePersistedInstanceId(String collectionName);
+	void calculatePersistedInstanceId(String collectionName);
 
 }

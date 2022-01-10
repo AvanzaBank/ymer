@@ -83,10 +83,10 @@ public interface MirroredObjectDefinitionsOverride {
         public PersistInstanceIdDefinition<?> persistInstanceId(MirroredObjectDefinition<?> definition) {
             PersistInstanceIdDefinition<?> persistInstanceId = PersistInstanceIdDefinition.from(definition.getPersistInstanceId());
             getProperty(definition, "persistInstanceId").ifPresent(persistInstanceId::enabled);
-            getProperty(definition, "recalculateInstanceIdOnStartup").ifPresent(persistInstanceId::recalculateOnStartup);
-            getIntProperty(definition, "recalculateInstanceIdWithDelay")
+            getProperty(definition, "triggerInstanceIdCalculationOnStartup").ifPresent(persistInstanceId::triggerCalculationOnStartup);
+            getIntProperty(definition, "triggerInstanceIdCalculationWithDelay")
                     .map(Duration::ofSeconds)
-                    .ifPresent(persistInstanceId::recalculateWithDelay);
+                    .ifPresent(persistInstanceId::triggerCalculationWithDelay);
             return persistInstanceId;
         }
 

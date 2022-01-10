@@ -51,7 +51,7 @@ import com.mongodb.client.MongoCollection;
 
 import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
-public class PersistedInstanceIdRecalculationServiceTest {
+public class PersistedInstanceIdCalculationServiceTest {
 
 	@ClassRule
 	public static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
@@ -72,7 +72,7 @@ public class PersistedInstanceIdRecalculationServiceTest {
 	}
 
 	@Test
-	public void shouldRecalculateInstanceIdUsingNumberOfInstancesFromSpaceProperty() throws Exception {
+	public void shouldCalculateInstanceIdUsingNumberOfInstancesFromSpaceProperty() throws Exception {
 		int numberOfInstances = 16;
 
 		try(RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
@@ -84,20 +84,20 @@ public class PersistedInstanceIdRecalculationServiceTest {
 
 			BeanFactory applicationContext = mirrorPu.getApplicationContexts().iterator().next();
 			YmerSpaceSynchronizationEndpoint spaceSynchronizationEndpoint = applicationContext.getBean(YmerSpaceSynchronizationEndpoint.class);
-			PersistedInstanceIdRecalculationService persistedInstanceIdRecalculationService = spaceSynchronizationEndpoint.getPersistedInstanceIdRecalculationService();
+			PersistedInstanceIdCalculationService persistedInstanceIdCalculationService = spaceSynchronizationEndpoint.getPersistedInstanceIdCalculationService();
 
-			persistedInstanceIdRecalculationService.recalculatePersistedInstanceId();
+			persistedInstanceIdCalculationService.calculatePersistedInstanceId();
 
 			verifyCollectionIsCalculatedFor(numberOfInstances);
 		}
 	}
 
 	@Test
-	public void shouldStartRecalculationJobOnStartup() throws Exception {
+	public void shouldStartCalculationJobOnStartup() throws Exception {
 		int numberOfInstances = 14;
 		Properties testProperties = new Properties();
-		testProperties.setProperty("ymer.com.avanza.ymer.TestSpaceObject.recalculateInstanceIdOnStartup", "true");
-		testProperties.setProperty("ymer.com.avanza.ymer.TestSpaceObject.recalculateInstanceIdWithDelay", "1");
+		testProperties.setProperty("ymer.com.avanza.ymer.TestSpaceObject.triggerInstanceIdCalculationOnStartup", "true");
+		testProperties.setProperty("ymer.com.avanza.ymer.TestSpaceObject.triggerInstanceIdCalculationWithDelay", "1");
 
 		execute(() -> {
 			try (RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
@@ -113,41 +113,41 @@ public class PersistedInstanceIdRecalculationServiceTest {
 	}
 
 	@Test
-	public void shouldRecalculateInstanceIdUsingNumberOfInstancesFromSystemProperty() throws Exception {
+	public void shouldCalculateInstanceIdUsingNumberOfInstancesFromSystemProperty() throws Exception {
 		int numberOfInstances = 32;
 		execute(() -> {
 			try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
-				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
-				target.recalculatePersistedInstanceId();
+				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
+				target.calculatePersistedInstanceId();
 				verifyCollectionIsCalculatedFor(numberOfInstances);
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
 	}
 
 	@Test
-	public void testRecalculatingInstanceIdForNextNumberOfInstances() throws Exception {
+	public void testCalculatingInstanceIdForNextNumberOfInstances() throws Exception {
 		int currentNumberOfInstances = 32;
 
 		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
 		testSpaceMirrorFactory.setNextNumberOfInstances(38);
 		execute(() -> {
 			try (YmerSpaceSynchronizationEndpoint endpoint = (YmerSpaceSynchronizationEndpoint) testSpaceMirrorFactory.createSpaceSynchronizationEndpoint()) {
-				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
-				target.recalculatePersistedInstanceId();
+				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
+				target.calculatePersistedInstanceId();
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsCalculatedFor(38);
 
-				// Recalculate again, using a different amount of instances
+				// Recalculate using a different next number of instances
 				testSpaceMirrorFactory.setNextNumberOfInstances(40);
-				target.recalculatePersistedInstanceId();
+				target.calculatePersistedInstanceId();
 
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsNotCalculatedFor(38);
 				verifyCollectionIsCalculatedFor(40);
 
-				// Recalculate again, without any number of instances, deleting next instance id field
+				// Recalculate without any next number of instances, deleting next instance id field
 				testSpaceMirrorFactory.setNextNumberOfInstances(null);
-				target.recalculatePersistedInstanceId();
+				target.calculatePersistedInstanceId();
 
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsNotCalculatedFor(40);
@@ -158,20 +158,20 @@ public class PersistedInstanceIdRecalculationServiceTest {
 	@Test
 	public void shouldThrowExceptionWhenNumberOfInstancesCannotBeDetermined() {
 		try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
-			PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
-			assertThrows(IllegalStateException.class, target::recalculatePersistedInstanceId);
+			PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
+			assertThrows(IllegalStateException.class, target::calculatePersistedInstanceId);
 		}
 	}
 
 	@Test
-	public void testCollectionNeedsRecalculation() throws Exception {
+	public void testCollectionNeedsCalculation() throws Exception {
 		int numberOfInstances = 1;
 		execute(() -> {
 			try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
-				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
+				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
 				assertTrue(target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
 
-				target.recalculatePersistedInstanceId(TEST_SPACE_OBJECT.collectionName());
+				target.calculatePersistedInstanceId(TEST_SPACE_OBJECT.collectionName());
 				verifyCollectionIsCalculatedFor(numberOfInstances);
 
 				assertFalse(target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
@@ -184,7 +184,7 @@ public class PersistedInstanceIdRecalculationServiceTest {
 		int numberOfInstances = 1;
 		execute(() -> {
 			try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
-				PersistedInstanceIdRecalculationService target = endpoint.getPersistedInstanceIdRecalculationService();
+				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
 				assertFalse(target.collectionNeedsCalculation("NOT_EXISTING_COLLECTION"));
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));

@@ -61,7 +61,7 @@ import com.avanza.ymer.util.GigaSpacesInstanceIdUtil;
 import com.avanza.ymer.util.StreamUtils;
 import com.mongodb.client.model.IndexOptions;
 
-public class PersistedInstanceIdRecalculationService implements PersistedInstanceIdRecalculationServiceMBean, ApplicationContextAware {
+public class PersistedInstanceIdCalculationService implements PersistedInstanceIdCalculationServiceMBean, ApplicationContextAware {
 	private static final int BATCH_SIZE = 10_000;
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -71,7 +71,7 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 	@Nullable
 	private ApplicationContext applicationContext;
 
-	public PersistedInstanceIdRecalculationService(SpaceMirrorContext spaceMirror, ReloadableYmerProperties ymerProperties) {
+	public PersistedInstanceIdCalculationService(SpaceMirrorContext spaceMirror, ReloadableYmerProperties ymerProperties) {
 		this.spaceMirror = spaceMirror;
 		this.ymerProperties = ymerProperties;
 	}
@@ -92,7 +92,7 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 			return collection.getIndexes()
 					.noneMatch(isIndexForAnyNumberOfPartitionsIn(numberOfPartitionsSet));
 		} catch (Exception e) {
-			log.warn("Could not determine whether persisted instance id should be recalculated for collection [{}]", collectionName, e);
+			log.warn("Could not determine whether persisted instance id should be calculated for collection [{}]", collectionName, e);
 			return false;
 		}
 	}
@@ -104,11 +104,11 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 	}
 
 	@Override
-	public void recalculatePersistedInstanceId() {
+	public void calculatePersistedInstanceId() {
 		spaceMirror.getMirroredDocuments().stream()
 				.filter(MirroredObject::persistInstanceId)
 				.map(MirroredObject::getCollectionName)
-				.forEach(collectionName -> recalculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate()));
+				.forEach(collectionName -> calculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate()));
 	}
 
 	private Set<Integer> getNumberOfPartitionsToCalculate() {
@@ -120,21 +120,21 @@ public class PersistedInstanceIdRecalculationService implements PersistedInstanc
 	}
 
 	@Override
-	public void recalculatePersistedInstanceId(String collectionName) {
+	public void calculatePersistedInstanceId(String collectionName) {
 		if (!collectionIsDefinedInMirroredObjects(collectionName)) {
-			log.warn("Cannot recalculate persisted instance id for collection [{}], no definition was found in mirrored objects",
+			log.warn("Cannot calculate instance id for collection [{}], no definition was found in mirrored objects",
 					collectionName);
 			return;
 		}
-		recalculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate());
+		calculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate());
 	}
 
 	private Predicate<IndexInfo> isInstanceIdIndex() {
 		return indexInfo -> indexInfo.getIndexFields().size() == 1 && indexInfo.getIndexFields().get(0).getKey().startsWith(DOCUMENT_INSTANCE_ID_PREFIX);
 	}
 
-	private void recalculatePersistedInstanceId(String collectionName, Set<Integer> numberOfPartitionsSet) {
-		log.info("Recalculating persisted instance id for collection {} with {} number of partitions and batch size {}",
+	private void calculatePersistedInstanceId(String collectionName, Set<Integer> numberOfPartitionsSet) {
+		log.info("Calculating instance id for collection {} with {} number of partitions and batch size {}",
 				collectionName,
 				numberOfPartitionsSet.stream().sorted().collect(toList()),
 				BATCH_SIZE

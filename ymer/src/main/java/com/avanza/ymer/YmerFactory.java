@@ -155,7 +155,7 @@ public final class YmerFactory implements ApplicationContextAware {
 			ymerSpaceSynchronizationEndpoint.registerExceptionHandlerMBean();
 		}
 		if (mirroredObjects.getMirroredObjects().stream().anyMatch(MirroredObject::persistInstanceId)) {
-			ymerSpaceSynchronizationEndpoint.registerPersistedInstanceIdRecalculationServiceMBean();
+			ymerSpaceSynchronizationEndpoint.registerPersistedInstanceIdCalculationServiceMBean();
 		}
 		if (applicationContext != null) {
 			ymerSpaceSynchronizationEndpoint.setApplicationContext(applicationContext);

@@ -49,7 +49,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 
 	private final MirroredObjectWriter mirroredObjectWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
-	private final PersistedInstanceIdRecalculationService persistedInstanceIdRecalculationService;
+	private final PersistedInstanceIdCalculationService persistedInstanceIdCalculationService;
 	private final SpaceMirrorContext spaceMirror;
 	private final ScheduledExecutorService scheduledExecutorService;
 	private final Set<ObjectName> registeredMbeans = new HashSet<>();
@@ -64,7 +64,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 				new CatchesAllDocumentWriteExceptionHandler());
 		this.spaceMirror = spaceMirror;
 		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler);
-		this.persistedInstanceIdRecalculationService = new PersistedInstanceIdRecalculationService(spaceMirror, ymerProperties);
+		this.persistedInstanceIdCalculationService = new PersistedInstanceIdCalculationService(spaceMirror, ymerProperties);
 		this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 		this.ymerProperties = ymerProperties;
 		this.currentNumberOfPartitions = GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSystemProperty().orElse(null);
@@ -82,7 +82,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	@Override
 	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
-		persistedInstanceIdRecalculationService.setApplicationContext(applicationContext);
+		persistedInstanceIdCalculationService.setApplicationContext(applicationContext);
 	}
 
 	@Override
@@ -96,30 +96,29 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 						() -> log.warn("Could not determine current number of partitions. Will not be able to persist current instance id")
 				);
 			}
-			schedulePersistedIdRecalculationIfNecessary();
+			schedulePersistedIdCalculationIfNecessary();
 		}
 	}
 
-	private void schedulePersistedIdRecalculationIfNecessary() {
-		List<MirroredObject<?>> objectsToRecalculate = spaceMirror.getMirroredDocuments().stream()
+	private void schedulePersistedIdCalculationIfNecessary() {
+		List<MirroredObject<?>> objectsNeedingInstanceIdCalculation = spaceMirror.getMirroredDocuments().stream()
 				.filter(MirroredObject::persistInstanceId)
-				.filter(MirroredObject::recalculateInstanceIdOnStartup)
-				.filter(mirroredObject -> persistedInstanceIdRecalculationService.collectionNeedsCalculation(mirroredObject.getCollectionName()))
+				.filter(MirroredObject::triggerInstanceIdCalculationOnStartup)
+				.filter(mirroredObject -> persistedInstanceIdCalculationService.collectionNeedsCalculation(mirroredObject.getCollectionName()))
 				.collect(toList());
 
-		for (MirroredObject<?> mirroredObject : objectsToRecalculate) {
-			Duration startJobIn = mirroredObject.recalculateInstanceIdWithDelay();
-			log.info("Will trigger recalculation of persisted instance id for collections [{}] starting in {}",
-					objectsToRecalculate.stream().map(MirroredObject::getCollectionName).collect(Collectors.joining(",")),
-					startJobIn
+		for (MirroredObject<?> mirroredObject : objectsNeedingInstanceIdCalculation) {
+			Duration startJobIn = mirroredObject.triggerInstanceIdCalculationWithDelay();
+			log.info("Will trigger calculation of persisted instance id for collection [{}] starting in {}",
+					mirroredObject.getCollectionName(), startJobIn
 			);
-			Runnable task = () -> persistedInstanceIdRecalculationService.recalculatePersistedInstanceId(mirroredObject.getCollectionName());
+			Runnable task = () -> persistedInstanceIdCalculationService.calculatePersistedInstanceId(mirroredObject.getCollectionName());
 			scheduledExecutorService.schedule(task, startJobIn.getSeconds(), TimeUnit.SECONDS);
 		}
 	}
 
-	public PersistedInstanceIdRecalculationService getPersistedInstanceIdRecalculationService() {
-		return persistedInstanceIdRecalculationService;
+	public PersistedInstanceIdCalculationService getPersistedInstanceIdCalculationService() {
+		return persistedInstanceIdCalculationService;
 	}
 
 	void registerExceptionHandlerMBean() {
@@ -127,9 +126,9 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 		registerMbean(exceptionHandler, name);
 	}
 
-	void registerPersistedInstanceIdRecalculationServiceMBean() {
-		String name = "se.avanzabank.space.mirror:type=PersistedInstanceIdRecalculationService,name=persistedInstanceIdRecalculationService";
-		registerMbean(persistedInstanceIdRecalculationService, name);
+	void registerPersistedInstanceIdCalculationServiceMBean() {
+		String name = "se.avanzabank.space.mirror:type=PersistedInstanceIdCalculationService,name=persistedInstanceIdCalculationService";
+		registerMbean(persistedInstanceIdCalculationService, name);
 	}
 
 	private void registerMbean(Object object, String name) {

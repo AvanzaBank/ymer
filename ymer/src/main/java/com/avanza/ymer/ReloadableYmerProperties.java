@@ -48,7 +48,7 @@ public final class ReloadableYmerProperties {
 		 * This is designed to be used in combination with {@link MirroredObjectDefinition#persistInstanceId()}.
 		 * <p>
 		 * When writing the instance ID field, both the instance ID using the current number of partitions and the next
-		 * number of partitions will be set to the document. It will also be used when calling {@link PersistedInstanceIdRecalculationService}.
+		 * number of partitions will be set to the document. It will also be used when calling {@link PersistedInstanceIdCalculationService}.
 		 * <p>
 		 * Only values from 1 and above are valid, other values will be ignored.
 		 */
