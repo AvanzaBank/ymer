@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.management.ObjectName;
@@ -88,13 +87,13 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	@Override
 	public void onApplicationEvent(@Nonnull ContextRefreshedEvent event) {
 		if (event.getApplicationContext().equals(applicationContext)) {
-			// If number of partitions wasn't available as a system property, set number of partitions
-			// from space properties, which should be available once the space is started
+			// Reading number of partitions is available once space is started, so this value is read upon application
+			// initialization. It takes precedence over currentNumberOfPartitions read from system properties.
+			GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSpaceProperties(applicationContext).ifPresent(
+					numberOfPartitions -> currentNumberOfPartitions = numberOfPartitions
+			);
 			if (currentNumberOfPartitions == null) {
-				GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSpaceProperties(applicationContext).ifPresentOrElse(
-						numberOfPartitions -> currentNumberOfPartitions = numberOfPartitions,
-						() -> log.warn("Could not determine current number of partitions. Will not be able to persist current instance id")
-				);
+				log.warn("Could not determine current number of partitions. Will not be able to persist current instance id");
 			}
 			schedulePersistedIdCalculationIfNecessary();
 		}
