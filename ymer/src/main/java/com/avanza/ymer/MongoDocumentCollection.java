@@ -141,13 +141,16 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	@SuppressWarnings("Convert2Lambda")
 	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
 		List<WriteModel<Document>> writeModels = new ArrayList<>();
 		bulkWriter.accept(new BulkWriter() {
 			@Override
 			public void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet) {
 				Bson updates = toUpdates(fieldsToSet);
+				addUpdates(ids, updates);
+			}
+
+			private void addUpdates(Set<Object> ids, Bson updates) {
 				if (ids.isEmpty()) {
 					log.warn("Skipping updates because no ids provided");
 				} else if (updates == null) {
@@ -157,6 +160,12 @@ final class MongoDocumentCollection implements DocumentCollection {
 					UpdateManyModel<Document> updateManyModel = new UpdateManyModel<>(filter, updates);
 					writeModels.add(updateManyModel);
 				}
+			}
+
+			@Override
+			public void unsetFieldsPartialByIds(Set<Object> ids, Set<String> fieldsToUnset) {
+				Bson updates = toFieldDeletes(fieldsToUnset);
+				addUpdates(ids, updates);
 			}
 		});
 		if (writeModels.isEmpty()) {
@@ -214,6 +223,14 @@ final class MongoDocumentCollection implements DocumentCollection {
 	private static Bson toUpdates(Map<String, Object> fieldsToSet) {
 		return fieldsToSet.entrySet().stream()
 				.map(entry -> Updates.set(entry.getKey(), entry.getValue()))
+				.reduce(Updates::combine)
+				.orElse(null);
+	}
+
+	@Nullable
+	private static Bson toFieldDeletes(Set<String> fieldsToUnset) {
+		return fieldsToUnset.stream()
+				.map(Updates::unset)
 				.reduce(Updates::combine)
 				.orElse(null);
 	}

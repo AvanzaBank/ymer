@@ -15,10 +15,14 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
+import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
+import static java.util.stream.Collectors.toSet;
+
 import java.lang.reflect.Method;
 import java.time.Duration;
-
-import javax.annotation.Nullable;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import org.bson.Document;
 
@@ -36,15 +40,15 @@ final class MirroredObject<T> {
 
 	public static final String DOCUMENT_FORMAT_VERSION_PROPERTY = "_formatVersion";
 	public static final String DOCUMENT_ROUTING_KEY = "_routingKey";
-	public static final String DOCUMENT_INSTANCE_ID = "_instanceId";
+	public static final String DOCUMENT_INSTANCE_ID_PREFIX = "_instanceId";
 	private final DocumentPatchChain<T> patchChain;
 	private final RoutingKeyExtractor routingKeyExtractor;
 	private final boolean excludeFromInitialLoad;
 	private final boolean writeBackPatchedDocuments;
 	private final boolean loadDocumentsRouted;
 	private final boolean persistInstanceId;
-	private final boolean recalculateInstanceIdOnStartup;
-	private final Duration recalculateInstanceIdWithDelay;
+	private final boolean triggerInstanceIdCalculationOnStartup;
+	private final Duration triggerInstanceIdCalculationWithDelay;
 	private final boolean keepPersistent;
     private final String collectionName;
 	private final TemplateFactory customInitialLoadTemplateFactory;
@@ -59,8 +63,8 @@ final class MirroredObject<T> {
 
 		PersistInstanceIdDefinition<?> persistInstanceId = override.persistInstanceId(definition);
         this.persistInstanceId = persistInstanceId.isEnabled();
-		this.recalculateInstanceIdOnStartup = persistInstanceId.isRecalculateOnStartup();
-		this.recalculateInstanceIdWithDelay = persistInstanceId.getRecalculateWithDelay();
+		this.triggerInstanceIdCalculationOnStartup = persistInstanceId.isTriggerCalculationOnStartup();
+		this.triggerInstanceIdCalculationWithDelay = persistInstanceId.getTriggerCalculationWithDelay();
 
         this.keepPersistent = definition.keepPersistent();
         this.collectionName = definition.collectionName();
@@ -116,12 +120,12 @@ final class MirroredObject<T> {
 		document.put(DOCUMENT_FORMAT_VERSION_PROPERTY, version);
 	}
 
-	void setDocumentAttributes(Document document, T spaceObject, @Nullable Integer instanceId) {
+	void setDocumentAttributes(Document document, T spaceObject, InstanceMetadata metadata) {
 		setDocumentVersion(document);
 		if (loadDocumentsRouted || persistInstanceId) {
 			setRoutingKey(document, spaceObject);
 			if (persistInstanceId) {
-				setInstanceId(document, instanceId);
+				setInstanceIdFields(document, metadata);
 			}
 		}
 	}
@@ -137,10 +141,16 @@ final class MirroredObject<T> {
 		}
 	}
 
-	private void setInstanceId(Document document, @Nullable Integer instanceId) {
-		if (instanceId != null) {
-			document.put(DOCUMENT_INSTANCE_ID, instanceId);
-		}
+	private void setInstanceIdFields(Document document, InstanceMetadata metadata) {
+		Set<Integer> numberOfInstancesToCalculateFor = Stream.concat(
+				metadata.getNumberOfInstances().stream(),
+				metadata.getNextNumberOfInstances().stream()
+		).collect(toSet());
+
+		numberOfInstancesToCalculateFor.forEach(numberOfInstances -> {
+			int instanceId = getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
+			document.put(getInstanceIdFieldName(numberOfInstances), instanceId);
+		});
 	}
 
 	int getCurrentVersion() {
@@ -215,12 +225,12 @@ final class MirroredObject<T> {
 		return persistInstanceId;
 	}
 
-	boolean recalculateInstanceIdOnStartup() {
-		return recalculateInstanceIdOnStartup;
+	boolean triggerInstanceIdCalculationOnStartup() {
+		return triggerInstanceIdCalculationOnStartup;
 	}
 
-	Duration recalculateInstanceIdWithDelay() {
-		return recalculateInstanceIdWithDelay;
+	Duration triggerInstanceIdCalculationWithDelay() {
+		return triggerInstanceIdCalculationWithDelay;
 	}
 
 	ReadPreference getReadPreference() {

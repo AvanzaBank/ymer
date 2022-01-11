@@ -15,7 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -99,27 +98,29 @@ public class MirroredObjectLoaderTest {
 				.and()
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
+		String documentInstanceIdField = PersistedInstanceIdUtil.getInstanceIdFieldName(contextProperties.getPartitionCount());
+
 		Document doc1 = new Document();
 		doc1.put("_id", 2);
 		doc1.put("spaceRouting", 1);
-		doc1.put(DOCUMENT_INSTANCE_ID, 1);
+		doc1.put(documentInstanceIdField, 1);
 
 		final Document doc2 = new Document();
 		doc2.put("_id", 3);
 		doc2.put("spaceRouting", 2);
-		doc2.put(DOCUMENT_INSTANCE_ID, 2);
+		doc2.put(documentInstanceIdField, 2);
 
 		final Document doc3 = new Document();
 		doc3.put("_id", 4);
 		doc3.put("spaceRouting", 1);
-		doc3.remove(DOCUMENT_INSTANCE_ID); // documents with no instance id should be loaded then filtered in java
+		doc3.remove(documentInstanceIdField); // documents with no instance id should be loaded then filtered in java
 
 		final Document doc4 = new Document();
 		doc4.put("_id", 5);
 		doc4.put("spaceRouting", 2);
-		doc4.remove(DOCUMENT_INSTANCE_ID); // documents with no instance id should be loaded then filtered in java
+		doc4.remove(documentInstanceIdField); // documents with no instance id should be loaded then filtered in java
 
-		documentCollection.createIndex(new Document(DOCUMENT_INSTANCE_ID, 1), new IndexOptions().name("_index" + DOCUMENT_INSTANCE_ID + "_numberOfPartitions_" + contextProperties.getPartitionCount()));
+		documentCollection.createIndex(new Document(documentInstanceIdField, 1), new IndexOptions());
 
 		documentCollection.insertAll(doc1, doc2, doc3, doc4);
 

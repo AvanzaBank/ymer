@@ -15,10 +15,27 @@
  */
 package com.avanza.ymer;
 
-public interface PersistedInstanceIdRecalculationServiceMBean {
+import java.util.Optional;
 
-	void recalculatePersistedInstanceId();
+import javax.annotation.Nullable;
 
-	void recalculatePersistedInstanceId(String collectionName);
+final class InstanceMetadata {
+	private final Integer numberOfInstances;
+	private final Integer nextNumberOfInstances;
 
+	public InstanceMetadata(
+			@Nullable Integer numberOfInstances,
+			@Nullable Integer nextNumberOfInstances
+	) {
+		this.numberOfInstances = numberOfInstances;
+		this.nextNumberOfInstances = nextNumberOfInstances;
+	}
+
+	public Optional<Integer> getNumberOfInstances() {
+		return Optional.ofNullable(numberOfInstances);
+	}
+
+	public Optional<Integer> getNextNumberOfInstances() {
+		return Optional.ofNullable(nextNumberOfInstances);
+	}
 }

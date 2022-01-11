@@ -94,5 +94,7 @@ interface DocumentCollection {
 
 		void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet);
 
+		void unsetFieldsPartialByIds(Set<Object> ids, Set<String> fieldsToUnset);
+
 	}
 }

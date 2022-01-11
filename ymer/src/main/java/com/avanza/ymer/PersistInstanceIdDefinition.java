@@ -23,8 +23,8 @@ public final class PersistInstanceIdDefinition<T> {
 
 	private final MirroredObjectDefinition<T> parent;
 	private boolean enabled;
-	private boolean recalculateOnStartup;
-	private Duration recalculateWithDelay = DEFAULT_DELAY;
+	private boolean triggerCalculationOnStartup;
+	private Duration triggerCalculationWithDelay = DEFAULT_DELAY;
 
 	PersistInstanceIdDefinition(MirroredObjectDefinition<T> parent) {
 		this.parent = parent;
@@ -33,12 +33,12 @@ public final class PersistInstanceIdDefinition<T> {
 	static <T> PersistInstanceIdDefinition<T> from(PersistInstanceIdDefinition<T> from) {
 		return new PersistInstanceIdDefinition<>(from.getParent())
 				.enabled(from.enabled)
-				.recalculateOnStartup(from.recalculateOnStartup)
-				.recalculateWithDelay(from.recalculateWithDelay);
+				.triggerCalculationOnStartup(from.triggerCalculationOnStartup)
+				.triggerCalculationWithDelay(from.triggerCalculationWithDelay);
 	}
 
 	public PersistInstanceIdDefinition<T> enableWithDefaults() {
-		return enabled(true).recalculateOnStartup(true);
+		return enabled(true).triggerCalculationOnStartup(true);
 	}
 
 	/**
@@ -50,31 +50,32 @@ public final class PersistInstanceIdDefinition<T> {
 	}
 
 	/**
-	 * Whether to recalculate persisted instance id on startup if necessary.
-	 * If enabled, instance id will be recalculated on startup (with a delay configured by
-	 * {@code delayRecalculationOnStartupWithSeconds}).
-	 * If disabled, instance id will only be recalculated when manually called.
+	 * Whether to calculate persisted instance id on startup if necessary.
+	 * When enabled, instance id will be calculated and persisted on startup (with a delay configured by
+	 * {@code triggerCalculationWithDelay}).
+	 * When disabled, {@link PersistedInstanceIdCalculationService} will only be run when manually called.
 	 * This defaults to {@code true} when persisting instance id is enabled.
 	 *
 	 * Automatically starting this job requires {@link YmerSpaceSynchronizationEndpoint} to be handled
 	 * as a Spring bean.
 	 */
-	public PersistInstanceIdDefinition<T> recalculateOnStartup(boolean recalculateOnStartup) {
-		this.recalculateOnStartup = recalculateOnStartup;
+	public PersistInstanceIdDefinition<T> triggerCalculationOnStartup(boolean triggerCalculationOnStartup) {
+		this.triggerCalculationOnStartup = triggerCalculationOnStartup;
 		return this;
 	}
 
 	/**
-	 * Delay starting recalculation of persisted instance id with the specified delay after startup.
+	 * Delay triggering of calculation of persisted instance id with the specified delay after startup.
 	 * This is done to reduce load on database during initial load of data.
+	 * This property only has an effect when {@code triggerCalculationOnStartup} is enabled.
 	 */
-	public PersistInstanceIdDefinition<T> recalculateWithDelay(Duration recalculateOnStartupDelay) {
-		this.recalculateWithDelay = recalculateOnStartupDelay;
+	public PersistInstanceIdDefinition<T> triggerCalculationWithDelay(Duration triggerCalculationWithDelay) {
+		this.triggerCalculationWithDelay = triggerCalculationWithDelay;
 		return this;
 	}
 
 	/**
-	 * Return the MirroredObjectDefinition when done configuring the PersistInstanceIdDefinition.
+	 * Return the {@code MirroredObjectDefinition} when done configuring the {@code PersistInstanceIdDefinition}.
 	 * This is useful for method chaining.
 	 *
 	 * @return the MirroredObjectDefinition for further customizations
@@ -91,11 +92,11 @@ public final class PersistInstanceIdDefinition<T> {
 		return enabled;
 	}
 
-	boolean isRecalculateOnStartup() {
-		return recalculateOnStartup;
+	boolean isTriggerCalculationOnStartup() {
+		return triggerCalculationOnStartup;
 	}
 
-	Duration getRecalculateWithDelay() {
-		return recalculateWithDelay;
+	Duration getTriggerCalculationWithDelay() {
+		return triggerCalculationWithDelay;
 	}
 }

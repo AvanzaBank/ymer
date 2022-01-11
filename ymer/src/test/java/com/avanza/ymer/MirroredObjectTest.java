@@ -16,6 +16,7 @@
 package com.avanza.ymer;
 
 import static com.avanza.ymer.MirroredObjectDefinitionsOverride.fromSystemProperties;
+import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -24,7 +25,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -348,10 +351,26 @@ public class MirroredObjectTest {
 		Document dbObject = new Document();
 
 		int routingKey = 23;
-		int instanceId = 2;
-		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), instanceId);
+		InstanceMetadata metadata = new InstanceMetadata(2, null);
+		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), metadata);
 		assertEquals(routingKey, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
-		assertEquals(instanceId, dbObject.get(MirroredObject.DOCUMENT_INSTANCE_ID));
+		assertEquals(2, dbObject.get(getInstanceIdFieldName(2)));
+	}
+
+	@Test
+	public void setsNextInstanceIdAndRoutingKeyForPersistInstanceId() throws Exception {
+		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
+				.persistInstanceId()
+				.and()
+				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+		Document dbObject = new Document();
+
+		int routingKey = 23;
+		InstanceMetadata metadata = new InstanceMetadata(2, 3);
+		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), metadata);
+		assertEquals(routingKey, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
+		assertEquals(2, dbObject.get(getInstanceIdFieldName(2)));
+		assertEquals(3, dbObject.get(getInstanceIdFieldName(3)));
 	}
 
 	@Test
@@ -360,12 +379,27 @@ public class MirroredObjectTest {
 				.persistInstanceId()
 				.and()
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+		int routingKey = 23;
+
+		Document nullNumberOfPartitions = new Document();
+		InstanceMetadata nullNumberOfPartitionsMetadata = new InstanceMetadata(null, null);
+		document.setDocumentAttributes(nullNumberOfPartitions, new MirroredType(routingKey), nullNumberOfPartitionsMetadata);
+		assertEquals(routingKey, nullNumberOfPartitions.get(MirroredObject.DOCUMENT_ROUTING_KEY));
+		assertNoInstanceIdFieldsAreSet(nullNumberOfPartitions);
+	}
+
+	@Test
+	public void willAlwaysCalculateNextNumberOfPartitionsIfSet() throws Exception {
+		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
+				.persistInstanceId()
+				.and()
+				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
 		int routingKey = 23;
-		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), null);
+		document.setDocumentAttributes(dbObject, new MirroredType(routingKey), new InstanceMetadata(null, 2));
 		assertEquals(routingKey, dbObject.get(MirroredObject.DOCUMENT_ROUTING_KEY));
-		assertFalse(dbObject.containsKey(MirroredObject.DOCUMENT_INSTANCE_ID));
+		assertEquals(2, dbObject.get(getInstanceIdFieldName(2)));
 	}
 
 	@Test
@@ -391,6 +425,11 @@ public class MirroredObjectTest {
 		assertFalse(definition.buildMirroredDocument(fromSystemProperties()).writeBackPatchedDocuments());
 		assertFalse(definition.buildMirroredDocument(fromSystemProperties()).excludeFromInitialLoad());
 		assertFalse(definition.buildMirroredDocument(fromSystemProperties()).persistInstanceId());
+	}
+
+	private static void assertNoInstanceIdFieldsAreSet(Document document) {
+		Set<String> fields = document.keySet().stream().filter(it -> it.startsWith(MirroredObject.DOCUMENT_INSTANCE_ID_PREFIX)).collect(Collectors.toSet());
+		assertTrue("Expected no instance id fields to exist, but found " + fields, fields.isEmpty());
 	}
 
 	static class MirroredType {

@@ -15,18 +15,22 @@
  */
 package com.avanza.ymer;
 
-import com.gigaspaces.datasource.SpaceDataSource;
-import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
-import java.util.Collection;
-import java.util.Collections;
+import com.gigaspaces.datasource.SpaceDataSource;
+import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
 public class TestSpaceMirrorFactory {
 
 	private final MongoDbFactory mongoDbFactory;
+	private final AtomicReference<Integer> nextNumberOfInstances = new AtomicReference<>(null);
 	private boolean exportExceptionHandlerMBean;
 
 	@Autowired
@@ -36,6 +40,10 @@ public class TestSpaceMirrorFactory {
 
 	public void setExportExceptionHandlerMBean(boolean exportExceptionHandlerMBean) {
 		this.exportExceptionHandlerMBean = exportExceptionHandlerMBean;
+	}
+
+	public void setNextNumberOfInstances(Integer nextNumberOfInstances) {
+		this.nextNumberOfInstances.set(nextNumberOfInstances);
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
@@ -50,6 +58,9 @@ public class TestSpaceMirrorFactory {
 		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions());
 		ymerFactory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
 		ymerFactory.setPlugins(Collections.singleton(new TestProcessor.TestPlugin()));
+		ymerFactory.withProperties(configurer -> {
+			configurer.nextNumberOfInstances(() -> Optional.ofNullable(nextNumberOfInstances.get()));
+		});
 		return ymerFactory.createSpaceSynchronizationEndpoint();
 	}
 

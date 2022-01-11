@@ -15,19 +15,22 @@
  */
 package com.avanza.ymer.util;
 
+import static com.j_spaces.core.Constants.Mirror.MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT;
+
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
+import org.springframework.context.ApplicationContext;
 
-import org.springframework.util.StringUtils;
+import com.gigaspaces.internal.client.spaceproxy.IDirectSpaceProxy;
+import com.gigaspaces.internal.server.space.SpaceImpl;
+import com.j_spaces.core.IJSpace;
 
 /**
  * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils
  */
 public final class GigaSpacesInstanceIdUtil {
-	private static final Pattern PARTITION_ID_PATTERN = Pattern.compile("_container(\\d+)");
+
+	public static final String NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY = "cluster.partitions";
 
 	private GigaSpacesInstanceIdUtil() {
 	}
@@ -39,25 +42,23 @@ public final class GigaSpacesInstanceIdUtil {
 		return safeAbsoluteValue(routingKey.hashCode()) % partitionCount + 1;
 	}
 
-	/**
-	 * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils#extractPartitionIdFromSpaceName(String)
-	 */
-	public static Optional<Integer> extractInstanceIdFromSpaceName(@Nullable String spaceName) {
-		// Format: qaSpace_container2_1:qaSpace
-		if (StringUtils.isEmpty(spaceName)) {
-			return Optional.empty();
-		}
-
-		Matcher matcher = PARTITION_ID_PATTERN.matcher(spaceName);
-		if (matcher.find()) {
-			return Optional.of(Integer.valueOf(matcher.group(1)));
-		} else {
-			return Optional.empty();
-		}
-	}
-
 	private static int safeAbsoluteValue(int value) {
 		return value == Integer.MIN_VALUE ? Integer.MAX_VALUE : Math.abs(value);
+	}
+
+	public static Optional<Integer> getNumberOfPartitionsFromSpaceProperties(ApplicationContext applicationContext) {
+		return Optional.ofNullable(applicationContext)
+				.map(it -> it.getBeanProvider(IJSpace.class).getIfAvailable())
+				.map(IJSpace::getDirectProxy)
+				.map(IDirectSpaceProxy::getSpaceImplIfEmbedded)
+				.map(SpaceImpl::getConfigReader)
+				.map(it -> it.getIntSpaceProperty(MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT, "0"))
+				.filter(it -> it > 0);
+	}
+
+	public static Optional<Integer> getNumberOfPartitionsFromSystemProperty() {
+		return Optional.ofNullable(System.getProperty(NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY))
+				.map(Integer::valueOf);
 	}
 
 }

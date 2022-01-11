@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.management.ObjectName;
@@ -38,6 +37,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 
+import com.avanza.ymer.util.GigaSpacesInstanceIdUtil;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
@@ -48,61 +48,76 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 
 	private final MirroredObjectWriter mirroredObjectWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
-	private final PersistedInstanceIdRecalculationService persistedInstanceIdRecalculationService;
+	private final PersistedInstanceIdCalculationService persistedInstanceIdCalculationService;
 	private final SpaceMirrorContext spaceMirror;
 	private final ScheduledExecutorService scheduledExecutorService;
 	private final Set<ObjectName> registeredMbeans = new HashSet<>();
+	private final ReloadableYmerProperties ymerProperties;
 
+	private Integer currentNumberOfPartitions;
 	private ApplicationContext applicationContext;
 
-	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
+	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror, ReloadableYmerProperties ymerProperties) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());
 		this.spaceMirror = spaceMirror;
 		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler);
-		this.persistedInstanceIdRecalculationService = new PersistedInstanceIdRecalculationService(spaceMirror);
+		this.persistedInstanceIdCalculationService = new PersistedInstanceIdCalculationService(spaceMirror, ymerProperties);
 		this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+		this.ymerProperties = ymerProperties;
+		this.currentNumberOfPartitions = GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSystemProperty().orElse(null);
 	}
 
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
-		mirroredObjectWriter.executeBulk(batchData);
+		mirroredObjectWriter.executeBulk(getInstanceMetadata(), batchData);
+	}
+
+	private InstanceMetadata getInstanceMetadata() {
+		return new InstanceMetadata(currentNumberOfPartitions, ymerProperties.getNextNumberOfInstances().orElse(null));
 	}
 
 	@Override
 	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
-		persistedInstanceIdRecalculationService.setApplicationContext(applicationContext);
+		persistedInstanceIdCalculationService.setApplicationContext(applicationContext);
 	}
 
 	@Override
 	public void onApplicationEvent(@Nonnull ContextRefreshedEvent event) {
 		if (event.getApplicationContext().equals(applicationContext)) {
-			schedulePersistedIdRecalculationIfNecessary();
+			// Reading number of partitions is available once space is started, so this value is read upon application
+			// initialization. It takes precedence over currentNumberOfPartitions read from system properties.
+			GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSpaceProperties(applicationContext).ifPresent(
+					numberOfPartitions -> currentNumberOfPartitions = numberOfPartitions
+			);
+			if (currentNumberOfPartitions == null) {
+				log.warn("Could not determine current number of partitions. Will not be able to persist current instance id");
+			}
+			schedulePersistedIdCalculationIfNecessary();
 		}
 	}
 
-	private void schedulePersistedIdRecalculationIfNecessary() {
-		List<MirroredObject<?>> objectsToRecalculate = spaceMirror.getMirroredDocuments().stream()
+	private void schedulePersistedIdCalculationIfNecessary() {
+		List<MirroredObject<?>> objectsNeedingInstanceIdCalculation = spaceMirror.getMirroredDocuments().stream()
 				.filter(MirroredObject::persistInstanceId)
-				.filter(MirroredObject::recalculateInstanceIdOnStartup)
-				.filter(mirroredObject -> persistedInstanceIdRecalculationService.collectionNeedsCalculation(mirroredObject.getCollectionName()))
+				.filter(MirroredObject::triggerInstanceIdCalculationOnStartup)
+				.filter(mirroredObject -> persistedInstanceIdCalculationService.collectionNeedsCalculation(mirroredObject.getCollectionName()))
 				.collect(toList());
 
-		for (MirroredObject<?> mirroredObject : objectsToRecalculate) {
-			Duration startJobIn = mirroredObject.recalculateInstanceIdWithDelay();
-			log.info("Will trigger recalculation of persisted instance id for collections [{}] starting in {}",
-					objectsToRecalculate.stream().map(MirroredObject::getCollectionName).collect(Collectors.joining(",")),
-					startJobIn
+		for (MirroredObject<?> mirroredObject : objectsNeedingInstanceIdCalculation) {
+			Duration startJobIn = mirroredObject.triggerInstanceIdCalculationWithDelay();
+			log.info("Will trigger calculation of persisted instance id for collection [{}] starting in {}",
+					mirroredObject.getCollectionName(), startJobIn
 			);
-			Runnable task = () -> persistedInstanceIdRecalculationService.recalculatePersistedInstanceId(mirroredObject.getCollectionName());
+			Runnable task = () -> persistedInstanceIdCalculationService.calculatePersistedInstanceId(mirroredObject.getCollectionName());
 			scheduledExecutorService.schedule(task, startJobIn.getSeconds(), TimeUnit.SECONDS);
 		}
 	}
 
-	public PersistedInstanceIdRecalculationService getPersistedInstanceIdRecalculationService() {
-		return persistedInstanceIdRecalculationService;
+	public PersistedInstanceIdCalculationService getPersistedInstanceIdCalculationService() {
+		return persistedInstanceIdCalculationService;
 	}
 
 	void registerExceptionHandlerMBean() {
@@ -110,9 +125,9 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 		registerMbean(exceptionHandler, name);
 	}
 
-	void registerPersistedInstanceIdRecalculationServiceMBean() {
-		String name = "se.avanzabank.space.mirror:type=PersistedInstanceIdRecalculationService,name=persistedInstanceIdRecalculationService";
-		registerMbean(persistedInstanceIdRecalculationService, name);
+	void registerPersistedInstanceIdCalculationServiceMBean() {
+		String name = "se.avanzabank.space.mirror:type=PersistedInstanceIdCalculationService,name=persistedInstanceIdCalculationService";
+		registerMbean(persistedInstanceIdCalculationService, name);
 	}
 
 	private void registerMbean(Object object, String name) {

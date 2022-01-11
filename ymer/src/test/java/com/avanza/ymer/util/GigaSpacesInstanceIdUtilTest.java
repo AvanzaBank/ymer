@@ -20,15 +20,22 @@ import static org.hamcrest.Matchers.equalTo;
 
 import org.junit.Test;
 
+import com.avanza.ymer.TestSpaceObject;
+
 public class GigaSpacesInstanceIdUtilTest {
 
 	@Test
-	public void shouldExtractInstanceIdFromSpaceName() {
-		String spaceName = "qaSpace_container2_1:qaSpace";
+	public void shouldCalculateInstanceId() {
+		TestSpaceObject spaceObject = new TestSpaceObject("testId", "testMessage");
+		Object routingKey = spaceObject.getId();
 
-		int instanceId = GigaSpacesInstanceIdUtil.extractInstanceIdFromSpaceName(spaceName).orElseThrow();
+		int instanceId_1_partitions = GigaSpacesInstanceIdUtil.getInstanceId(routingKey, 1);
+		int instanceId_4_partitions = GigaSpacesInstanceIdUtil.getInstanceId(routingKey, 4);
+		int instanceId_6_partitions = GigaSpacesInstanceIdUtil.getInstanceId(routingKey, 6);
 
-		assertThat(instanceId, equalTo(2));
+		assertThat(instanceId_1_partitions, equalTo(1));
+		assertThat(instanceId_4_partitions, equalTo(4));
+		assertThat(instanceId_6_partitions, equalTo(2));
 	}
 
  }
