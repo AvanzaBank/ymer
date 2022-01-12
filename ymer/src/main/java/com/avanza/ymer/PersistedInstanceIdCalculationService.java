@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
@@ -65,6 +66,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 	private static final int BATCH_SIZE = 10_000;
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final Map<String, PersistedInstanceIdStatistics> jobStatistics = new ConcurrentHashMap<>();
 	private final SpaceMirrorContext spaceMirror;
 	private final ReloadableYmerProperties ymerProperties;
 
@@ -79,6 +81,25 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 	@Override
 	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
+	}
+
+	PersistedInstanceIdStatisticsMBean collectStatistics(MirroredObject<?> mirroredObject) {
+		return jobStatistics.computeIfAbsent(mirroredObject.getCollectionName(), x -> new PersistedInstanceIdStatistics());
+	}
+
+	// Initializes readyForNumberOfPartitions for collections that are already calculated
+	void initializeStatistics() {
+		Set<Integer> numberOfPartitionsToCalculate = getNumberOfPartitionsToCalculate();
+		jobStatistics.replaceAll((collectionName, statistics) -> {
+			try {
+				numberOfPartitionsToCalculate.stream()
+						.filter(numberOfPartitions -> spaceMirror.getDocumentDb().getCollection(collectionName).getIndexes().anyMatch(isIndexForNumberOfPartitions(numberOfPartitions)))
+						.forEach(statistics::addReadyForNumberOfPartitions);
+			} catch (Exception e) {
+				log.warn("Unable to initialize persisted instance id statistics for collection {}", collectionName, e);
+			}
+			return statistics;
+		});
 	}
 
 	public boolean collectionNeedsCalculation(String collectionName) {
@@ -141,6 +162,9 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 		);
 		DocumentCollection collection = spaceMirror.getDocumentDb().getCollection(collectionName);
 
+		PersistedInstanceIdStatistics statistics = jobStatistics.computeIfAbsent(collectionName, x -> new PersistedInstanceIdStatistics());
+		statistics.resetStatisticsForJobExecution(numberOfPartitionsSet);
+
 		Set<String> fieldNamesToCalculate = numberOfPartitionsSet.stream()
 				.map(PersistedInstanceIdUtil::getInstanceIdFieldName)
 				.collect(toSet());
@@ -172,7 +196,10 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 			log.info("Step 2/3\tWill delete no longer used fields [{}]", String.join(", ", noLongerNeededFields));
 		}
 
-		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(createQuery(BATCH_SIZE, fieldNamesToCalculate, noLongerNeededFields)), BATCH_SIZE)) {
+		Query query = createQuery(BATCH_SIZE, fieldNamesToCalculate, noLongerNeededFields);
+		statistics.setTotalToCalculate(collection.countByQuery(query));
+
+		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(query), BATCH_SIZE)) {
 			LongAdder analyzedCount = new LongAdder();
 			AtomicInteger updatedCount = new AtomicInteger();
 			batches.forEach(batch -> collection.bulkWrite(bulkWriter -> {
@@ -211,6 +238,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 						}
 					});
 				});
+				statistics.addToCalculationProgress(batch.size());
 			}));
 			log.info("Step 2/3\tUpdated persisted instance id for {} documents total ({} analyzed total)", updatedCount.get(), analyzedCount.sum());
 		}
@@ -225,6 +253,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 				log.info("Step 3/3\tCreating index for field [{}]", fieldName);
 				IndexOptions options = new IndexOptions().background(true);
 				collection.createIndex(new Document(fieldName, 1), options);
+				statistics.addReadyForNumberOfPartitions(numberOfPartitions);
 				log.info("Step 3/3\tDone creating index");
 			}
 		});

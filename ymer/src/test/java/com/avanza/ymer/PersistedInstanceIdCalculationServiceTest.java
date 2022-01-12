@@ -89,6 +89,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 			persistedInstanceIdCalculationService.calculatePersistedInstanceId();
 
 			verifyCollectionIsCalculatedFor(numberOfInstances);
+			verifyStatistics(persistedInstanceIdCalculationService, 16);
 		}
 	}
 
@@ -120,6 +121,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
 				target.calculatePersistedInstanceId();
 				verifyCollectionIsCalculatedFor(numberOfInstances);
+				verifyStatistics(target, numberOfInstances);
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
 	}
@@ -136,6 +138,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 				target.calculatePersistedInstanceId();
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsCalculatedFor(38);
+				verifyStatistics(target, 32, 38);
 
 				// Recalculate using a different next number of instances
 				testSpaceMirrorFactory.setNextNumberOfInstances(40);
@@ -144,6 +147,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsNotCalculatedFor(38);
 				verifyCollectionIsCalculatedFor(40);
+				verifyStatistics(target, 32, 40);
 
 				// Recalculate without any next number of instances, deleting next instance id field
 				testSpaceMirrorFactory.setNextNumberOfInstances(null);
@@ -151,6 +155,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsNotCalculatedFor(40);
+				verifyStatistics(target, 32);
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(currentNumberOfInstances)));
 	}
@@ -213,6 +218,16 @@ public class PersistedInstanceIdCalculationServiceTest {
 						assertThat("Should not contain " + fieldName, document.containsKey(fieldName), is(false))
 				);
 		assertThat(mongoDocumentCollection.getIndexes().collect(toList()), not(hasItem(isIndexForField(fieldName))));
+	}
+
+	private static void verifyStatistics(PersistedInstanceIdCalculationService calculationService, int... readyForNumberOfPartitions) {
+		MirroredObject<TestSpaceObject> testObject = TEST_SPACE_OBJECT.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+
+		// Verify statistics are collected properly
+		PersistedInstanceIdStatisticsMBean statistics = calculationService.collectStatistics(testObject);
+		assertThat(statistics.getCalculationProgress(), is(1_000L));
+		assertThat(statistics.getTotalToCalculate(), is(1_000L));
+		assertThat(statistics.getReadyForNumberOfPartitions(), is(readyForNumberOfPartitions));
 	}
 
 	private Document createDocument(int id) {
