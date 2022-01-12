@@ -23,16 +23,16 @@ import org.openspaces.core.util.ConcurrentHashSet;
 class PersistedInstanceIdStatistics implements PersistedInstanceIdStatisticsMBean {
 
 	private final Set<Integer> readyForNumberOfPartitions = new ConcurrentHashSet<>();
-	private final LongAdder calculationProgress = new LongAdder();
+	private LongAdder calculationProgress;
 	private Long totalToCalculate;
 
 	public void resetStatisticsForJobExecution(Set<Integer> calculatingForPartitions) {
-		calculationProgress.reset();
+		calculationProgress = new LongAdder();
 		totalToCalculate = 0L;
 		readyForNumberOfPartitions.removeIf((numberOfPartitions -> !calculatingForPartitions.contains(numberOfPartitions)));
 	}
 
-	public void addToCalculationProgress(Integer calculationProgress) {
+	public void addToCalculationProgress(int calculationProgress) {
 		this.calculationProgress.add(calculationProgress);
 	}
 
@@ -51,7 +51,7 @@ class PersistedInstanceIdStatistics implements PersistedInstanceIdStatisticsMBea
 
 	@Override
 	public Long getCalculationProgress() {
-		return calculationProgress.longValue();
+		return calculationProgress != null ? calculationProgress.longValue() : null;
 	}
 
 	@Override
