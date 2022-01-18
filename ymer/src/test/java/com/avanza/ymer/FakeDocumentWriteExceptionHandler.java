@@ -18,6 +18,7 @@ package com.avanza.ymer;
 public class FakeDocumentWriteExceptionHandler implements DocumentWriteExceptionHandler {
 
 	private final RuntimeException exceptionToThrow;
+	private String lastOperationDescription;
 
 	/**
 	 * Constructs a DocumentWriteExceptionHandler that does nothing.
@@ -36,9 +37,13 @@ public class FakeDocumentWriteExceptionHandler implements DocumentWriteException
 	
 	@Override
 	public void handleException(Exception exception, String operationDescription) {
+		this.lastOperationDescription = operationDescription;
 		if (exceptionToThrow != null) {
 			throw exceptionToThrow;
 		}
 	}
 
+	public String getLastOperationDescription() {
+		return lastOperationDescription;
+	}
 }
