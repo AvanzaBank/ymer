@@ -16,12 +16,13 @@
 package com.avanza.ymer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -172,8 +173,10 @@ final class MirroredObjectWriter {
 
 		private void onException(final Exception exception) {
 			mirror.onMirrorException(exception, operation, objects);
+			Map<String, List<Object>> objectsPerType = Stream.of(this.objects)
+					.collect(Collectors.groupingBy(o -> o.getClass().getSimpleName()));
 			exceptionHandler.handleException(exception,
-					"Operation: " + operation + ", objects: " + Arrays.toString(objects));
+					"Operation: " + operation + ", objects: " + objectsPerType);
 		}
 
 		protected abstract void execute(Document... documents);

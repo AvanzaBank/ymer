@@ -40,6 +40,7 @@ import com.gigaspaces.sync.SynchronizationSourceDetails;
 
 public class MirroredObjectWriterTest {
 
+	private final FakeDocumentWriteExceptionHandler exceptionHandler = new FakeDocumentWriteExceptionHandler();
 	private MirroredObjectWriter mirroredObjectWriter;
 	private DocumentConverter documentConverter;
 	private DocumentDb documentDb;
@@ -75,7 +76,7 @@ public class MirroredObjectWriterTest {
 		documentDb = FakeDocumentDb.create();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler);
 		testMetadata = new InstanceMetadata(1, null);
 	}
 
@@ -236,7 +237,7 @@ public class MirroredObjectWriterTest {
 		documentDb = throwsOnUpdateDocumentDb();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler);
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -244,6 +245,10 @@ public class MirroredObjectWriterTest {
 
 		assertNotNull(mirrorExceptionSpy.lastException);
 		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
+		assertEquals(
+				"Operation: UPDATE, objects: {TestSpaceObject=[TestSpaceObject [id=1, message=hello]]}",
+				exceptionHandler.getLastOperationDescription()
+		);
 	}
 
 	@Test
@@ -284,7 +289,7 @@ public class MirroredObjectWriterTest {
 		});
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler());
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler);
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -292,6 +297,10 @@ public class MirroredObjectWriterTest {
 
 		assertNotNull(mirrorExceptionSpy.lastException);
 		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
+		assertEquals(
+				"Operation: UPDATE, objects: {TestSpaceObject=[TestSpaceObject [id=1, message=hello]]}",
+				exceptionHandler.getLastOperationDescription()
+		);
 	}
 
 	@Test
