@@ -91,7 +91,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 
 			verifyCollectionIsCalculatedFor(numberOfInstances);
 			verifyStatistics(TEST_SPACE_OBJECT, persistedInstanceIdCalculationService, new int[] { 16 });
-			assertThat(persistedInstanceIdCalculationService.getAllCollectionsReadyForNumberOfPartitions(), is(new int[] { 16 }));
+			assertThat(persistedInstanceIdCalculationService.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 16 }));
 		}
 	}
 
@@ -124,7 +124,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 				target.calculatePersistedInstanceId();
 				verifyCollectionIsCalculatedFor(numberOfInstances);
 				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { numberOfInstances });
-				assertThat(target.getAllCollectionsReadyForNumberOfPartitions(), is(new int[] { numberOfInstances }));
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { numberOfInstances }));
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
 	}
@@ -140,13 +140,13 @@ public class PersistedInstanceIdCalculationServiceTest {
 				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { 22 });
 
 				// TEST_SPACE_OTHER_OBJECT is not calculated yet, so this should be empty
-				assertThat(target.getAllCollectionsReadyForNumberOfPartitions(), is(new int[] { }));
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { }));
 
 				target.calculatePersistedInstanceId(TEST_SPACE_OTHER_OBJECT.collectionName());
 				verifyStatistics(TEST_SPACE_OTHER_OBJECT, target, new int[] { 22 });
 
 				// Now that all collections are calculated, this should contain number of instances
-				assertThat(target.getAllCollectionsReadyForNumberOfPartitions(), is(new int[] { 22 }));
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 22 }));
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
 	}
@@ -163,13 +163,13 @@ public class PersistedInstanceIdCalculationServiceTest {
 
 				// Verify statistics are empty before calculation
 				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { });
-				assertThat(target.getAllCollectionsReadyForNumberOfPartitions(), is(new int[] { }));
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { }));
 
 				target.calculatePersistedInstanceId();
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsCalculatedFor(38);
 				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { 32, 38 });
-				assertThat(target.getAllCollectionsReadyForNumberOfPartitions(), is(new int[] { 32, 38 }));
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 32, 38 }));
 
 				// Recalculate using a different next number of instances
 				testSpaceMirrorFactory.setNextNumberOfInstances(40);
@@ -179,7 +179,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 				verifyCollectionIsNotCalculatedFor(38);
 				verifyCollectionIsCalculatedFor(40);
 				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { 32, 40 });
-				assertThat(target.getAllCollectionsReadyForNumberOfPartitions(), is(new int[] { 32, 40 }));
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 32, 40 }));
 
 				// Recalculate without any next number of instances, deleting next instance id field
 				testSpaceMirrorFactory.setNextNumberOfInstances(null);
@@ -188,7 +188,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsNotCalculatedFor(40);
 				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { 32 });
-				assertThat(target.getAllCollectionsReadyForNumberOfPartitions(), is(new int[] { 32 }));
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 32 }));
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(currentNumberOfInstances)));
 	}
@@ -261,7 +261,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 		// Verify statistics are collected properly
 		PersistedInstanceIdStatisticsMBean statistics = calculationService.collectStatistics(testObject);
 		assertThat(statistics.isCalculationInProgress(), is(false));
-		assertThat(statistics.getReadyForNumberOfPartitions(), is(readyForNumberOfPartitions));
+		assertThat(statistics.getNumberOfPartitionsThatCollectionIsPreparedFor(), is(readyForNumberOfPartitions));
 	}
 
 	private Document createDocument(int id) {

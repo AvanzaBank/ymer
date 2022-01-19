@@ -16,13 +16,12 @@
 package com.avanza.ymer;
 
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.openspaces.core.util.ConcurrentHashSet;
 
 class PersistedInstanceIdStatistics implements PersistedInstanceIdStatisticsMBean {
 
-	private final Set<Integer> readyForNumberOfPartitionsSet = new ConcurrentHashSet<>();
+	private final Set<Integer> readyForNumberOfPartitionsSet = ConcurrentHashMap.newKeySet();
 	private final AtomicBoolean calculationInProgress = new AtomicBoolean(false);
 
 	public void resetStatisticsForJobExecution(Set<Integer> calculatingForPartitions) {
@@ -44,7 +43,7 @@ class PersistedInstanceIdStatistics implements PersistedInstanceIdStatisticsMBea
 	}
 
 	@Override
-	public int[] getReadyForNumberOfPartitions() {
+	public int[] getNumberOfPartitionsThatCollectionIsPreparedFor() {
 		return readyForNumberOfPartitionsSet.stream().mapToInt(x -> x).sorted().toArray();
 	}
 

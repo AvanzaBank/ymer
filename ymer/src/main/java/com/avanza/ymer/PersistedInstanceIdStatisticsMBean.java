@@ -18,9 +18,9 @@ package com.avanza.ymer;
 public interface PersistedInstanceIdStatisticsMBean {
 
 	/**
-	 * A list of number of partitions that this collection is currently ready to be loaded for.
+	 * A list of number of partitions that this collection is currently prepared to be loaded for.
 	 */
-	int[] getReadyForNumberOfPartitions();
+	int[] getNumberOfPartitionsThatCollectionIsPreparedFor();
 
 	/**
 	 * Whether {@link PersistedInstanceIdCalculationService} is currently running a calculation for the collection.

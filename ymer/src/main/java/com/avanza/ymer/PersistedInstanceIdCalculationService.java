@@ -151,7 +151,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 	}
 
 	@Override
-	public int[] getAllCollectionsReadyForNumberOfPartitions() {
+	public int[] getNumberOfPartitionsThatDataIsPreparedFor() {
 		return getCollectionsWithPersistInstanceIdEnabled().stream()
 				.map(this::getStatisticsForCollection)
 				.map(PersistedInstanceIdStatistics::getReadyForNumberOfPartitionsSet)
