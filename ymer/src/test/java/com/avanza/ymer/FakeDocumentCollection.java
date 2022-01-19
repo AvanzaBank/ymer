@@ -182,11 +182,6 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public long countByQuery(Query query) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Stream<Document> findByTemplate(Document template) {
 		throw new UnsupportedOperationException();
 	}

@@ -21,4 +21,11 @@ public interface PersistedInstanceIdCalculationServiceMBean {
 
 	void calculatePersistedInstanceId(String collectionName);
 
+	/**
+	 * Returns number of partitions that all collections enabled for persisted instance id are currently
+	 * ready for.
+	 * When only one collection is used, this is the same as {@link PersistedInstanceIdStatisticsMBean#getReadyForNumberOfPartitions()}.
+	 */
+	int[] getAllCollectionsReadyForNumberOfPartitions();
+
 }

@@ -16,46 +16,40 @@
 package com.avanza.ymer;
 
 import java.util.Set;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.openspaces.core.util.ConcurrentHashSet;
 
 class PersistedInstanceIdStatistics implements PersistedInstanceIdStatisticsMBean {
 
-	private final Set<Integer> readyForNumberOfPartitions = new ConcurrentHashSet<>();
-	private LongAdder calculationProgress;
-	private Long totalToCalculate;
+	private final Set<Integer> readyForNumberOfPartitionsSet = new ConcurrentHashSet<>();
+	private final AtomicBoolean calculationInProgress = new AtomicBoolean(false);
 
 	public void resetStatisticsForJobExecution(Set<Integer> calculatingForPartitions) {
-		calculationProgress = new LongAdder();
-		totalToCalculate = 0L;
-		readyForNumberOfPartitions.removeIf((numberOfPartitions -> !calculatingForPartitions.contains(numberOfPartitions)));
-	}
-
-	public void addToCalculationProgress(int calculationProgress) {
-		this.calculationProgress.add(calculationProgress);
-	}
-
-	public void setTotalToCalculate(Long totalToCalculate) {
-		this.totalToCalculate = totalToCalculate;
+		readyForNumberOfPartitionsSet.removeIf((numberOfPartitions -> !calculatingForPartitions.contains(numberOfPartitions)));
+		calculationInProgress.set(true);
 	}
 
 	public void addReadyForNumberOfPartitions(int numberOfPartitions) {
-		readyForNumberOfPartitions.add(numberOfPartitions);
+		readyForNumberOfPartitionsSet.add(numberOfPartitions);
+	}
+
+	public void calculationCompleted(Set<Integer> calculatingForPartitions) {
+		calculatingForPartitions.forEach(this::addReadyForNumberOfPartitions);
+		calculationInProgress.set(false);
+	}
+
+	public Set<Integer> getReadyForNumberOfPartitionsSet() {
+		return readyForNumberOfPartitionsSet;
 	}
 
 	@Override
 	public int[] getReadyForNumberOfPartitions() {
-		return readyForNumberOfPartitions.stream().mapToInt(x -> x).sorted().toArray();
+		return readyForNumberOfPartitionsSet.stream().mapToInt(x -> x).sorted().toArray();
 	}
 
 	@Override
-	public Long getCalculationProgress() {
-		return calculationProgress != null ? calculationProgress.longValue() : null;
-	}
-
-	@Override
-	public Long getTotalToCalculate() {
-		return totalToCalculate;
+	public boolean isCalculationInProgress() {
+		return calculationInProgress.get();
 	}
 }

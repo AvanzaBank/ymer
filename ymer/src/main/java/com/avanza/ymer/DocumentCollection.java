@@ -52,8 +52,6 @@ interface DocumentCollection {
 
 	Stream<Document> findByQuery(Query query);
 
-	long countByQuery(Query query);
-
 	/**
 	 * Replaces a given document in the underlying mongo collection with a new
 	 * document. <p>

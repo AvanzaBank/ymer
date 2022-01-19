@@ -33,6 +33,8 @@ public class TestSpaceMirrorObjectDefinitions  {
 	public static final MirroredObjectDefinition<TestSpaceOtherObject> TEST_SPACE_OTHER_OBJECT =
 			MirroredObjectDefinition.create(TestSpaceOtherObject.class)
 					.writeBackPatchedDocuments(false)
+					.persistInstanceId()
+					.and()
 					.documentPatches(new TestSpaceObjectV1Patch());
 
 	public static final MirroredObjectDefinition<TestSpaceThirdObject> TEST_SPACE_THIRD_OBJECT =

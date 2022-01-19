@@ -23,14 +23,7 @@ public interface PersistedInstanceIdStatisticsMBean {
 	int[] getReadyForNumberOfPartitions();
 
 	/**
-	 * Current progress for calculation of instance id.
-	 * Will be null until {@link PersistedInstanceIdCalculationService} is run for the collection.
+	 * Whether {@link PersistedInstanceIdCalculationService} is currently running a calculation for the collection.
 	 */
-	Long getCalculationProgress();
-
-	/**
-	 * Total number of rows to be handled by the calculation.
-	 * Will be null until {@link PersistedInstanceIdCalculationService} is run for the collection.
-	 */
-	Long getTotalToCalculate();
+	boolean isCalculationInProgress();
 }

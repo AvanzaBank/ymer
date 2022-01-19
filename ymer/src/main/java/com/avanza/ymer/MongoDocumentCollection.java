@@ -113,11 +113,6 @@ final class MongoDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public long countByQuery(Query query) {
-		return collection.countDocuments(query.getQueryObject());
-	}
-
-	@Override
 	public Stream<Document> findByTemplate(Document template) {
 		return toStream(collection.find(template));
 	}
