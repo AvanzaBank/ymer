@@ -15,6 +15,8 @@
  */
 package com.avanza.ymer;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
@@ -168,8 +170,10 @@ final class MirroredObjectWriter {
 
 		private void onException(final Exception exception) {
 			mirror.onMirrorException(exception, operation, objects);
+			Map<String, List<Object>> objectsPerType = Stream.of(this.objects)
+					.collect(Collectors.groupingBy(o -> o.getClass().getSimpleName()));
 			exceptionHandler.handleException(exception,
-					"Operation: " + operation + ", objects: " + Arrays.toString(objects));
+					"Operation: " + operation + ", objects: " + objectsPerType);
 		}
 
 		protected abstract void execute(DBObject... dbOBject);
