@@ -95,6 +95,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 			if (currentNumberOfPartitions == null) {
 				log.warn("Could not determine current number of partitions. Will not be able to persist current instance id");
 			}
+			persistedInstanceIdCalculationService.initializeStatistics();
 			schedulePersistedIdCalculationIfNecessary();
 		}
 	}
@@ -128,6 +129,12 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	void registerPersistedInstanceIdCalculationServiceMBean() {
 		String name = "se.avanzabank.space.mirror:type=PersistedInstanceIdCalculationService,name=persistedInstanceIdCalculationService";
 		registerMbean(persistedInstanceIdCalculationService, name);
+		spaceMirror.getMirroredDocuments().stream()
+				.filter(MirroredObject::persistInstanceId)
+				.forEach(mirroredObject -> {
+					String statisticsBean = "se.avanzabank.space.mirror:type=PersistedInstanceIdCalculationService,name=collection_" + mirroredObject.getCollectionName();
+					registerMbean(persistedInstanceIdCalculationService.collectStatistics(mirroredObject), statisticsBean);
+				});
 	}
 
 	private void registerMbean(Object object, String name) {

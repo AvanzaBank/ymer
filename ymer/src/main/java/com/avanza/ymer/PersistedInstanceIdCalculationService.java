@@ -23,6 +23,7 @@ import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForNumberOfPartitio
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
 import static com.j_spaces.core.Constants.Mirror.MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -36,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
@@ -65,6 +67,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 	private static final int BATCH_SIZE = 10_000;
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final Map<String, PersistedInstanceIdStatistics> jobStatistics = new ConcurrentHashMap<>();
 	private final SpaceMirrorContext spaceMirror;
 	private final ReloadableYmerProperties ymerProperties;
 
@@ -79,6 +82,29 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 	@Override
 	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
+	}
+
+	PersistedInstanceIdStatisticsMBean collectStatistics(MirroredObject<?> mirroredObject) {
+		return getStatisticsForCollection(mirroredObject.getCollectionName());
+	}
+
+	// Initializes readyForNumberOfPartitions for collections that are already calculated
+	void initializeStatistics() {
+		Set<Integer> numberOfPartitionsToCalculate = getNumberOfPartitionsToCalculate();
+		getCollectionsWithPersistInstanceIdEnabled().forEach(collectionName -> {
+			try {
+				PersistedInstanceIdStatistics statistics = getStatisticsForCollection(collectionName);
+				numberOfPartitionsToCalculate.stream()
+						.filter(numberOfPartitions -> spaceMirror.getDocumentDb().getCollection(collectionName).getIndexes().anyMatch(isIndexForNumberOfPartitions(numberOfPartitions)))
+						.forEach(statistics::addReadyForNumberOfPartitions);
+			} catch (Exception e) {
+				log.warn("Unable to initialize persisted instance id statistics for collection {}", collectionName, e);
+			}
+		});
+	}
+
+	private PersistedInstanceIdStatistics getStatisticsForCollection(String collectionName) {
+		return jobStatistics.computeIfAbsent(collectionName, x -> new PersistedInstanceIdStatistics());
 	}
 
 	public boolean collectionNeedsCalculation(String collectionName) {
@@ -105,10 +131,15 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 
 	@Override
 	public void calculatePersistedInstanceId() {
-		spaceMirror.getMirroredDocuments().stream()
+		getCollectionsWithPersistInstanceIdEnabled()
+				.forEach(collectionName -> calculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate()));
+	}
+
+	private Set<String> getCollectionsWithPersistInstanceIdEnabled() {
+		return spaceMirror.getMirroredDocuments().stream()
 				.filter(MirroredObject::persistInstanceId)
 				.map(MirroredObject::getCollectionName)
-				.forEach(collectionName -> calculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate()));
+				.collect(toSet());
 	}
 
 	private Set<Integer> getNumberOfPartitionsToCalculate() {
@@ -117,6 +148,20 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 		numberOfPartitionsSet.add(numberOfPartitions);
 		ymerProperties.getNextNumberOfInstances().ifPresent(numberOfPartitionsSet::add);
 		return numberOfPartitionsSet;
+	}
+
+	@Override
+	public int[] getNumberOfPartitionsThatDataIsPreparedFor() {
+		return getCollectionsWithPersistInstanceIdEnabled().stream()
+				.map(this::getStatisticsForCollection)
+				.map(PersistedInstanceIdStatistics::getReadyForNumberOfPartitionsSet)
+				.reduce((a, b) -> {
+					Set<Integer> intersection = new HashSet<>(a);
+					intersection.retainAll(b);
+					return intersection;
+				})
+				.orElse(emptySet())
+				.stream().mapToInt(x -> x).sorted().toArray();
 	}
 
 	@Override
@@ -140,6 +185,9 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 				BATCH_SIZE
 		);
 		DocumentCollection collection = spaceMirror.getDocumentDb().getCollection(collectionName);
+
+		PersistedInstanceIdStatistics statistics = getStatisticsForCollection(collectionName);
+		statistics.resetStatisticsForJobExecution(numberOfPartitionsSet);
 
 		Set<String> fieldNamesToCalculate = numberOfPartitionsSet.stream()
 				.map(PersistedInstanceIdUtil::getInstanceIdFieldName)
@@ -172,7 +220,9 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 			log.info("Step 2/3\tWill delete no longer used fields [{}]", String.join(", ", noLongerNeededFields));
 		}
 
-		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(createQuery(BATCH_SIZE, fieldNamesToCalculate, noLongerNeededFields)), BATCH_SIZE)) {
+		Query query = createQuery(BATCH_SIZE, fieldNamesToCalculate, noLongerNeededFields);
+
+		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(query), BATCH_SIZE)) {
 			LongAdder analyzedCount = new LongAdder();
 			AtomicInteger updatedCount = new AtomicInteger();
 			batches.forEach(batch -> collection.bulkWrite(bulkWriter -> {
@@ -228,6 +278,8 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 				log.info("Step 3/3\tDone creating index");
 			}
 		});
+
+		statistics.calculationCompleted(numberOfPartitionsSet);
 	}
 
 	private int determineNumberOfPartitions() {

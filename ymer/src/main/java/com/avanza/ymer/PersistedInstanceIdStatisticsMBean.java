@@ -15,17 +15,15 @@
  */
 package com.avanza.ymer;
 
-public interface PersistedInstanceIdCalculationServiceMBean {
-
-	void calculatePersistedInstanceId();
-
-	void calculatePersistedInstanceId(String collectionName);
+public interface PersistedInstanceIdStatisticsMBean {
 
 	/**
-	 * A list of number of partitions that all collections enabled for persisted instance id are currently
-	 * ready to be loaded for.
-	 * When only one collection is used, this is the same as {@link PersistedInstanceIdStatisticsMBean#getNumberOfPartitionsThatCollectionIsPreparedFor()}.
+	 * A list of number of partitions that this collection is currently prepared to be loaded for.
 	 */
-	int[] getNumberOfPartitionsThatDataIsPreparedFor();
+	int[] getNumberOfPartitionsThatCollectionIsPreparedFor();
 
+	/**
+	 * Whether {@link PersistedInstanceIdCalculationService} is currently running a calculation for the collection.
+	 */
+	boolean isCalculationInProgress();
 }

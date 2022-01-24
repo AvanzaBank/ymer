@@ -17,6 +17,7 @@ package com.avanza.ymer;
 
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT;
+import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OTHER_OBJECT;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
 import static com.j_spaces.core.Constants.Mirror.FULL_MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT;
 import static java.util.stream.Collectors.toList;
@@ -89,6 +90,8 @@ public class PersistedInstanceIdCalculationServiceTest {
 			persistedInstanceIdCalculationService.calculatePersistedInstanceId();
 
 			verifyCollectionIsCalculatedFor(numberOfInstances);
+			verifyStatistics(TEST_SPACE_OBJECT, persistedInstanceIdCalculationService, new int[] { 16 });
+			assertThat(persistedInstanceIdCalculationService.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 16 }));
 		}
 	}
 
@@ -120,6 +123,30 @@ public class PersistedInstanceIdCalculationServiceTest {
 				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
 				target.calculatePersistedInstanceId();
 				verifyCollectionIsCalculatedFor(numberOfInstances);
+				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { numberOfInstances });
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { numberOfInstances }));
+			}
+		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
+	}
+
+	@Test
+	public void verifyAllCollectionsAreReadyStatistic() throws Exception {
+		int numberOfInstances = 22;
+		execute(() -> {
+			try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
+				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
+
+				target.calculatePersistedInstanceId(TEST_SPACE_OBJECT.collectionName());
+				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { 22 });
+
+				// TEST_SPACE_OTHER_OBJECT is not calculated yet, so this should be empty
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { }));
+
+				target.calculatePersistedInstanceId(TEST_SPACE_OTHER_OBJECT.collectionName());
+				verifyStatistics(TEST_SPACE_OTHER_OBJECT, target, new int[] { 22 });
+
+				// Now that all collections are calculated, this should contain number of instances
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 22 }));
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
 	}
@@ -133,9 +160,16 @@ public class PersistedInstanceIdCalculationServiceTest {
 		execute(() -> {
 			try (YmerSpaceSynchronizationEndpoint endpoint = (YmerSpaceSynchronizationEndpoint) testSpaceMirrorFactory.createSpaceSynchronizationEndpoint()) {
 				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
+
+				// Verify statistics are empty before calculation
+				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { });
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { }));
+
 				target.calculatePersistedInstanceId();
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsCalculatedFor(38);
+				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { 32, 38 });
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 32, 38 }));
 
 				// Recalculate using a different next number of instances
 				testSpaceMirrorFactory.setNextNumberOfInstances(40);
@@ -144,6 +178,8 @@ public class PersistedInstanceIdCalculationServiceTest {
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsNotCalculatedFor(38);
 				verifyCollectionIsCalculatedFor(40);
+				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { 32, 40 });
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 32, 40 }));
 
 				// Recalculate without any next number of instances, deleting next instance id field
 				testSpaceMirrorFactory.setNextNumberOfInstances(null);
@@ -151,6 +187,8 @@ public class PersistedInstanceIdCalculationServiceTest {
 
 				verifyCollectionIsCalculatedFor(32);
 				verifyCollectionIsNotCalculatedFor(40);
+				verifyStatistics(TEST_SPACE_OBJECT, target, new int[] { 32 });
+				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { 32 }));
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(currentNumberOfInstances)));
 	}
@@ -213,6 +251,17 @@ public class PersistedInstanceIdCalculationServiceTest {
 						assertThat("Should not contain " + fieldName, document.containsKey(fieldName), is(false))
 				);
 		assertThat(mongoDocumentCollection.getIndexes().collect(toList()), not(hasItem(isIndexForField(fieldName))));
+	}
+
+	private static void verifyStatistics(MirroredObjectDefinition<?> mirroredObject,
+			PersistedInstanceIdCalculationService calculationService,
+			int[] readyForNumberOfPartitions) {
+		MirroredObject<?> testObject = mirroredObject.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+
+		// Verify statistics are collected properly
+		PersistedInstanceIdStatisticsMBean statistics = calculationService.collectStatistics(testObject);
+		assertThat(statistics.isCalculationInProgress(), is(false));
+		assertThat(statistics.getNumberOfPartitionsThatCollectionIsPreparedFor(), is(readyForNumberOfPartitions));
 	}
 
 	private Document createDocument(int id) {
