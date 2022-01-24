@@ -18,7 +18,6 @@ package com.avanza.ymer;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID_PREFIX;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
-import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForAnyNumberOfPartitionsIn;
 import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForNumberOfPartitions;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
@@ -87,10 +86,9 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 			return false;
 		}
 		try {
-			Set<Integer> numberOfPartitionsSet = getNumberOfPartitionsToCalculate();
-			DocumentCollection collection = spaceMirror.getDocumentDb().getCollection(collectionName);
-			return collection.getIndexes()
-					.noneMatch(isIndexForAnyNumberOfPartitionsIn(numberOfPartitionsSet));
+			List<IndexInfo> indices = spaceMirror.getDocumentDb().getCollection(collectionName).getIndexes().collect(toList());
+			return getNumberOfPartitionsToCalculate().stream()
+					.anyMatch(numPartitions -> indices.stream().noneMatch(isIndexForNumberOfPartitions(numPartitions)));
 		} catch (Exception e) {
 			log.warn("Could not determine whether persisted instance id should be calculated for collection [{}]", collectionName, e);
 			return false;
