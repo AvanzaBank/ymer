@@ -18,7 +18,6 @@ package com.avanza.ymer;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID_PREFIX;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 
 import org.springframework.data.mongodb.core.index.IndexInfo;
@@ -26,10 +25,6 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 final class PersistedInstanceIdUtil {
 
 	private PersistedInstanceIdUtil() {
-	}
-
-	public static Predicate<IndexInfo> isIndexForAnyNumberOfPartitionsIn(Set<Integer> numberOfPartitions) {
-		return indexInfo -> numberOfPartitions.stream().anyMatch(fieldName -> isIndexForNumberOfPartitions(fieldName).test(indexInfo));
 	}
 
 	public static Predicate<IndexInfo> isIndexForNumberOfPartitions(int numberOfPartitions) {

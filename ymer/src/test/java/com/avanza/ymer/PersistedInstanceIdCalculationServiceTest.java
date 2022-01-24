@@ -16,6 +16,7 @@
 package com.avanza.ymer;
 
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
+import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
 import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT;
 import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OTHER_OBJECT;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
@@ -204,15 +205,32 @@ public class PersistedInstanceIdCalculationServiceTest {
 	@Test
 	public void testCollectionNeedsCalculation() throws Exception {
 		int numberOfInstances = 1;
+		var spaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
 		execute(() -> {
-			try (YmerSpaceSynchronizationEndpoint endpoint = createSpaceSynchronizationEndpoint()) {
+			try (YmerSpaceSynchronizationEndpoint endpoint = (YmerSpaceSynchronizationEndpoint) spaceMirrorFactory.createSpaceSynchronizationEndpoint()) {
 				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
-				assertTrue(target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
+				assertTrue("In the initial state, collection should need to be calculated",
+						target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
 
 				target.calculatePersistedInstanceId(TEST_SPACE_OBJECT.collectionName());
-				verifyCollectionIsCalculatedFor(numberOfInstances);
+				assertFalse("The collection should now be calculated for [1] number of instances",
+						target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
 
-				assertFalse(target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
+				spaceMirrorFactory.setNextNumberOfInstances(2);
+				assertTrue("Should need recalculation when next number of instances is set",
+						target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
+
+				target.calculatePersistedInstanceId(TEST_SPACE_OBJECT.collectionName());
+				assertFalse("The collection should now be calculated for [1, 2] number of instances",
+						target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
+
+				spaceMirrorFactory.setNextNumberOfInstances(3);
+				assertTrue("Should need recalculation again when next number of instances is updated to a different value",
+						target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
+
+				spaceMirrorFactory.setNextNumberOfInstances(null);
+				assertFalse("Should not need recalculation if next number of instances property is removed",
+						target.collectionNeedsCalculation(TEST_SPACE_OBJECT.collectionName()));
 			}
 		}, new SystemProperties("cluster.partitions", String.valueOf(numberOfInstances)));
 	}
@@ -235,7 +253,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 
 	private void verifyCollectionIsCalculatedFor(int numberOfInstances) {
 		MongoDocumentCollection mongoDocumentCollection = new MongoDocumentCollection(collection);
-		String fieldName = PersistedInstanceIdUtil.getInstanceIdFieldName(numberOfInstances);
+		String fieldName = getInstanceIdFieldName(numberOfInstances);
 		mongoDocumentCollection.findAll()
 				.forEach(document ->
 								 assertThat(document.getInteger(fieldName), is(getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances)))
@@ -245,7 +263,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 
 	private void verifyCollectionIsNotCalculatedFor(int numberOfInstances) {
 		MongoDocumentCollection mongoDocumentCollection = new MongoDocumentCollection(collection);
-		String fieldName = PersistedInstanceIdUtil.getInstanceIdFieldName(numberOfInstances);
+		String fieldName = getInstanceIdFieldName(numberOfInstances);
 		mongoDocumentCollection.findAll()
 				.forEach(document ->
 						assertThat("Should not contain " + fieldName, document.containsKey(fieldName), is(false))
