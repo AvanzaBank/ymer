@@ -65,7 +65,7 @@ public class TestSpaceMirrorFactory {
 	}
 
 	private Collection<MirroredObjectDefinition<?>> getDefinitions() {
-		return new TestSpaceMirrorObjectDefinitions().getDefinitions();
+		return TestSpaceMirrorObjectDefinitions.getDefinitions();
 	}
 
 	private MongoConverter createMongoConverter() {
