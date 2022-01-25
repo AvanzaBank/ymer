@@ -92,11 +92,13 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 			GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSpaceProperties(applicationContext).ifPresent(
 					numberOfPartitions -> currentNumberOfPartitions = numberOfPartitions
 			);
-			if (currentNumberOfPartitions == null) {
-				log.warn("Could not determine current number of partitions. Will not be able to persist current instance id");
+			if (spaceMirror.getMirroredDocuments().stream().anyMatch(MirroredObject::persistInstanceId)) {
+				if (currentNumberOfPartitions == null) {
+					log.warn("Could not determine current number of partitions. Will not be able to persist current instance id");
+				}
+				persistedInstanceIdCalculationService.initializeStatistics();
+				schedulePersistedIdCalculationIfNecessary();
 			}
-			persistedInstanceIdCalculationService.initializeStatistics();
-			schedulePersistedIdCalculationIfNecessary();
 		}
 	}
 

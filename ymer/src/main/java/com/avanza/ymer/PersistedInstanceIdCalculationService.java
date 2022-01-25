@@ -89,7 +89,13 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 
 	// Initializes readyForNumberOfPartitions for collections that are already calculated
 	void initializeStatistics() {
-		Set<Integer> numberOfPartitionsToCalculate = getNumberOfPartitionsToCalculate();
+		Set<Integer> numberOfPartitionsToCalculate;
+		try {
+			numberOfPartitionsToCalculate = getNumberOfPartitionsToCalculate();
+		} catch (Exception e) {
+			log.warn("Could not get number of partitions to calculate, unable to initialize persisted instance id statistics", e);
+			return;
+		}
 		getCollectionsWithPersistInstanceIdEnabled().forEach(collectionName -> {
 			try {
 				PersistedInstanceIdStatistics statistics = getStatisticsForCollection(collectionName);
