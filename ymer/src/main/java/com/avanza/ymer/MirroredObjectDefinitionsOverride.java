@@ -28,7 +28,7 @@ public interface MirroredObjectDefinitionsOverride {
     boolean excludeFromInitialLoad(MirroredObjectDefinition<?> definition);
     boolean writeBackPatchedDocuments(MirroredObjectDefinition<?> definition);
     boolean loadDocumentsRouted(MirroredObjectDefinition<?> definition);
-    PersistInstanceIdDefinition<?> persistInstanceId(MirroredObjectDefinition<?> definition);
+    PersistInstanceIdDefinition persistInstanceId(MirroredObjectDefinition<?> definition);
 
     static MirroredObjectDefinitionsOverride noOverride() {
         return new MirroredObjectDefinitionsOverrideNone();
@@ -55,7 +55,7 @@ public interface MirroredObjectDefinitionsOverride {
         }
 
         @Override
-        public PersistInstanceIdDefinition<?> persistInstanceId(MirroredObjectDefinition<?> definition) {
+        public PersistInstanceIdDefinition persistInstanceId(MirroredObjectDefinition<?> definition) {
             return definition.getPersistInstanceId();
         }
     }
@@ -80,8 +80,8 @@ public interface MirroredObjectDefinitionsOverride {
         }
 
         @Override
-        public PersistInstanceIdDefinition<?> persistInstanceId(MirroredObjectDefinition<?> definition) {
-            PersistInstanceIdDefinition<?> persistInstanceId = PersistInstanceIdDefinition.from(definition.getPersistInstanceId());
+        public PersistInstanceIdDefinition persistInstanceId(MirroredObjectDefinition<?> definition) {
+            PersistInstanceIdDefinition persistInstanceId = PersistInstanceIdDefinition.from(definition.getPersistInstanceId());
             getProperty(definition, "persistInstanceId").ifPresent(persistInstanceId::enabled);
             getProperty(definition, "triggerInstanceIdCalculationOnStartup").ifPresent(persistInstanceId::triggerCalculationOnStartup);
             getIntProperty(definition, "triggerInstanceIdCalculationWithDelay")

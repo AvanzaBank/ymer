@@ -29,15 +29,16 @@ public class TestSpaceMirrorObjectDefinitions {
 	public static final MirroredObjectDefinition<TestSpaceObject> TEST_SPACE_OBJECT =
 			MirroredObjectDefinition.create(TestSpaceObject.class)
 					.loadDocumentsRouted(true)
-					.persistInstanceId()
-					.and()
+					.persistInstanceId(true)
 					.documentPatches(new TestSpaceObjectV1Patch(), new TestSpaceObjectV2Patch());
 
 	public static final MirroredObjectDefinition<TestSpaceOtherObject> TEST_SPACE_OTHER_OBJECT =
 			MirroredObjectDefinition.create(TestSpaceOtherObject.class)
 					.writeBackPatchedDocuments(false)
-					.persistInstanceId()
-					.and()
+					.persistInstanceId(configurer -> configurer
+							.enabled(true)
+							.triggerCalculationOnStartup(false)
+					)
 					.documentPatches(new TestSpaceObjectV1Patch());
 
 	public static final MirroredObjectDefinition<TestSpaceThirdObject> TEST_SPACE_THIRD_OBJECT =

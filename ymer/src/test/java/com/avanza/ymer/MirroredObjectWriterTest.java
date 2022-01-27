@@ -62,8 +62,7 @@ public class MirroredObjectWriterTest {
 		anotherMirroredDocument =
 				MirroredObjectDefinition.create(TestSpaceOtherObject.class)
 										.keepPersistent(true)
-										.persistInstanceId()
-										.and()
+										.persistInstanceId(true)
 										.documentPatches(patches2)
 										.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		DocumentPatch[] patches1 = {};

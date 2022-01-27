@@ -45,7 +45,7 @@ public final class ReloadableYmerProperties {
 
 		/**
 		 * Sets a supplier returning the coming amount of partitions planned for the space after restart.
-		 * This is designed to be used in combination with {@link MirroredObjectDefinition#persistInstanceId()}.
+		 * This is designed to be used in combination with {@link MirroredObjectDefinition#persistInstanceId(boolean)}.
 		 * <p>
 		 * When writing the instance ID field, both the instance ID using the current number of partitions and the next
 		 * number of partitions will be set to the document. It will also be used when calling {@link PersistedInstanceIdCalculationService}.

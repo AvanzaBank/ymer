@@ -94,8 +94,7 @@ public class MirroredObjectLoaderTest {
 	@Test
 	public void loadsAllObjectsRoutedToCurrentPartitionByPersistedInstanceId() {
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class)
-				.persistInstanceId()
-				.and()
+				.persistInstanceId(true)
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		String documentInstanceIdField = PersistedInstanceIdUtil.getInstanceIdFieldName(contextProperties.getPartitionCount());
