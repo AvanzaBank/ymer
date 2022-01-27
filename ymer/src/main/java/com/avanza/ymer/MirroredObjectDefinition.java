@@ -33,6 +33,7 @@ package com.avanza.ymer;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.springframework.data.mongodb.MongoCollectionUtils;
 
@@ -52,7 +53,7 @@ public final class MirroredObjectDefinition<T> {
 	private boolean excludeFromInitialLoad = false;
 	private boolean writeBackPatchedDocuments = true;
 	private boolean loadDocumentsRouted = false;
-	private final PersistInstanceIdDefinition<T> persistInstanceId = new PersistInstanceIdDefinition<>(this);
+	private final PersistInstanceIdDefinition persistInstanceId = new PersistInstanceIdDefinition();
 	private boolean keepPersistent = false;
 	private TemplateFactory customInitialLoadTemplateFactory;
 	private ReadPreference readPreference;
@@ -149,13 +150,31 @@ public final class MirroredObjectDefinition<T> {
 	 * This can increase load speed, but requires all persisted partition numbers to be recalculated
 	 * when the number of partitions change.
 	 *
-	 * This will enable persisting of instance id with default settings.
+	 * For more properties related to instance id persisting, see {@link #persistInstanceId(Consumer)}
 	 */
-	public PersistInstanceIdDefinition<T> persistInstanceId() {
-		return persistInstanceId.enableWithDefaults();
+	public MirroredObjectDefinition<T> persistInstanceId(boolean enabled) {
+		persistInstanceId.enabled(enabled);
+		return this;
 	}
 
-	PersistInstanceIdDefinition<T> getPersistInstanceId() {
+	/**
+	 * Configuration relating to persisting the instance id.
+	 * This method accepts a configurer where more detailed configuration is available.
+	 * This configuration can be used in the following manner:
+	 *
+	 * <pre>{@code
+	 *   .persistInstanceId(configurer -> configurer
+	 *       .enabled(true)
+	 *       .triggerCalculationWithDelay(Duration.ofMinutes(60))
+	 *   )
+	 * }</pre>
+	 */
+	public MirroredObjectDefinition<T> persistInstanceId(Consumer<PersistInstanceIdDefinition> configurer) {
+		configurer.accept(persistInstanceId);
+		return this;
+	}
+
+	PersistInstanceIdDefinition getPersistInstanceId() {
 		return persistInstanceId;
 	}
 

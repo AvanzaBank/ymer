@@ -17,34 +17,25 @@ package com.avanza.ymer;
 
 import java.time.Duration;
 
-public final class PersistInstanceIdDefinition<T> {
+public final class PersistInstanceIdDefinition {
 
 	private static final Duration DEFAULT_DELAY = Duration.ofHours(1);
 
-	private final MirroredObjectDefinition<T> parent;
-	private boolean enabled;
-	private boolean triggerCalculationOnStartup;
+	private boolean enabled = false;
+	private boolean triggerCalculationOnStartup = true;
 	private Duration triggerCalculationWithDelay = DEFAULT_DELAY;
 
-	PersistInstanceIdDefinition(MirroredObjectDefinition<T> parent) {
-		this.parent = parent;
-	}
-
-	static <T> PersistInstanceIdDefinition<T> from(PersistInstanceIdDefinition<T> from) {
-		return new PersistInstanceIdDefinition<>(from.getParent())
+	static PersistInstanceIdDefinition from(PersistInstanceIdDefinition from) {
+		return new PersistInstanceIdDefinition()
 				.enabled(from.enabled)
 				.triggerCalculationOnStartup(from.triggerCalculationOnStartup)
 				.triggerCalculationWithDelay(from.triggerCalculationWithDelay);
 	}
 
-	public PersistInstanceIdDefinition<T> enableWithDefaults() {
-		return enabled(true).triggerCalculationOnStartup(true);
-	}
-
 	/**
 	 * Whether to enable persisting the instance id for each document.
 	 */
-	public PersistInstanceIdDefinition<T> enabled(boolean enabled) {
+	public PersistInstanceIdDefinition enabled(boolean enabled) {
 		this.enabled = enabled;
 		return this;
 	}
@@ -59,7 +50,7 @@ public final class PersistInstanceIdDefinition<T> {
 	 * Automatically starting this job requires {@link YmerSpaceSynchronizationEndpoint} to be handled
 	 * as a Spring bean.
 	 */
-	public PersistInstanceIdDefinition<T> triggerCalculationOnStartup(boolean triggerCalculationOnStartup) {
+	public PersistInstanceIdDefinition triggerCalculationOnStartup(boolean triggerCalculationOnStartup) {
 		this.triggerCalculationOnStartup = triggerCalculationOnStartup;
 		return this;
 	}
@@ -69,23 +60,9 @@ public final class PersistInstanceIdDefinition<T> {
 	 * This is done to reduce load on database during initial load of data.
 	 * This property only has an effect when {@code triggerCalculationOnStartup} is enabled.
 	 */
-	public PersistInstanceIdDefinition<T> triggerCalculationWithDelay(Duration triggerCalculationWithDelay) {
+	public PersistInstanceIdDefinition triggerCalculationWithDelay(Duration triggerCalculationWithDelay) {
 		this.triggerCalculationWithDelay = triggerCalculationWithDelay;
 		return this;
-	}
-
-	/**
-	 * Return the {@code MirroredObjectDefinition} when done configuring the {@code PersistInstanceIdDefinition}.
-	 * This is useful for method chaining.
-	 *
-	 * @return the MirroredObjectDefinition for further customizations
-	 */
-	public MirroredObjectDefinition<T> and() {
-		return getParent();
-	}
-
-	private MirroredObjectDefinition<T> getParent() {
-		return parent;
 	}
 
 	boolean isEnabled() {

@@ -345,8 +345,7 @@ public class MirroredObjectTest {
 	@Test
 	public void setsInstanceIdAndRoutingKeyForPersistInstanceId() throws Exception {
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
-				.persistInstanceId()
-				.and()
+				.persistInstanceId(true)
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
@@ -360,8 +359,7 @@ public class MirroredObjectTest {
 	@Test
 	public void setsNextInstanceIdAndRoutingKeyForPersistInstanceId() throws Exception {
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
-				.persistInstanceId()
-				.and()
+				.persistInstanceId(true)
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
@@ -376,8 +374,7 @@ public class MirroredObjectTest {
 	@Test
 	public void doesNotSetInstanceIdWhenNull() throws Exception {
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
-				.persistInstanceId()
-				.and()
+				.persistInstanceId(true)
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		int routingKey = 23;
 
@@ -391,8 +388,7 @@ public class MirroredObjectTest {
 	@Test
 	public void willAlwaysCalculateNextNumberOfPartitionsIfSet() throws Exception {
 		MirroredObject<MirroredType> document = MirroredObjectDefinition.create(MirroredType.class)
-				.persistInstanceId()
-				.and()
+				.persistInstanceId(true)
 				.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		Document dbObject = new Document();
 
@@ -407,8 +403,7 @@ public class MirroredObjectTest {
 		MirroredObjectDefinition<RoutedType> definition = MirroredObjectDefinition.create(RoutedType.class)
 				.loadDocumentsRouted(true)
 				.writeBackPatchedDocuments(true)
-				.persistInstanceId()
-				.and()
+				.persistInstanceId(true)
 				.excludeFromInitialLoad(true);
 
 		assertTrue(definition.buildMirroredDocument(fromSystemProperties()).loadDocumentsRouted());

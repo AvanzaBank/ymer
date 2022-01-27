@@ -61,7 +61,7 @@ final class MirroredObject<T> {
         this.writeBackPatchedDocuments = override.writeBackPatchedDocuments(definition);
         this.loadDocumentsRouted = override.loadDocumentsRouted(definition);
 
-		PersistInstanceIdDefinition<?> persistInstanceId = override.persistInstanceId(definition);
+		PersistInstanceIdDefinition persistInstanceId = override.persistInstanceId(definition);
         this.persistInstanceId = persistInstanceId.isEnabled();
 		this.triggerInstanceIdCalculationOnStartup = persistInstanceId.isTriggerCalculationOnStartup();
 		this.triggerInstanceIdCalculationWithDelay = persistInstanceId.getTriggerCalculationWithDelay();
