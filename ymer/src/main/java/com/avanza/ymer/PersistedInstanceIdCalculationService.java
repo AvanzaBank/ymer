@@ -15,7 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID_PREFIX;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
 import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForNumberOfPartitions;
@@ -40,7 +39,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -178,10 +176,6 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 		calculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate());
 	}
 
-	private Predicate<IndexInfo> isInstanceIdIndex() {
-		return indexInfo -> indexInfo.getIndexFields().size() == 1 && indexInfo.getIndexFields().get(0).getKey().startsWith(DOCUMENT_INSTANCE_ID_PREFIX);
-	}
-
 	private void calculatePersistedInstanceId(String collectionName, Set<Integer> numberOfPartitionsSet) {
 		log.info("Calculating instance id for collection {} with {} number of partitions and batch size {}",
 				collectionName,
@@ -198,7 +192,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 				.collect(toSet());
 
 		List<IndexInfo> allInstanceIdIndexes = collection.getIndexes()
-				.filter(isInstanceIdIndex())
+				.filter(PersistedInstanceIdUtil::isPersistedInstanceIdIndex)
 				.collect(toList());
 
 		Set<String> noLongerNeededFields = allInstanceIdIndexes.stream()

@@ -35,4 +35,8 @@ final class PersistedInstanceIdUtil {
 	public static String getInstanceIdFieldName(int numberOfPartitions) {
 		return DOCUMENT_INSTANCE_ID_PREFIX + "_" + numberOfPartitions;
 	}
+
+	public static boolean isPersistedInstanceIdIndex(IndexInfo index) {
+		return index.getIndexFields().size() == 1 && index.getIndexFields().get(0).getKey().startsWith(DOCUMENT_INSTANCE_ID_PREFIX);
+	}
 }
