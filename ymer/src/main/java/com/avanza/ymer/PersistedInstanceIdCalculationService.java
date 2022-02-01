@@ -293,14 +293,14 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 	private Optional<Integer> getNumberOfPartitionsFromSpaceProperties() {
 		return GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSpaceProperties(applicationContext)
 				.map(peek(numberOfPartitions ->
-								  log.info("Using {} number of partitions (from space property \"{}\")", numberOfPartitions, MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT)
+						log.debug("Using {} number of partitions (from space property \"{}\")", numberOfPartitions, MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT)
 				));
 	}
 
 	private Optional<Integer> getNumberOfPartitionsFromSystemProperty() {
 		return GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSystemProperty()
 				.map(peek(numberOfPartitions ->
-								  log.info("Using {} number of partitions (from system property \"{}\")", numberOfPartitions, NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY)
+						log.debug("Using {} number of partitions (from system property \"{}\")", numberOfPartitions, NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY)
 				));
 	}
 
