@@ -140,7 +140,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	}
 
 	private void registerMbean(Object object, String name) {
-		log.info("Registering MBean with name {}", name);
+		log.debug("Registering MBean with name {}", name);
 		try {
 			ObjectName objectName = ObjectName.getInstance(name);
 			ManagementFactory.getPlatformMBeanServer().registerMBean(object, objectName);

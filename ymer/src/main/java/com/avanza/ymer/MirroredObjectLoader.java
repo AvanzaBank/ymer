@@ -75,7 +75,6 @@ final class MirroredObjectLoader<T> {
     }
 
     Stream<LoadedDocument<T>> streamAllObjects() {
-        log.info("Begin loadAllObjects. targetCollection={}", mirroredObject.getCollectionName());
         return loadDocuments()
                 .parallel() // We run patching and conversions in parallel as this is a cpu-intensive task
                 .flatMap(document -> tryPatchAndConvert(document).stream());
@@ -86,6 +85,8 @@ final class MirroredObjectLoader<T> {
             Document template = mirroredObject.getCustomInitialLoadTemplateFactory()
                                                    .create(contextProperties.getPartitionCount(),
                                                            contextProperties.getInstanceId());
+            log.info("Begin loading objects for collection {}. Loading using custom initial load template.",
+                    mirroredObject.getCollectionName());
             return documentCollection.findByTemplate(template);
         }
         if (mirroredObject.persistInstanceId()) {
@@ -102,15 +103,18 @@ final class MirroredObjectLoader<T> {
                 instanceIdIndices.forEach(index -> query.fields().exclude(index.getIndexFields().get(0).getKey()));
                 query.fields().exclude(DOCUMENT_ROUTING_KEY);
 
+                log.info("Begin loading objects for collection {}. Loading using persistInstanceId.", mirroredObject.getCollectionName());
                 return documentCollection.findByQuery(query);
             } else {
-                log.warn("Configured to load using persisted instance id, but no index exists for field {}. Will not use instance id when loading.",
-                        instanceIdField);
+                log.warn("Configured to load using persisted instance id for collection {}, but no index exists for field {}. Will not use instance id when loading.",
+                        mirroredObject.getCollectionName(), instanceIdField);
             }
         }
         if (mirroredObject.loadDocumentsRouted()) {
+            log.info("Begin loading objects for collection {}. Loading using loadDocumentsRouted.", mirroredObject.getCollectionName());
             return documentCollection.findAll(spaceObjectFilter);
         } else {
+            log.info("Begin loading objects for collection {}. Loading ALL documents.", mirroredObject.getCollectionName());
             return documentCollection.findAll();
         }
     }
