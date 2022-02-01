@@ -268,12 +268,13 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 			boolean indexExists = collection.getIndexes()
 					.anyMatch(isIndexForNumberOfPartitions(numberOfPartitions));
 			if (indexExists) {
-				log.info("Step 3/3\tIndex for field [{}] does not need to be created because it already exists", fieldName);
+				log.info("Step 3/3\tIndex for field [{}] in collection {} does not need to be created because it already exists",
+						fieldName, collectionName);
 			} else {
-				log.info("Step 3/3\tCreating index for field [{}]", fieldName);
+				log.info("Step 3/3\tCreating index for field [{}] in collection {}", fieldName, collectionName);
 				IndexOptions options = new IndexOptions().background(true);
 				collection.createIndex(new Document(fieldName, 1), options);
-				log.info("Step 3/3\tDone creating index");
+				log.info("Step 3/3\tDone creating index for field [{}] in collection {}", fieldName, collectionName);
 			}
 		});
 
