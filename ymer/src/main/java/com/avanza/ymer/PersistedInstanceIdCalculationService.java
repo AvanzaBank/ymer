@@ -29,6 +29,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -226,6 +227,8 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 
 		Query query = createQuery(BATCH_SIZE, fieldNamesToCalculate, noLongerNeededFields);
 
+		LogWithInterval logWithInterval = new LogWithInterval(Duration.ofSeconds(30));
+
 		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(query), BATCH_SIZE)) {
 			LongAdder analyzedCount = new LongAdder();
 			AtomicInteger updatedCount = new AtomicInteger();
@@ -243,7 +246,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 								.filter(Objects::nonNull)
 								.peek(it -> {
 									int currentCount = updatedCount.incrementAndGet();
-									if (currentCount % 10_000 == 0) {
+									if (logWithInterval.shouldLog()) {
 										log.info("Step 2/3\tUpdated persisted instance id for {} documents ({} analyzed)", currentCount, analyzedCount.sum());
 									}
 								})

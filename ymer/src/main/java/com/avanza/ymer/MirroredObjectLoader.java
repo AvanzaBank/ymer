@@ -21,6 +21,7 @@ import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -53,6 +54,7 @@ final class MirroredObjectLoader<T> {
     private final AtomicLong numLoadedObjects = new AtomicLong();
     private final MirrorContextProperties contextProperties;
     private final PostReadProcessor postReadProcessor;
+    private final LogWithInterval logWithInterval = new LogWithInterval(Duration.ofSeconds(30));
 
     MirroredObjectLoader(DocumentCollection documentCollection,
                          DocumentConverter documentConverter,
@@ -118,7 +120,7 @@ final class MirroredObjectLoader<T> {
                 result = patchAndConvert(new Document(document));
             }
             long loaded = numLoadedObjects.incrementAndGet();
-            if (loaded % 10_000 == 0) {
+            if (logWithInterval.shouldLog()) {
                 log.info("Status: loaded {} records for collection {}", loaded, mirroredObject.getCollectionName());
             }
             return result;
