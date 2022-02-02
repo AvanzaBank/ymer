@@ -25,8 +25,9 @@ import java.util.concurrent.ThreadFactory;
 
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
-class RepeatingTask implements AutoCloseable{
-	private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1, daemonThreadFactory("Repeating-Task"));
+class RepeatingTask implements AutoCloseable {
+	private static final ThreadFactory threadFactory = daemonThreadFactory("Repeating-Task-");
+	private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1, threadFactory);
 	private final ScheduledFuture<?> task;
 
 	public RepeatingTask(Duration initialDelay, Duration fixedRate, Runnable action) {
