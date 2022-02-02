@@ -38,7 +38,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -227,11 +226,13 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 
 		Query query = createQuery(BATCH_SIZE, fieldNamesToCalculate, noLongerNeededFields);
 
-		LogWithInterval logWithInterval = new LogWithInterval(Duration.ofSeconds(30));
+		LongAdder analyzedCount = new LongAdder();
+		LongAdder updatedCount = new LongAdder();
+		Runnable progressLogger = () -> log.info("Step 2/3\tUpdated persisted instance id for {} documents ({} analyzed)", updatedCount.sum(), analyzedCount.sum());
 
-		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(query), BATCH_SIZE)) {
-			LongAdder analyzedCount = new LongAdder();
-			AtomicInteger updatedCount = new AtomicInteger();
+		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(query), BATCH_SIZE);
+				RepeatingTask ignore = new RepeatingTask(Duration.ofSeconds(30), progressLogger)) {
+
 			batches.forEach(batch -> collection.bulkWrite(bulkWriter -> {
 				numberOfPartitionsSet.forEach(numberOfPartitions -> {
 					String fieldName = getInstanceIdFieldName(numberOfPartitions);
@@ -244,12 +245,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 								.filter(document -> !Objects.equals(instanceId, document.get(fieldName)))
 								.map(document -> document.get("_id"))
 								.filter(Objects::nonNull)
-								.peek(it -> {
-									int currentCount = updatedCount.incrementAndGet();
-									if (logWithInterval.shouldLog()) {
-										log.info("Step 2/3\tUpdated persisted instance id for {} documents ({} analyzed)", currentCount, analyzedCount.sum());
-									}
-								})
+								.peek(it -> updatedCount.increment())
 								.collect(toSet());
 						if (!ids.isEmpty()) {
 							bulkWriter.updatePartialByIds(ids, Map.of(fieldName, instanceId));
@@ -269,8 +265,8 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 					});
 				});
 			}));
-			log.info("Step 2/3\tUpdated persisted instance id for {} documents total ({} analyzed total)", updatedCount.get(), analyzedCount.sum());
 		}
+		log.info("Step 2/3\tUpdated persisted instance id for {} documents total ({} analyzed total)", updatedCount.sum(), analyzedCount.sum());
 
 		numberOfPartitionsSet.forEach(numberOfPartitions -> {
 			String fieldName = getInstanceIdFieldName(numberOfPartitions);
