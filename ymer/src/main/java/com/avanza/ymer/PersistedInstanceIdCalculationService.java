@@ -15,7 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static com.avanza.ymer.MirroredObject.DOCUMENT_INSTANCE_ID_PREFIX;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
 import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForNumberOfPartitions;
@@ -40,7 +39,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -178,10 +176,6 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 		calculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate());
 	}
 
-	private Predicate<IndexInfo> isInstanceIdIndex() {
-		return indexInfo -> indexInfo.getIndexFields().size() == 1 && indexInfo.getIndexFields().get(0).getKey().startsWith(DOCUMENT_INSTANCE_ID_PREFIX);
-	}
-
 	private void calculatePersistedInstanceId(String collectionName, Set<Integer> numberOfPartitionsSet) {
 		log.info("Calculating instance id for collection {} with {} number of partitions and batch size {}",
 				collectionName,
@@ -198,7 +192,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 				.collect(toSet());
 
 		List<IndexInfo> allInstanceIdIndexes = collection.getIndexes()
-				.filter(isInstanceIdIndex())
+				.filter(PersistedInstanceIdUtil::isPersistedInstanceIdIndex)
 				.collect(toList());
 
 		Set<String> noLongerNeededFields = allInstanceIdIndexes.stream()
@@ -273,12 +267,13 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 			boolean indexExists = collection.getIndexes()
 					.anyMatch(isIndexForNumberOfPartitions(numberOfPartitions));
 			if (indexExists) {
-				log.info("Step 3/3\tIndex for field [{}] does not need to be created because it already exists", fieldName);
+				log.info("Step 3/3\tIndex for field [{}] in collection {} does not need to be created because it already exists",
+						fieldName, collectionName);
 			} else {
-				log.info("Step 3/3\tCreating index for field [{}]", fieldName);
+				log.info("Step 3/3\tCreating index for field [{}] in collection {}", fieldName, collectionName);
 				IndexOptions options = new IndexOptions().background(true);
 				collection.createIndex(new Document(fieldName, 1), options);
-				log.info("Step 3/3\tDone creating index");
+				log.info("Step 3/3\tDone creating index for field [{}] in collection {}", fieldName, collectionName);
 			}
 		});
 
@@ -297,14 +292,14 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 	private Optional<Integer> getNumberOfPartitionsFromSpaceProperties() {
 		return GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSpaceProperties(applicationContext)
 				.map(peek(numberOfPartitions ->
-								  log.info("Using {} number of partitions (from space property \"{}\")", numberOfPartitions, MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT)
+						log.debug("Using {} number of partitions (from space property \"{}\")", numberOfPartitions, MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT)
 				));
 	}
 
 	private Optional<Integer> getNumberOfPartitionsFromSystemProperty() {
 		return GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSystemProperty()
 				.map(peek(numberOfPartitions ->
-								  log.info("Using {} number of partitions (from system property \"{}\")", numberOfPartitions, NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY)
+						log.debug("Using {} number of partitions (from system property \"{}\")", numberOfPartitions, NUMBER_OF_PARTITIONS_SYSTEM_PROPERTY)
 				));
 	}
 

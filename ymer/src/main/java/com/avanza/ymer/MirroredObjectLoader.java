@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
 import static com.avanza.ymer.PersistedInstanceIdUtil.isIndexForNumberOfPartitions;
 import static java.util.stream.Collectors.toList;
@@ -32,6 +33,7 @@ import javax.annotation.Nullable;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -74,8 +76,6 @@ final class MirroredObjectLoader<T> {
     }
 
     Stream<LoadedDocument<T>> streamAllObjects() {
-        log.info("Begin loadAllObjects. targetCollection={}", mirroredObject.getCollectionName());
-
         RepeatingTask progressLogger = new RepeatingTask(Duration.ofSeconds(30), () ->
                 log.info("Status: loaded {} records for collection {}", numLoadedObjects.sum(), mirroredObject.getCollectionName()));
 
@@ -90,23 +90,36 @@ final class MirroredObjectLoader<T> {
             Document template = mirroredObject.getCustomInitialLoadTemplateFactory()
                                                    .create(contextProperties.getPartitionCount(),
                                                            contextProperties.getInstanceId());
+            log.info("Begin loading objects for collection {}. Loading using custom initial load template.",
+                    mirroredObject.getCollectionName());
             return documentCollection.findByTemplate(template);
         }
         if (mirroredObject.persistInstanceId()) {
             String instanceIdField = getInstanceIdFieldName(contextProperties.getPartitionCount());
-            boolean indexExists = documentCollection.getIndexes()
+            List<IndexInfo> instanceIdIndices = documentCollection.getIndexes()
+                    .filter(PersistedInstanceIdUtil::isPersistedInstanceIdIndex)
+                    .collect(toList());
+            boolean indexExists = instanceIdIndices.stream()
                     .anyMatch(isIndexForNumberOfPartitions(contextProperties.getPartitionCount()));
             if (indexExists) {
                 Query query = query(new Criteria().orOperator(where(instanceIdField).is(contextProperties.getInstanceId()), where(instanceIdField).exists(false)));
+
+                // exclude fields that are only needed in db while loading the data and are not used in code
+                instanceIdIndices.forEach(index -> query.fields().exclude(index.getIndexFields().get(0).getKey()));
+                query.fields().exclude(DOCUMENT_ROUTING_KEY);
+
+                log.info("Begin loading objects for collection {}. Loading using persistInstanceId.", mirroredObject.getCollectionName());
                 return documentCollection.findByQuery(query);
             } else {
-                log.warn("Configured to load using persisted instance id, but no index exists for field {}. Will not use instance id when loading.",
-                        instanceIdField);
+                log.warn("Configured to load using persisted instance id for collection {}, but no index exists for field {}. Will not use instance id when loading.",
+                        mirroredObject.getCollectionName(), instanceIdField);
             }
         }
         if (mirroredObject.loadDocumentsRouted()) {
+            log.info("Begin loading objects for collection {}. Loading using loadDocumentsRouted.", mirroredObject.getCollectionName());
             return documentCollection.findAll(spaceObjectFilter);
         } else {
+            log.info("Begin loading objects for collection {}. Loading ALL documents.", mirroredObject.getCollectionName());
             return documentCollection.findAll();
         }
     }
