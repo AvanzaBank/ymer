@@ -21,9 +21,12 @@ import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 class RepeatingTask implements AutoCloseable{
-	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+	private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1, daemonThreadFactory("Repeating-Task"));
 	private final ScheduledFuture<?> task;
 
 	public RepeatingTask(Duration initialDelay, Duration fixedRate, Runnable action) {
@@ -38,6 +41,13 @@ class RepeatingTask implements AutoCloseable{
 	public void close() {
 		task.cancel(true);
 		executor.shutdown();
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private static ThreadFactory daemonThreadFactory(String threadNamePrefix) {
+		CustomizableThreadFactory threadFactory = new CustomizableThreadFactory(threadNamePrefix);
+		threadFactory.setDaemon(true);
+		return threadFactory;
 	}
 
 }

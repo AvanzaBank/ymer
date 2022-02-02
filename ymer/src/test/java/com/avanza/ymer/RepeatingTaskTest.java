@@ -30,23 +30,23 @@ public class RepeatingTaskTest {
 	public void shouldTriggerExpectedNumberOfTimes() throws Exception {
 		LongAdder counter = new LongAdder();
 
-		try(RepeatingTask ignore = new RepeatingTask(Duration.ofMillis(5), Duration.ofMillis(10), counter::increment)) {
-			Thread.sleep(100);
+		try(RepeatingTask ignore = new RepeatingTask(Duration.ofMillis(50), Duration.ofMillis(100), counter::increment)) {
+			Thread.sleep(500);
 		}
 
-		assertThat(counter.sum(), is(10L));
+		assertThat(counter.sum(), is(5L));
 	}
 
 	@Test
 	public void shouldNotTriggerAfterClosed() throws Exception {
 		LongAdder counter = new LongAdder();
 
-		try(RepeatingTask ignore = new RepeatingTask(Duration.ZERO, Duration.ofMillis(100), counter::increment)) {
-			Thread.sleep(5);
+		try(RepeatingTask ignore = new RepeatingTask(Duration.ZERO, Duration.ofMillis(500), counter::increment)) {
+			Thread.sleep(100);
 			assumeTrue(counter.sum() == 1L);
 		}
 
-		Thread.sleep(10);
+		Thread.sleep(200);
 		assertThat(counter.sum(), is(1L));
 	}
 
