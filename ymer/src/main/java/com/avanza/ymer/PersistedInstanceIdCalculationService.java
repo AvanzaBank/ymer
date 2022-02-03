@@ -134,7 +134,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 	@Override
 	public void calculatePersistedInstanceId() {
 		getCollectionsWithPersistInstanceIdEnabled()
-				.forEach(collectionName -> calculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate()));
+				.forEach(collectionName -> startPersistedInstanceIdCalculation(collectionName, getNumberOfPartitionsToCalculate()));
 	}
 
 	private Set<String> getCollectionsWithPersistInstanceIdEnabled() {
@@ -173,19 +173,27 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 					collectionName);
 			return;
 		}
-		calculatePersistedInstanceId(collectionName, getNumberOfPartitionsToCalculate());
+		startPersistedInstanceIdCalculation(collectionName, getNumberOfPartitionsToCalculate());
 	}
 
-	private void calculatePersistedInstanceId(String collectionName, Set<Integer> numberOfPartitionsSet) {
+	private void startPersistedInstanceIdCalculation(String collectionName, Set<Integer> numberOfPartitionsSet) {
+		PersistedInstanceIdStatistics statistics = getStatisticsForCollection(collectionName);
+		statistics.resetStatisticsForJobExecution(numberOfPartitionsSet);
+		try {
+			calculatePersistedInstanceIdInternal(collectionName, numberOfPartitionsSet);
+			numberOfPartitionsSet.forEach(statistics::addReadyForNumberOfPartitions);
+		} finally {
+			statistics.calculationCompleted();
+		}
+	}
+
+	private void calculatePersistedInstanceIdInternal(String collectionName, Set<Integer> numberOfPartitionsSet) {
 		log.info("Calculating instance id for collection {} with {} number of partitions and batch size {}",
 				collectionName,
 				numberOfPartitionsSet.stream().sorted().collect(toList()),
 				BATCH_SIZE
 		);
 		DocumentCollection collection = spaceMirror.getDocumentDb().getCollection(collectionName);
-
-		PersistedInstanceIdStatistics statistics = getStatisticsForCollection(collectionName);
-		statistics.resetStatisticsForJobExecution(numberOfPartitionsSet);
 
 		Set<String> fieldNamesToCalculate = numberOfPartitionsSet.stream()
 				.map(PersistedInstanceIdUtil::getInstanceIdFieldName)
@@ -277,8 +285,6 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 				log.info("Step 3/3\tDone creating index for field [{}] in collection {}", fieldName, collectionName);
 			}
 		});
-
-		statistics.calculationCompleted(numberOfPartitionsSet);
 	}
 
 	private int determineNumberOfPartitions() {

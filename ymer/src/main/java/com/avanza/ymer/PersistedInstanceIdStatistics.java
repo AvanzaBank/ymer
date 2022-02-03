@@ -33,8 +33,7 @@ class PersistedInstanceIdStatistics implements PersistedInstanceIdStatisticsMBea
 		readyForNumberOfPartitionsSet.add(numberOfPartitions);
 	}
 
-	public void calculationCompleted(Set<Integer> calculatingForPartitions) {
-		calculatingForPartitions.forEach(this::addReadyForNumberOfPartitions);
+	public void calculationCompleted() {
 		calculationInProgress.set(false);
 	}
 
