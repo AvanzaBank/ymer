@@ -22,9 +22,10 @@ import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -52,7 +53,7 @@ final class MirroredObjectLoader<T> {
     private final DocumentCollection documentCollection;
     private final SpaceObjectFilter<T> spaceObjectFilter;
     private final DocumentConverter documentConverter;
-    private final AtomicLong numLoadedObjects = new AtomicLong();
+    private final LongAdder numLoadedObjects = new LongAdder();
     private final MirrorContextProperties contextProperties;
     private final PostReadProcessor postReadProcessor;
 
@@ -75,9 +76,13 @@ final class MirroredObjectLoader<T> {
     }
 
     Stream<LoadedDocument<T>> streamAllObjects() {
+        RepeatingTask progressLogger = new RepeatingTask(Duration.ofSeconds(30), () ->
+                log.info("Status: loaded {} records for collection {}", numLoadedObjects.sum(), mirroredObject.getCollectionName()));
+
         return loadDocuments()
                 .parallel() // We run patching and conversions in parallel as this is a cpu-intensive task
-                .flatMap(document -> tryPatchAndConvert(document).stream());
+                .flatMap(document -> tryPatchAndConvert(document).stream())
+                .onClose(progressLogger::close);
     }
 
     private Stream<Document> loadDocuments() {
@@ -131,10 +136,8 @@ final class MirroredObjectLoader<T> {
                 log.warn("Failed to load dbObject={}. Retrying.", document, e);
                 result = patchAndConvert(new Document(document));
             }
-            long loaded = numLoadedObjects.incrementAndGet();
-            if (loaded % 10_000 == 0) {
-                log.info("Status: loaded {} records for collection {}", loaded, mirroredObject.getCollectionName());
-            }
+            numLoadedObjects.increment();
+
             return result;
         } catch (RuntimeException e) {
             log.error("Unable to load document={}", document, e);
