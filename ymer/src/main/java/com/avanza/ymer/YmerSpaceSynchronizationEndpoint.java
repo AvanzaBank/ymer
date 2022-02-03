@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
@@ -36,6 +37,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import com.avanza.ymer.util.GigaSpacesInstanceIdUtil;
 import com.gigaspaces.sync.OperationsBatchData;
@@ -45,6 +47,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 		ApplicationListener<ContextRefreshedEvent>, AutoCloseable {
 
 	private static final Logger log = LoggerFactory.getLogger(YmerSpaceSynchronizationEndpoint.class);
+	private static final ThreadFactory THREAD_FACTORY = new CustomizableThreadFactory("Ymer-Space-Synchronization-Endpoint-");
 
 	private final MirroredObjectWriter mirroredObjectWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
@@ -64,7 +67,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 		this.spaceMirror = spaceMirror;
 		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler);
 		this.persistedInstanceIdCalculationService = new PersistedInstanceIdCalculationService(spaceMirror, ymerProperties);
-		this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+		this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(THREAD_FACTORY);
 		this.ymerProperties = ymerProperties;
 		this.currentNumberOfPartitions = GigaSpacesInstanceIdUtil.getNumberOfPartitionsFromSystemProperty().orElse(null);
 	}
