@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
@@ -58,7 +58,7 @@ public class YmerMirrorNoClusterPropertiesIntegrationTest {
 	static class TestConfigBase {
 		@Bean
 		public YmerFactory ymerFactory(Collection<MirroredObjectDefinition<?>> testDefinitions) {
-			MongoDbFactory mongoDbFactory = mirrorEnv.getMongoTemplate().getMongoDbFactory();
+			MongoDatabaseFactory mongoDbFactory = mirrorEnv.getMongoTemplate().getMongoDatabaseFactory();
 			return new YmerFactory(
 					mongoDbFactory,
 					new TestSpaceMongoConverterFactory(mongoDbFactory).createMongoConverter(),

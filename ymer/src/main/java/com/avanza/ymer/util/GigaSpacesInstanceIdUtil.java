@@ -35,9 +35,6 @@ public final class GigaSpacesInstanceIdUtil {
 	private GigaSpacesInstanceIdUtil() {
 	}
 
-	/**
-	 * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils#getPartitionId(Object, int)
-	 */
 	public static int getInstanceId(Object routingKey, int partitionCount) {
 		return safeAbsoluteValue(routingKey.hashCode()) % partitionCount + 1;
 	}

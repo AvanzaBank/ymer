@@ -32,6 +32,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
@@ -80,10 +81,17 @@ public final class YmerFactory implements ApplicationContextAware {
 		}
 	}
 
+	@Deprecated
 	public YmerFactory(MongoDbFactory mongoDbFactory,
 					   MongoConverter mongoConverter,
 					   Collection<MirroredObjectDefinition<?>> definitions) {
 		this(mongoDbFactory::getDb, mongoConverter, definitions);
+	}
+
+	public YmerFactory(MongoDatabaseFactory mongoDbFactory,
+					   MongoConverter mongoConverter,
+					   Collection<MirroredObjectDefinition<?>> definitions) {
+		this(mongoDbFactory::getMongoDatabase, mongoConverter, definitions);
 	}
 
 	@Override

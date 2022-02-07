@@ -16,7 +16,7 @@
 package com.avanza.ymer;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -24,10 +24,10 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 public class TestSpaceMongoConverterFactory {
 
-	private final MongoDbFactory mongoDbFactory;
+	private final MongoDatabaseFactory mongoDbFactory;
 
 	@Autowired
-	public TestSpaceMongoConverterFactory(MongoDbFactory mongoDbFactory) {
+	public TestSpaceMongoConverterFactory(MongoDatabaseFactory mongoDbFactory) {
 		this.mongoDbFactory = mongoDbFactory;
 	}
 

@@ -34,8 +34,8 @@ import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
@@ -50,12 +50,12 @@ public abstract class YmerConverterTestBase {
 
 	@SuppressWarnings("rawtypes")
 	private final ConverterTest testCase;
-	private final MongoDbFactory dummyMongoDbFactory;
+	private final MongoDatabaseFactory dummyMongoDbFactory;
 
 	public YmerConverterTestBase(ConverterTest<?> testCase) {
 		this.testCase = testCase;
 		// The MongoDbFactory is never used during the tests.
-		this.dummyMongoDbFactory = new SimpleMongoClientDbFactory("mongodb://xxx/unused");
+		this.dummyMongoDbFactory = new SimpleMongoClientDatabaseFactory("mongodb://xxx/unused");
 	}
 
 	@SuppressWarnings("unchecked")
@@ -120,7 +120,7 @@ public abstract class YmerConverterTestBase {
 
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 
-	protected abstract MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory);
+	protected abstract MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory);
 
 	private MongoConverter createMongoConverter() {
 		MongoConverter converter = createMongoConverter(dummyMongoDbFactory);

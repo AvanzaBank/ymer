@@ -33,8 +33,8 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
@@ -49,11 +49,11 @@ import com.avanza.ymer.TestDocumentConverter;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class YmerConverterTestBase {
 
-	private final MongoDbFactory dummyMongoDbFactory;
+	private final MongoDatabaseFactory dummyMongoDbFactory;
 
 	public YmerConverterTestBase() {
 		// The MongoDbFactory is never used during the tests.
-		this.dummyMongoDbFactory = new SimpleMongoClientDbFactory("mongodb://xxx/unused");
+		this.dummyMongoDbFactory = new SimpleMongoClientDatabaseFactory("mongodb://xxx/unused");
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -122,7 +122,7 @@ public abstract class YmerConverterTestBase {
 
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 
-	protected abstract MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory);
+	protected abstract MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory);
 
 	private MongoConverter createMongoConverter() {
 		MongoConverter converter = createMongoConverter(dummyMongoDbFactory);

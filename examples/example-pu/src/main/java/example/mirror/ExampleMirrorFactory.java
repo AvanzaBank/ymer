@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -41,10 +41,10 @@ import example.domain.SpaceFruit;
 
 public class ExampleMirrorFactory {
 	
-	private final MongoDbFactory mongoDbFactory;
+	private final MongoDatabaseFactory mongoDbFactory;
 	
 	@Autowired
-	public ExampleMirrorFactory(MongoDbFactory mongoDbFactory) {
+	public ExampleMirrorFactory(MongoDatabaseFactory mongoDbFactory) {
 		this.mongoDbFactory = mongoDbFactory;
 	}
 
@@ -56,7 +56,7 @@ public class ExampleMirrorFactory {
 		return new YmerFactory(mongoDbFactory, createMongoConverter(mongoDbFactory), getDefinitions()).createSpaceSynchronizationEndpoint();
 	}
 
-	static MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+	static MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
 		DbRefResolver dbRef = new DefaultDbRefResolver(mongoDbFactory);
 		MappingMongoConverter converter = new MappingMongoConverter(dbRef , new MongoMappingContext());
 		List<Converter<?, ?>> converters = new ArrayList<>();

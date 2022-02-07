@@ -24,11 +24,10 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.mongodb.DBCollection;
 import com.mongodb.client.model.IndexOptions;
 
 /**
- * Abstraction over {@link DBCollection}. <p>
+ * Abstraction over {@link com.mongodb.client.MongoCollection MongoCollection}. <p>
  *
  * @author Elias Lindholm (elilin)
  *

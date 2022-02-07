@@ -42,14 +42,14 @@ import org.junit.Test;
 import org.openspaces.core.GigaSpace;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.testcontainers.containers.MongoDBContainer;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
 import example.domain.SpaceFruit;
 
@@ -65,7 +65,7 @@ public class SpaceObjectWriteSynchronizationTest {
 
 	@Before
 	public void setUp() {
-		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
+		mongoClient = MongoClients.create(mongoDBContainer.getReplicaSetUrl());
 	}
 
 	@After
@@ -131,7 +131,7 @@ public class SpaceObjectWriteSynchronizationTest {
 
 	private ApplicationContext createSingleInstanceAppContext(MongoClient mongo) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.getBeanFactory().registerSingleton("mongoClient", new SimpleMongoDbFactory(mongo, "exampleDb"));
+		context.getBeanFactory().registerSingleton("mongoClient", new SimpleMongoClientDatabaseFactory(mongo, "exampleDb"));
 		context.refresh();
 		return context;
 	}

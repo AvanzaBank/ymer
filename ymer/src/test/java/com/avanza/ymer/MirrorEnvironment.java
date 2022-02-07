@@ -22,12 +22,13 @@ import org.bson.Document;
 import org.junit.rules.ExternalResource;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.testcontainers.containers.MongoDBContainer;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -45,7 +46,7 @@ public class MirrorEnvironment extends ExternalResource {
 	public MirrorEnvironment() {
 		mongoDBContainer.start();
 
-		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
+		mongoClient = MongoClients.create(mongoDBContainer.getReplicaSetUrl());
 	}
 
 	@Override
@@ -54,7 +55,7 @@ public class MirrorEnvironment extends ExternalResource {
 	}
 
 	public MongoTemplate getMongoTemplate() {
-		SimpleMongoDbFactory simpleMongoDbFactory = new SimpleMongoDbFactory(mongoClient, TEST_MIRROR_DB_NAME);
+		MongoDatabaseFactory simpleMongoDbFactory = new SimpleMongoClientDatabaseFactory(mongoClient, TEST_MIRROR_DB_NAME);
 		return new MongoTemplate(simpleMongoDbFactory);
 	}
 
@@ -69,7 +70,7 @@ public class MirrorEnvironment extends ExternalResource {
 
 	public ApplicationContext getMongoClientContext() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.getBeanFactory().registerSingleton("mongoDbFactory", new SimpleMongoDbFactory(mongoClient, TEST_MIRROR_DB_NAME));
+		context.getBeanFactory().registerSingleton("mongoDbFactory", new SimpleMongoClientDatabaseFactory(mongoClient, TEST_MIRROR_DB_NAME));
 		context.refresh();
 		return context;
 	}

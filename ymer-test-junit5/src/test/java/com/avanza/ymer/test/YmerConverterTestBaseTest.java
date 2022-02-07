@@ -31,7 +31,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -157,7 +157,7 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+		protected MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
 			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 		}
 
@@ -176,7 +176,7 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+		protected MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
 			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 		}
 
@@ -195,7 +195,7 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+		protected MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
 			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 		}
 
@@ -214,7 +214,7 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+		protected MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
 			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 		}
 
@@ -236,7 +236,7 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+		protected MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
 			MappingMongoConverter mongoConverter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
 			mongoConverter.setCustomConversions(new MongoCustomConversions(mongoConverters));
 			return mongoConverter;

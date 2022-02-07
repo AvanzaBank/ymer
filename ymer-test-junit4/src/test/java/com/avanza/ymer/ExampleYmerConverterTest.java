@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.runners.Parameterized;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -46,7 +46,7 @@ public class ExampleYmerConverterTest extends YmerConverterTestBase {
 	}
 
 	@Override
-	protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
+	protected MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
 		MappingMongoConverter converter = new MappingMongoConverter(
 				new DefaultDbRefResolver(mongoDbFactory),
 				new MongoMappingContext()
