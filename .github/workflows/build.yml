@@ -1,0 +1,54 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+      - v1.4.x
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  Build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'maven'
+      - name: Maven setup
+        uses: s4u/maven-settings-action@v2.4.1
+        with:
+          mirrors: |
+            [{
+                "id": "com.springsource.repository.bundles.external.mirror",
+                "name": "com.springsource.repository.bundles.external",
+                "mirrorOf": "com.springsource.repository.bundles.external",
+                "url": "http://repository.springsource.com/maven/bundles/external",
+                "blocked": false
+            },
+            {
+              "id": "org.openspaces.mirror",
+              "name": "org.openspaces",
+              "mirrorOf": "org.openspaces",
+              "url": "http://maven-repository.openspaces.org",
+              "blocked": false
+            },
+            {
+              "id": "spy.mirror",
+              "name": "spy",
+              "mirrorOf": "spy",
+              "url": "http://files.couchbase.com/maven2",
+              "blocked": false
+            }]
+      - name: Compile
+        run: mvn -T 1C --batch-mode -Dstyle.color=always --fail-at-end -DskipTests package
+      - name: Test
+        run: mvn --batch-mode -Dstyle.color=always --fail-at-end verify
+      - name: Publish Test Report
+        if: always()
+        uses: scacap/action-surefire-report@v1
