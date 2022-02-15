@@ -35,11 +35,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
@@ -53,12 +51,9 @@ public abstract class YmerConverterTestBase {
 
 	@SuppressWarnings("rawtypes")
 	private final ConverterTest testCase;
-	private final MongoDatabaseFactory dummyMongoDbFactory;
 
 	public YmerConverterTestBase(ConverterTest<?> testCase) {
 		this.testCase = testCase;
-		// The MongoDbFactory is never used during the tests.
-		this.dummyMongoDbFactory = new SimpleMongoClientDatabaseFactory("mongodb://xxx/unused");
 	}
 
 	@SuppressWarnings("unchecked")
@@ -127,7 +122,7 @@ public abstract class YmerConverterTestBase {
 
 	private MongoConverter createMongoConverter() {
 		MappingMongoConverter converter = new MappingMongoConverter(
-				new DefaultDbRefResolver(dummyMongoDbFactory),
+				NoOpDbRefResolver.INSTANCE,
 				new MongoMappingContext()
 		);
 		converter.setCustomConversions(getCustomConversions());

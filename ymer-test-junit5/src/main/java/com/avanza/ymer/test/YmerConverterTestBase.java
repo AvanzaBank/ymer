@@ -19,6 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -34,11 +35,9 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.MirroredObjectDefinition;
@@ -49,15 +48,8 @@ import com.avanza.ymer.TestDocumentConverter;
  * Base class for testing that objects may be marshalled to a mongo document and
  * then unmarshalled back into an object.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(PER_CLASS)
 public abstract class YmerConverterTestBase {
-
-	private final MongoDatabaseFactory dummyMongoDbFactory;
-
-	public YmerConverterTestBase() {
-		// The MongoDbFactory is never used during the tests.
-		this.dummyMongoDbFactory = new SimpleMongoClientDatabaseFactory("mongodb://xxx/unused");
-	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@ParameterizedTest
@@ -129,7 +121,7 @@ public abstract class YmerConverterTestBase {
 
 	private MongoConverter createMongoConverter() {
 		MappingMongoConverter converter = new MappingMongoConverter(
-				new DefaultDbRefResolver(dummyMongoDbFactory),
+				NoOpDbRefResolver.INSTANCE,
 				new MongoMappingContext()
 		);
 		converter.setCustomConversions(getCustomConversions());
