@@ -59,10 +59,7 @@ public class ExampleMirrorFactory {
 	static MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
 		DbRefResolver dbRef = new DefaultDbRefResolver(mongoDbFactory);
 		MappingMongoConverter converter = new MappingMongoConverter(dbRef , new MongoMappingContext());
-		List<Converter<?, ?>> converters = new ArrayList<>();
-		converters.add(new FruitToBson());
-		converters.add(new BsonToFruit());
-		converter.setCustomConversions(new MongoCustomConversions(converters));
+		converter.setCustomConversions(getMongoCustomConversions());
 		converter.afterPropertiesSet();
 		return converter;
 	}
@@ -91,6 +88,13 @@ public class ExampleMirrorFactory {
 			MirroredObjectDefinition.create(SpaceFruit.class)
 									.documentPatches(new SpaceFruitV1ToV2Patch())
 		);
+	}
+
+	static MongoCustomConversions getMongoCustomConversions() {
+		List<Converter<?, ?>> converters = new ArrayList<>();
+		converters.add(new FruitToBson());
+		converters.add(new BsonToFruit());
+		return new MongoCustomConversions(converters);
 	}
 	
 }

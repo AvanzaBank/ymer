@@ -18,8 +18,7 @@ package example.mirror;
 import java.util.Collection;
 import java.util.List;
 
-import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.convert.CustomConversions;
 
 import com.avanza.ymer.MirroredObjectDefinition;
 import com.avanza.ymer.test.YmerConverterTestBase;
@@ -34,8 +33,8 @@ class ExampleMirrorConverterTest extends YmerConverterTestBase {
 	}
 
 	@Override
-	protected MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
-		return ExampleMirrorFactory.createMongoConverter(mongoDbFactory);
+	protected CustomConversions getCustomConversions() {
+		return ExampleMirrorFactory.getMongoCustomConversions();
 	}
 
 	@Override

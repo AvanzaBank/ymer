@@ -33,10 +33,13 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.MirroredObjectDefinition;
 import com.avanza.ymer.MirroredObjectTestHelper;
@@ -122,19 +125,15 @@ public abstract class YmerConverterTestBase {
 
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 
-	protected abstract MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory);
+	protected abstract CustomConversions getCustomConversions();
 
 	private MongoConverter createMongoConverter() {
-		MongoConverter converter = createMongoConverter(dummyMongoDbFactory);
-		if (converter instanceof AbstractMongoConverter) {
-			// In a real app, the instance of MongoConverter is usually
-			// registered as a spring bean, which will make "afterPropertiesSet"
-			// be called automatically. But here, we are not in a spring context
-			// and therefore will need to call it manually since
-			// MappingMongoConverter only updates its internal state of
-			// "conversionService" once this is called.
-			((AbstractMongoConverter) converter).afterPropertiesSet();
-		}
+		MappingMongoConverter converter = new MappingMongoConverter(
+				new DefaultDbRefResolver(dummyMongoDbFactory),
+				new MongoMappingContext()
+		);
+		converter.setCustomConversions(getCustomConversions());
+		converter.afterPropertiesSet();
 		return converter;
 	}
 
