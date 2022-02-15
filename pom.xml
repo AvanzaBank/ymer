@@ -117,7 +117,7 @@
 		<gigaspaces.version>16.1.0</gigaspaces.version>
 		<jsr305.version>3.0.2</jsr305.version>
 		<junit.version>4.13.2</junit.version>
-		<junit-jupiter.version>5.7.2</junit-jupiter.version>
+		<junit-jupiter.version>5.8.2</junit-jupiter.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<mockito.version>3.12.4</mockito.version>
 		<gs-test.version>1.0.3</gs-test.version>
