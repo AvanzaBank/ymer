@@ -35,6 +35,15 @@ public final class GigaSpacesInstanceIdUtil {
 	private GigaSpacesInstanceIdUtil() {
 	}
 
+	/**
+	 * Determine instance id for {@code routingKey} given {@code partitionCount} number of partitions,
+	 * using the same logic as Gigaspaces
+	 *
+	 * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils#getPartitionId(Object, com.gigaspaces.internal.cluster.ClusterTopology)
+	 * PartitionedClusterUtils#getPartitionId(Object, ClusterTopology)
+	 * @see com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils#getPartitionId(Object, com.gigaspaces.internal.cluster.SpaceClusterInfo)
+	 * PartitionedClusterUtils#getPartitionId(Object, SpaceClusterInfo)
+	 */
 	public static int getInstanceId(Object routingKey, int partitionCount) {
 		return safeAbsoluteValue(routingKey.hashCode()) % partitionCount + 1;
 	}

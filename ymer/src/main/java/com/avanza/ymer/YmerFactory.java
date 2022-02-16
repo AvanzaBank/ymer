@@ -81,6 +81,9 @@ public final class YmerFactory implements ApplicationContextAware {
 		}
 	}
 
+	/**
+	 * @deprecated please use {@link #YmerFactory(MongoDatabaseFactory,MongoConverter,Collection)}
+	 */
 	@Deprecated
 	public YmerFactory(MongoDbFactory mongoDbFactory,
 					   MongoConverter mongoConverter,
