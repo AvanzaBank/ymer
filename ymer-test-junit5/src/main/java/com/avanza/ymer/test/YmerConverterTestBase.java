@@ -19,6 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -33,10 +34,11 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
-import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
+import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.MirroredObjectDefinition;
 import com.avanza.ymer.MirroredObjectTestHelper;
@@ -46,15 +48,8 @@ import com.avanza.ymer.TestDocumentConverter;
  * Base class for testing that objects may be marshalled to a mongo document and
  * then unmarshalled back into an object.
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(PER_CLASS)
 public abstract class YmerConverterTestBase {
-
-	private final MongoDbFactory dummyMongoDbFactory;
-
-	public YmerConverterTestBase() {
-		// The MongoDbFactory is never used during the tests.
-		this.dummyMongoDbFactory = new SimpleMongoClientDbFactory("mongodb://xxx/unused");
-	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@ParameterizedTest
@@ -122,19 +117,15 @@ public abstract class YmerConverterTestBase {
 
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 
-	protected abstract MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory);
+	protected abstract CustomConversions getCustomConversions();
 
 	private MongoConverter createMongoConverter() {
-		MongoConverter converter = createMongoConverter(dummyMongoDbFactory);
-		if (converter instanceof AbstractMongoConverter) {
-			// In a real app, the instance of MongoConverter is usually
-			// registered as a spring bean, which will make "afterPropertiesSet"
-			// be called automatically. But here, we are not in a spring context
-			// and therefore will need to call it manually since
-			// MappingMongoConverter only updates its internal state of
-			// "conversionService" once this is called.
-			((AbstractMongoConverter) converter).afterPropertiesSet();
-		}
+		MappingMongoConverter converter = new MappingMongoConverter(
+				NoOpDbRefResolver.INSTANCE,
+				new MongoMappingContext()
+		);
+		converter.setCustomConversions(getCustomConversions());
+		converter.afterPropertiesSet();
 		return converter;
 	}
 

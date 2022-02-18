@@ -156,7 +156,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 	public void testCalculatingInstanceIdForNextNumberOfInstances() throws Exception {
 		int currentNumberOfInstances = 32;
 
-		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
+		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDatabaseFactory());
 		testSpaceMirrorFactory.setNextNumberOfInstances(38);
 		execute(() -> {
 			try (YmerSpaceSynchronizationEndpoint endpoint = (YmerSpaceSynchronizationEndpoint) testSpaceMirrorFactory.createSpaceSynchronizationEndpoint()) {
@@ -205,7 +205,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 	@Test
 	public void testCollectionNeedsCalculation() throws Exception {
 		int numberOfInstances = 1;
-		var spaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
+		var spaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDatabaseFactory());
 		execute(() -> {
 			try (YmerSpaceSynchronizationEndpoint endpoint = (YmerSpaceSynchronizationEndpoint) spaceMirrorFactory.createSpaceSynchronizationEndpoint()) {
 				PersistedInstanceIdCalculationService target = endpoint.getPersistedInstanceIdCalculationService();
@@ -247,7 +247,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 	}
 
 	private YmerSpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
-		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDbFactory());
+		TestSpaceMirrorFactory testSpaceMirrorFactory = new TestSpaceMirrorFactory(mirrorEnvironment.getMongoTemplate().getMongoDatabaseFactory());
 		return (YmerSpaceSynchronizationEndpoint) testSpaceMirrorFactory.createSpaceSynchronizationEndpoint();
 	}
 

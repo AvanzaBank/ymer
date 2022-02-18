@@ -15,6 +15,8 @@
  */
 package com.avanza.ymer.test;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.containsString;
@@ -24,19 +26,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.DocumentPatch;
 import com.avanza.ymer.MirroredObjectDefinition;
@@ -157,8 +154,8 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
+		protected CustomConversions getCustomConversions() {
+			return new MongoCustomConversions(emptyList());
 		}
 
 	}
@@ -176,8 +173,8 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
+		protected CustomConversions getCustomConversions() {
+			return new MongoCustomConversions(emptyList());
 		}
 
 	}
@@ -195,8 +192,8 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
+		protected CustomConversions getCustomConversions() {
+			return new MongoCustomConversions(emptyList());
 		}
 
 	}
@@ -214,8 +211,8 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-			return new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
+		protected CustomConversions getCustomConversions() {
+			return new MongoCustomConversions(emptyList());
 		}
 
 	}
@@ -236,10 +233,8 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-			MappingMongoConverter mongoConverter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), new MongoMappingContext());
-			mongoConverter.setCustomConversions(new MongoCustomConversions(mongoConverters));
-			return mongoConverter;
+		protected CustomConversions getCustomConversions() {
+			return new MongoCustomConversions(mongoConverters);
 		}
 
 	}
@@ -248,7 +243,7 @@ class YmerConverterTestBaseTest {
 		@Id
 		String id;
 
-		Collection<String> emptyCollection = Collections.emptyList();
+		Collection<String> emptyCollection = emptyList();
 
 		public String getId() {
 			return id;
@@ -272,7 +267,7 @@ class YmerConverterTestBaseTest {
 		@Id
 		String id;
 
-		Map<String, String> map = Collections.emptyMap();
+		Map<String, String> map = emptyMap();
 
 		public String getId() {
 			return id;

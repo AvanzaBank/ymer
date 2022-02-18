@@ -21,12 +21,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.runners.Parameterized;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.support.JavaInstantReadConverter;
 import com.avanza.ymer.support.JavaInstantWriteConverter;
@@ -46,17 +42,11 @@ public class ExampleYmerConverterTest extends YmerConverterTestBase {
 	}
 
 	@Override
-	protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-		MappingMongoConverter converter = new MappingMongoConverter(
-				new DefaultDbRefResolver(mongoDbFactory),
-				new MongoMappingContext()
-		);
-		converter.setCustomConversions(new MongoCustomConversions(List.of(
+	protected CustomConversions getCustomConversions() {
+		return new MongoCustomConversions(List.of(
 				new JavaInstantReadConverter(),
 				new JavaInstantWriteConverter()
-		)));
-		// Explicitly do NOT call "converter.afterPropertiesSet()" here
-		return converter;
+		));
 	}
 
 	@Parameterized.Parameters

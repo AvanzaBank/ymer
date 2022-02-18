@@ -23,18 +23,17 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+
 import com.avanza.ymer.support.JavaLocalDateTimeReadConverter;
 import com.avanza.ymer.support.JavaLocalDateTimeWriteConverter;
 import com.gigaspaces.annotation.pojo.SpaceClass;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClientURI;
 
 public class ConverterTest {
 
@@ -45,10 +44,7 @@ public class ConverterTest {
 
 	@Before
 	public void beforeEachTest() {
-		final DefaultDbRefResolver ref = new DefaultDbRefResolver(
-				new SimpleMongoDbFactory(new MongoClientURI("mongodb://localhost/test"))
-		);
-		converter = new MappingMongoConverter(ref, new MongoMappingContext());
+		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
 		converter.setCustomConversions(new MongoCustomConversions(Arrays.asList(
 				new JavaLocalDateTimeReadConverter(),
 				new JavaLocalDateTimeWriteConverter()

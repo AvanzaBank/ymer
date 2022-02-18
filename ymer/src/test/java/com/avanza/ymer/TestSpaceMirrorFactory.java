@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.gigaspaces.datasource.SpaceDataSource;
@@ -29,12 +29,12 @@ import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
 public class TestSpaceMirrorFactory {
 
-	private final MongoDbFactory mongoDbFactory;
+	private final MongoDatabaseFactory mongoDbFactory;
 	private final AtomicReference<Integer> nextNumberOfInstances = new AtomicReference<>(null);
 	private boolean exportExceptionHandlerMBean;
 
 	@Autowired
-	public TestSpaceMirrorFactory(MongoDbFactory mongoDbFactory) {
+	public TestSpaceMirrorFactory(MongoDatabaseFactory mongoDbFactory) {
 		this.mongoDbFactory = mongoDbFactory;
 	}
 
