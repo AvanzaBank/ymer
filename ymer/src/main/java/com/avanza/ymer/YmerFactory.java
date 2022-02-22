@@ -17,8 +17,11 @@ package com.avanza.ymer;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -32,9 +35,17 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
+import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.data.convert.ConverterBuilder.ConverterAware;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.plugin.Plugin;
 import com.gigaspaces.datasource.SpaceDataSource;
@@ -95,6 +106,12 @@ public final class YmerFactory implements ApplicationContextAware {
 					   MongoConverter mongoConverter,
 					   Collection<MirroredObjectDefinition<?>> definitions) {
 		this(mongoDbFactory::getMongoDatabase, mongoConverter, definitions);
+	}
+
+	public YmerFactory(MongoDatabaseFactory mongoDatabaseFactory,
+					   ConverterCustomizer converterCustomizer,
+					   Collection<MirroredObjectDefinition<?>> definitions) {
+		this(mongoDatabaseFactory::getMongoDatabase, mongoConverter(mongoDatabaseFactory, converterCustomizer), definitions);
 	}
 
 	@Override
@@ -182,6 +199,34 @@ public final class YmerFactory implements ApplicationContextAware {
 			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
 		return new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
+	}
+
+	private static MongoConverter mongoConverter(MongoDatabaseFactory mongoDatabaseFactory, ConverterCustomizer converterCustomizer) {
+		MappingMongoConverter mongoConverter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDatabaseFactory), new MongoMappingContext());
+		List<Object> customConverters = new ArrayList<>();
+		converterCustomizer.customize(new ConverterConfigurer() {
+			@Override
+			public void add(Converter<?, ?>... converters) {
+				customConverters.addAll(Arrays.asList(converters));
+			}
+
+			@Override
+			public void add(ConverterFactory<?, ?>... converters) {
+				customConverters.addAll(Arrays.asList(converters));
+			}
+
+			@Override
+			public void add(GenericConverter... converters) {
+				customConverters.addAll(Arrays.asList(converters));
+			}
+
+			@Override
+			public void add(ConverterAware... converters) {
+				customConverters.addAll(Arrays.asList(converters));
+			}
+		});
+		mongoConverter.setCustomConversions(new MongoCustomConversions(customConverters));
+		return mongoConverter;
 	}
 
 }
