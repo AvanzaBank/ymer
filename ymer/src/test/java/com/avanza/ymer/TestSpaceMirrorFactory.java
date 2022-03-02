@@ -15,14 +15,12 @@
  */
 package com.avanza.ymer;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
@@ -30,6 +28,7 @@ import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 public class TestSpaceMirrorFactory {
 
 	private final MongoDatabaseFactory mongoDbFactory;
+	private final MirroredObjectsConfiguration mirroredObjectsConfiguration = new TestSpaceMirrorObjectDefinitions();
 	private final AtomicReference<Integer> nextNumberOfInstances = new AtomicReference<>(null);
 	private boolean exportExceptionHandlerMBean;
 
@@ -47,7 +46,7 @@ public class TestSpaceMirrorFactory {
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
-		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions());
+		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, mirroredObjectsConfiguration);
 		ymerFactory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
 		ymerFactory.setPlugins(Collections.singleton(new TestProcessor.TestPlugin()));
 		ymerFactory.setNumParallelCollections(2);
@@ -55,7 +54,7 @@ public class TestSpaceMirrorFactory {
 	}
 
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
-		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions());
+		YmerFactory ymerFactory = new YmerFactory(mongoDbFactory, mirroredObjectsConfiguration);
 		ymerFactory.setExportExceptionHandlerMBean(exportExceptionHandlerMBean);
 		ymerFactory.setPlugins(Collections.singleton(new TestProcessor.TestPlugin()));
 		ymerFactory.withProperties(configurer -> {
@@ -63,13 +62,4 @@ public class TestSpaceMirrorFactory {
 		});
 		return ymerFactory.createSpaceSynchronizationEndpoint();
 	}
-
-	private Collection<MirroredObjectDefinition<?>> getDefinitions() {
-		return TestSpaceMirrorObjectDefinitions.getDefinitions();
-	}
-
-	private MongoConverter createMongoConverter() {
-		return new TestSpaceMongoConverterFactory(mongoDbFactory).createMongoConverter();
-	}
-
 }

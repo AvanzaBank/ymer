@@ -15,7 +15,6 @@
  */
 package com.avanza.ymer;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.junit.ClassRule;
@@ -57,12 +56,11 @@ public class YmerMirrorNoClusterPropertiesIntegrationTest {
 	@Configuration
 	static class TestConfigBase {
 		@Bean
-		public YmerFactory ymerFactory(Collection<MirroredObjectDefinition<?>> testDefinitions) {
+		public YmerFactory ymerFactory(MirroredObjectsConfiguration mirroredObjectsConfiguration) {
 			MongoDatabaseFactory mongoDbFactory = mirrorEnv.getMongoTemplate().getMongoDatabaseFactory();
 			return new YmerFactory(
 					mongoDbFactory,
-					new TestSpaceMongoConverterFactory(mongoDbFactory).createMongoConverter(),
-					testDefinitions
+					mirroredObjectsConfiguration
 			);
 		}
 
@@ -76,8 +74,8 @@ public class YmerMirrorNoClusterPropertiesIntegrationTest {
 	@Import(TestConfigBase.class)
 	static class ApplicationConfigWithInstanceIdPersisting {
 		@Bean
-		public Collection<MirroredObjectDefinition<?>> testDefinitions() {
-			return TestSpaceMirrorObjectDefinitions.getDefinitions();
+		public MirroredObjectsConfiguration mirroredObjectsConfiguration() {
+			return new TestSpaceMirrorObjectDefinitions();
 		}
 	}
 
@@ -85,9 +83,8 @@ public class YmerMirrorNoClusterPropertiesIntegrationTest {
 	@Import(TestConfigBase.class)
 	static class ApplicationConfigWithoutInstanceIdPersisting {
 		@Bean
-		public Collection<MirroredObjectDefinition<?>> testDefinitions() {
-			return List.of(TestSpaceMirrorObjectDefinitions.TEST_SPACE_THIRD_OBJECT);
+		public MirroredObjectsConfiguration mirroredObjectsConfiguration() {
+			return () -> List.of(TestSpaceMirrorObjectDefinitions.TEST_SPACE_THIRD_OBJECT);
 		}
 	}
-
 }

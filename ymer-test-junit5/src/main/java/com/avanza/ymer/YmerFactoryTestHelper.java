@@ -13,27 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package example.mirror;
+package com.avanza.ymer;
 
-import java.util.Collection;
-import java.util.List;
+import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 
-import com.avanza.ymer.MirroredObjectsConfiguration;
-import com.avanza.ymer.test.YmerConverterTestBase;
-
-import example.domain.SpaceFruit;
-
-class ExampleMirrorConverterTest extends YmerConverterTestBase {
-
-	@Override
-	protected MirroredObjectsConfiguration getMirroredObjectsConfiguration() {
-		return new ExampleMirrorFactory.ExampleMirroredObjectsConfiguration();
-	}
-
-	@Override
-	protected Collection<ConverterTest<?>> testCases() {
-		return List.of(
-			new ConverterTest<>(new SpaceFruit("Apple", "France", true))
-		);
+/**
+ * Allows using methods and classes that are otherwise package-private in tests.
+ */
+public class YmerFactoryTestHelper {
+	public static MongoConverter createMongoConverter(
+			DbRefResolver dbRef,
+			CustomConversions customConversions
+	) {
+		return YmerFactory.createMongoConverter(dbRef, customConversions);
 	}
 }

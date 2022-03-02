@@ -21,10 +21,7 @@ import java.util.Collection;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV2Patch;
 
-public class TestSpaceMirrorObjectDefinitions {
-
-	private TestSpaceMirrorObjectDefinitions() {
-	}
+public class TestSpaceMirrorObjectDefinitions implements MirroredObjectsConfiguration {
 
 	public static final MirroredObjectDefinition<TestSpaceObject> TEST_SPACE_OBJECT =
 			MirroredObjectDefinition.create(TestSpaceObject.class)
@@ -45,12 +42,12 @@ public class TestSpaceMirrorObjectDefinitions {
 			MirroredObjectDefinition.create(TestSpaceThirdObject.class)
 					.documentPatches(new TestSpaceThirdObject.TestSpaceThirdObjectPatchV1());
 
-	public static Collection<MirroredObjectDefinition<?>> getDefinitions() {
+	@Override
+	public Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 		return Arrays.asList(
 				TEST_SPACE_OBJECT,
 				TEST_SPACE_OTHER_OBJECT,
 				TEST_SPACE_THIRD_OBJECT
 		);
 	}
-
 }

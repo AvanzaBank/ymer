@@ -22,15 +22,12 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.MirroredObjectsConfiguration;
 import com.avanza.ymer.YmerFactory;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
@@ -42,28 +39,22 @@ import example.domain.SpaceFruit;
 public class ExampleMirrorFactory {
 	
 	private final MongoDatabaseFactory mongoDbFactory;
-	
+	private final MirroredObjectsConfiguration mirroredObjectsConfiguration = new ExampleMirroredObjectsConfiguration();
+
 	@Autowired
 	public ExampleMirrorFactory(MongoDatabaseFactory mongoDbFactory) {
 		this.mongoDbFactory = mongoDbFactory;
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
-		return new YmerFactory(mongoDbFactory, createMongoConverter(mongoDbFactory), getDefinitions()).createSpaceDataSource();
+		return new YmerFactory(mongoDbFactory, mirroredObjectsConfiguration).createSpaceDataSource();
 	}
 	
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
-		return new YmerFactory(mongoDbFactory, createMongoConverter(mongoDbFactory), getDefinitions()).createSpaceSynchronizationEndpoint();
+		return new YmerFactory(mongoDbFactory, mirroredObjectsConfiguration).createSpaceSynchronizationEndpoint();
 	}
 
-	static MongoConverter createMongoConverter(MongoDatabaseFactory mongoDbFactory) {
-		DbRefResolver dbRef = new DefaultDbRefResolver(mongoDbFactory);
-		MappingMongoConverter converter = new MappingMongoConverter(dbRef , new MongoMappingContext());
-		converter.setCustomConversions(getMongoCustomConversions());
-		converter.afterPropertiesSet();
-		return converter;
-	}
-	
+	@WritingConverter
 	static class FruitToBson implements Converter<SpaceFruit, DBObject> {
 		@Override
 		public DBObject convert(SpaceFruit fruit) {
@@ -74,7 +65,8 @@ public class ExampleMirrorFactory {
 			return result;
 		}
 	}
-	
+
+	@ReadingConverter
 	static class BsonToFruit implements Converter<DBObject, SpaceFruit> {
 
 		@Override
@@ -82,7 +74,19 @@ public class ExampleMirrorFactory {
 			return new SpaceFruit((String) dbObject.get("_id"), (String) dbObject.get("origin"), (boolean) dbObject.get("organic"));
 		}
 	}
-	
+
+	static class ExampleMirroredObjectsConfiguration implements MirroredObjectsConfiguration {
+		@Override
+		public Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
+			return getDefinitions();
+		}
+
+		@Override
+		public List<Converter<?, ?>> getCustomConverters() {
+			return ExampleMirrorFactory.getCustomConverters();
+		}
+	}
+
 	static Collection<MirroredObjectDefinition<?>> getDefinitions() {
 		return Arrays.asList(
 			MirroredObjectDefinition.create(SpaceFruit.class)
@@ -90,11 +94,10 @@ public class ExampleMirrorFactory {
 		);
 	}
 
-	static MongoCustomConversions getMongoCustomConversions() {
+	static List<Converter<?, ?>> getCustomConverters() {
 		List<Converter<?, ?>> converters = new ArrayList<>();
 		converters.add(new FruitToBson());
 		converters.add(new BsonToFruit());
-		return new MongoCustomConversions(converters);
+		return converters;
 	}
-	
 }

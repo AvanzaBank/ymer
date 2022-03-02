@@ -32,9 +32,15 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.plugin.Plugin;
 import com.gigaspaces.datasource.SpaceDataSource;
@@ -95,6 +101,17 @@ public final class YmerFactory implements ApplicationContextAware {
 					   MongoConverter mongoConverter,
 					   Collection<MirroredObjectDefinition<?>> definitions) {
 		this(mongoDbFactory::getMongoDatabase, mongoConverter, definitions);
+	}
+
+	public YmerFactory(
+			MongoDatabaseFactory mongoDbFactory,
+			MirroredObjectsConfiguration mirroredObjectsConfiguration
+	) {
+		this(
+				mongoDbFactory::getMongoDatabase,
+				createMongoConverter(mongoDbFactory, mirroredObjectsConfiguration),
+				mirroredObjectsConfiguration.getMirroredObjectDefinitions()
+		);
 	}
 
 	@Override
@@ -184,4 +201,23 @@ public final class YmerFactory implements ApplicationContextAware {
 		return new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
 	}
 
+	static MongoConverter createMongoConverter(
+			MongoDatabaseFactory mongoDbFactory,
+			MirroredObjectsConfiguration mirroredObjectsConfiguration
+	) {
+		return createMongoConverter(
+				new DefaultDbRefResolver(mongoDbFactory),
+				new MongoCustomConversions(mirroredObjectsConfiguration.getCustomConverters())
+		);
+	}
+
+	static MongoConverter createMongoConverter(
+			DbRefResolver dbRef,
+			CustomConversions customConversions
+	) {
+		MappingMongoConverter converter = new MappingMongoConverter(dbRef, new MongoMappingContext());
+		converter.setCustomConversions(customConversions);
+		converter.afterPropertiesSet();
+		return converter;
+	}
 }

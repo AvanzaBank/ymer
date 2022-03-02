@@ -21,20 +21,19 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.runners.Parameterized;
-import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.core.convert.converter.Converter;
 
 import com.avanza.ymer.support.JavaInstantReadConverter;
 import com.avanza.ymer.support.JavaInstantWriteConverter;
 
-public class ExampleYmerConverterTest extends YmerConverterTestBase {
+public class ExampleYmerConverterTest extends YmerConverterTestBase implements MirroredObjectsConfiguration {
 
 	public ExampleYmerConverterTest(ConverterTest<?> testCase) {
 		super(testCase);
 	}
 
 	@Override
-	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
+	public Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 		return Collections.singletonList(
 				new MirroredObjectDefinition<>(ExampleSpaceObjWithInstant.class)
 						.loadDocumentsRouted(true)
@@ -42,11 +41,16 @@ public class ExampleYmerConverterTest extends YmerConverterTestBase {
 	}
 
 	@Override
-	protected CustomConversions getCustomConversions() {
-		return new MongoCustomConversions(List.of(
+	public List<Converter<?, ?>> getCustomConverters() {
+		return List.of(
 				new JavaInstantReadConverter(),
 				new JavaInstantWriteConverter()
-		));
+		);
+	}
+
+	@Override
+	protected MirroredObjectsConfiguration getMirroredObjectsConfiguration() {
+		return this;
 	}
 
 	@Parameterized.Parameters
