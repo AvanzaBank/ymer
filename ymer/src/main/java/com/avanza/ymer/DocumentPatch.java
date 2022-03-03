@@ -18,12 +18,14 @@ package com.avanza.ymer;
 import org.bson.Document;
 
 import com.mongodb.BasicDBObject;
+
 /**
  * A DocumentPatch patches a given document from one version to the next.
  * 
  * @author Elias Lindholm (elilin)
- *
+ * @deprecated use parent interface {@link BsonDocumentPatch} instead.
  */
+@Deprecated
 public interface DocumentPatch extends BsonDocumentPatch {
 	
 	/**
