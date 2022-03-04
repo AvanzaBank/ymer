@@ -154,15 +154,18 @@ public abstract class YmerConverterTestBase {
 				.orElseThrow(() -> new AssertionError("Could not find @SpaceId on " + spaceObject.getClass().getSimpleName()));
 
 		Method readMethod = spaceIdProperty.getReadMethod();
+		ReflectionUtils.makeAccessible(readMethod);
 		if (readMethod.getAnnotation(SpaceId.class).autoGenerate() && ReflectionUtils.invokeMethod(readMethod, spaceObject) == null) {
 			String uid = UUID.randomUUID().toString();
 			Method writeMethod = spaceIdProperty.getWriteMethod();
 			if (writeMethod != null) {
+				ReflectionUtils.makeAccessible(writeMethod);
 				ReflectionUtils.invokeMethod(writeMethod, spaceObject, uid);
 				return;
 			}
 			Field field = ReflectionUtils.findField(spaceObject.getClass(), spaceIdProperty.getName());
 			if (field != null) {
+				ReflectionUtils.makeAccessible(field);
 				ReflectionUtils.setField(field, spaceObject, uid);
 				return;
 			}
