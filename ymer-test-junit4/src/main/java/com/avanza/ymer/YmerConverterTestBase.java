@@ -15,21 +15,18 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.test.SpaceClassTestHelper.ensureSpaceId;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.matcher.AssertionMatcher;
@@ -38,14 +35,10 @@ import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.util.ReflectionUtils;
-
-import com.gigaspaces.annotation.pojo.SpaceId;
 
 /**
  * Base class for testing that objects may be marshalled to a mongo document and
@@ -144,33 +137,6 @@ public abstract class YmerConverterTestBase {
 			((AbstractMongoConverter) converter).afterPropertiesSet();
 		}
 		return converter;
-	}
-
-	private static void ensureSpaceId(Object spaceObject) {
-		PropertyDescriptor spaceIdProperty = Arrays.stream(BeanUtils.getPropertyDescriptors(spaceObject.getClass()))
-				.filter(it -> it.getReadMethod() != null)
-				.filter(it -> it.getReadMethod().isAnnotationPresent(SpaceId.class))
-				.findFirst()
-				.orElseThrow(() -> new AssertionError("Could not find @SpaceId on " + spaceObject.getClass().getSimpleName()));
-
-		Method readMethod = spaceIdProperty.getReadMethod();
-		ReflectionUtils.makeAccessible(readMethod);
-		if (readMethod.getAnnotation(SpaceId.class).autoGenerate() && ReflectionUtils.invokeMethod(readMethod, spaceObject) == null) {
-			String uid = UUID.randomUUID().toString();
-			Method writeMethod = spaceIdProperty.getWriteMethod();
-			if (writeMethod != null) {
-				ReflectionUtils.makeAccessible(writeMethod);
-				ReflectionUtils.invokeMethod(writeMethod, spaceObject, uid);
-				return;
-			}
-			Field field = ReflectionUtils.findField(spaceObject.getClass(), spaceIdProperty.getName());
-			if (field != null) {
-				ReflectionUtils.makeAccessible(field);
-				ReflectionUtils.setField(field, spaceObject, uid);
-				return;
-			}
-			throw new AssertionError("Could not set property " + spaceIdProperty.getName());
-		}
 	}
 
 	protected static List<Object[]> buildTestCases(ConverterTest<?>... list) {
