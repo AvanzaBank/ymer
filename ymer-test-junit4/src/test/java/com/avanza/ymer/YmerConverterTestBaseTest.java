@@ -307,15 +307,11 @@ public class YmerConverterTestBaseTest {
 		assertThat(ae.getMessage(), containsString(messageContaining));
 	}
 
-	private static void assertPasses(ThrowingRunnable testRun) {
+	private static void assertPasses(Runnable testRun) {
 		try {
 			testRun.run();
 		} catch (AssertionError e) {
 			fail("Expected test to pass, but failed with \"" + e.getMessage() + "\"");
-		} catch (RuntimeException e) {
-			throw e;
-		} catch (Throwable e) {
-			fail("Expected test to pass, but exception thrown: " + e.getMessage());
 		}
 	}
 
