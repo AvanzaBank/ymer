@@ -52,7 +52,9 @@
 			</activation>
 			<modules>
 				<module>ymer</module>
+				<module>ymer-bom</module>
 				<module>ymer-test</module>
+				<module>ymer-test-common</module>
 				<module>ymer-test-junit4</module>
 				<module>ymer-test-junit5</module>
 				<module>examples</module>
@@ -62,7 +64,9 @@
 			<id>release</id>
 			<modules>
 				<module>ymer</module>
+				<module>ymer-bom</module>
 				<module>ymer-test</module>
+				<module>ymer-test-common</module>
 				<module>ymer-test-junit4</module>
 				<module>ymer-test-junit5</module>
 			</modules>
