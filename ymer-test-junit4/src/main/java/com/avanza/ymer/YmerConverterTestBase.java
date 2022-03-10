@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.test.SpaceClassTestHelper.ensureSpaceId;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -78,11 +79,13 @@ public abstract class YmerConverterTestBase {
     public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() {
         Object spaceObject = testCase.spaceObject;
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectHelper(spaceObject.getClass());
-
 		TestDocumentConverter documentConverter = TestDocumentConverter.create(createMongoConverter());
+		ensureSpaceId(spaceObject);
+
         Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
         Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
         Document recreatedBasicDbObject = documentConverter.convertToBsonDocument(reCreated);
+
         assertNotNull("No id field defined. @SpaceId annotations are ignored by persistence framework, use @Id for id field (Typically the same as is annotated with @SpaceId)", recreatedBasicDbObject.get("_id"));
         assertEquals(basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
     }
