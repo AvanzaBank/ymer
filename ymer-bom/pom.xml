@@ -8,7 +8,8 @@
 	<artifactId>ymer-bom</artifactId>
 	<version>3.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-
+	<name>${project.artifactId}</name>
+	<description>Ymer (Bill of Materials)</description>
 	<url>https://github.com/AvanzaBank/ymer</url>
 	<licenses>
 		<license>
