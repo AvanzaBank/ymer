@@ -6,7 +6,7 @@
 
 	<groupId>com.avanza.ymer</groupId>
 	<artifactId>ymer-bom</artifactId>
-	<version>3.0.1-SNAPSHOT</version>
+	<version>3.0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>${project.artifactId}</name>
 	<description>Ymer (Bill of Materials)</description>
