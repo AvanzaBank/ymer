@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -35,11 +36,13 @@ import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
  * Base class for testing that objects may be marshalled to a mongo document and
@@ -115,22 +118,38 @@ public abstract class YmerConverterTestBase {
     			+ "add at least one element to ensure proper test coverage.: " + emptyFields, emptyFields.isEmpty());
     }
 
+	@Test
+	public void shouldRequireAnnotationsOnCustomConverters() {
+		for (Converter<?, ?> customConverter : getMirroredObjectsConfiguration().getCustomConverters()) {
+			boolean hasReadingConverterAnnotation = customConverter.getClass().getAnnotation(ReadingConverter.class) != null;
+			boolean hasWritingConverterAnnotation = customConverter.getClass().getAnnotation(WritingConverter.class) != null;
+			if (!hasReadingConverterAnnotation && !hasWritingConverterAnnotation) {
+				fail("Custom converter=[" + customConverter.getClass() + "] should be annotated with either @ReadingConverter or @WritingConverter");
+			}
+		}
+	}
+
 	private MirroredObjectTestHelper getMirroredObjectHelper(Class<?> objectClass) {
 		return MirroredObjectTestHelper.fromDefinitions(getMirroredObjectDefinitions(), objectClass);
 	}
 
-	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
+	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
+		return getMirroredObjectsConfiguration().getMirroredObjectDefinitions();
+	}
 
-	protected abstract CustomConversions getCustomConversions();
+	protected CustomConversions getCustomConversions() {
+		return new MongoCustomConversions(
+				getMirroredObjectsConfiguration().getCustomConverters()
+		);
+	}
+
+	protected abstract MirroredObjectsConfiguration getMirroredObjectsConfiguration();
 
 	private MongoConverter createMongoConverter() {
-		MappingMongoConverter converter = new MappingMongoConverter(
+		return YmerFactory.createMongoConverter(
 				NoOpDbRefResolver.INSTANCE,
-				new MongoMappingContext()
+				getCustomConversions()
 		);
-		converter.setCustomConversions(getCustomConversions());
-		converter.afterPropertiesSet();
-		return converter;
 	}
 
 	protected static List<Object[]> buildTestCases(ConverterTest<?>... list) {

@@ -17,9 +17,9 @@ __Ymer__ is a __MongoDB__ based [SpaceDataSource and SpaceSynchronizationEndpoin
 A `SpaceDataSource` and `SpaceSynchronizationEndpoint` is created using an `YmerFactory`. Ymer uses __Spring Data MongoDB__:
 
 * A `MongoConverter` is used to convert between space object form and bson (MongoDB) form
-* A `MongoDBFactory` is used to create a `com.mongodb.DB` instance
+* A `MongoDatabaseFactory` is used to create an instance of a mongodb client
 
-You configure `YmerFactory` with a `MongoConverter` that can convert all objects that are intended to be persisted in MongoDB, and you provide a `MongoDBFactory` which effectively defines in what MongoDB instance the objects should be persisted. In addition to a `MongoConverter` and a `MongoDBFactory` instance you also have to provide a collection of `MirroredObjectDefinition's` to define what set of space objects are intended to be persisted in MongoDB. Later in the lifecycle for an application you also use the `MirroredObjectDefinition` to define what patches to (possibly) apply to migrate the data from one version to the next.
+You configure `YmerFactory` with a `MongoConverter` that can convert all objects that are intended to be persisted in MongoDB, and you provide a `MongoDatabaseFactory` which effectively defines in what MongoDB instance the objects should be persisted. In addition to a `MongoConverter` and a `MongoDatabaseFactory` instance you also have to provide a collection of `MirroredObjectDefinition's` to define what set of space objects are intended to be persisted in MongoDB. Later in the lifecycle for an application you also use the `MirroredObjectDefinition` to define what patches to (possibly) apply to migrate the data from one version to the next.
 
 You might use the `YmerFactory` directly from your spring configuration (xml or java configuration), or you might implement an application specific factory for a `SpaceDataSource` and `SpaceSynchronizationEndpoint` as the following example illustrates:
 
@@ -29,41 +29,36 @@ This example shows how to use Ymer to create an application specific factory for
 #### Application specific factory
 ```java
 public class ExampleMirrorFactory {
-	
-	// Ymer uses a MongoDbFactory to create the target `cm.mongodb.DB` instance using MongoDbFactory#getDb().
-	private MongoDbFactory mongoDbFactory;
+
+	// Ymer uses a MongoDatabaseFactory to create the target instance using MongoDatabaseFactory#getMongoDatabase().
+	private MongoDatabaseFactory mongoDatabaseFactory;
 
 	public SpaceDataSource createSpaceDataSource() {
-		return new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions()).createSpaceDataSource();
+		return new YmerFactory(mongoDatabaseFactory, getMirroredObjectsConfiguration()).createSpaceDataSource();
 	}
-	
+
 	public SpaceSynchronizationEndpoint createSpaceSynchronizationEndpoint() {
-		return new YmerFactory(mongoDbFactory, createMongoConverter(), getDefinitions()).createSpaceSynchronizationEndpoint();
+		return new YmerFactory(mongoDatabaseFactory, getMirroredObjectsConfiguration()).createSpaceSynchronizationEndpoint();
 	}
-	
-	 
-	// Ymer uses the given MongoConverter to convert between space object form and the bson form used to store it
-	// in mongo db.
-	private MongoConverter createMongoConverter() {
-		DbRefResolver dbRef = new DefaultDbRefResolver(mongoDbFactory);
-		return new MappingMongoConverter(dbRef , new MongoMappingContext());
+
+
+	static MirroredObjectsConfiguration getMirroredObjectsConfiguration() {
+		return ExampleMirrorFactory::getDefinitions;
 	}
-	
-	
+
 	// Each MirroredObjectDefinition defines that all space objects of a given type should be persisted
 	// using Ymer.
-	private Collection<MirroredObjectDefinition<?>> getDefinitions() {
-		return Arrays.asList(
+	private static Collection<MirroredObjectDefinition<?>> getDefinitions() {
+		return List.of(
 			MirroredObjectDefinition.create(SpaceFruit.class)
 		);
 	}
-	
 }
 ```
 
 #### Usage of custom factory in pu.xml
 
-```xml	
+```xml
 <os-core:space id="testSpace" url="/./example-space" mirror="true" space-data-source="spaceDataSource">
 	<!-- configuration... -->
 </os-core:space>
@@ -155,13 +150,8 @@ The examples provided below are using `junit5`.
 class ExampleMirrorConverterTest extends YmerConverterTestBase {
 
 	@Override
-	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
-		return ExampleMirrorFactory.getDefinitions();
-	}
-
-	@Override
-	protected MongoConverter createMongoConverter(MongoDbFactory mongoDbFactory) {
-		return ExampleMirrorFactory.createMongoConverter(mongoDbFactory);
+	protected MirroredObjectsConfiguration getMirroredObjectsConfiguration() {
+		return ExampleMirrorFactory.getMirroredObjectsConfiguration();
 	}
 
 	@Override
@@ -170,7 +160,6 @@ class ExampleMirrorConverterTest extends YmerConverterTestBase {
 			new ConverterTest<>(new SpaceFruit("Apple", "France", true))
 		);
 	}
-	
 }
 ```
 
@@ -227,7 +216,7 @@ Ymer is packed as a single jar file. Maven users can get Ymer using the followin
 <dependency>
   <groupId>com.avanza.ymer</groupId>
   <artifactId>ymer</artifactId>
-  <version>2.0.0</version>
+  <version>3.0.0</version>
 </dependency>
 ```
 
@@ -236,7 +225,7 @@ The `junit5` test support is packed in a distinct jar using the following coordi
 <dependency>
   <groupId>com.avanza.ymer</groupId>
   <artifactId>ymer-test-junit5</artifactId>
-  <version>2.0.0</version>
+  <version>3.0.0</version>
 </dependency>
 ```
 

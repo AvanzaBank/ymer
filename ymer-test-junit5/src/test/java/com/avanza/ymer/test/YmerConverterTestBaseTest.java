@@ -31,11 +31,11 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 
 import com.avanza.ymer.MirroredObjectDefinition;
+import com.avanza.ymer.MirroredObjectsConfiguration;
 import com.avanza.ymer.support.JavaLocalDateReadConverter;
 import com.avanza.ymer.support.JavaLocalDateWriteConverter;
 import com.avanza.ymer.test.YmerConverterTestBase.ConverterTest;
@@ -134,14 +134,42 @@ class YmerConverterTestBaseTest {
 		assertFails(() -> test.testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty(test.converterTest));
 	}
 
+	@Test
+	public void shouldRequireAnnotationsOnCustomConverters() {
+		// Arrange
+		final var test = new YmerConverterTestCase(
+				new ConverterTest<>(new Object()),
+				List.of(new ReadingConverterWithoutAnnotation())
+		);
+
+		// Act
+		Throwable expected = assertThrows(AssertionError.class, test::shouldRequireAnnotationsOnCustomConverters);
+
+		// Assert
+		assertThat(expected.getMessage(), containsString(ReadingConverterWithoutAnnotation.class.getName()));
+		assertThat(expected.getMessage(), containsString("should be annotated with either @ReadingConverter or @WritingConverter"));
+	}
+
 	private static class YmerConverterTestCase extends YmerConverterTestBase {
 
 		private final ConverterTest<?> converterTest;
-		private final List<?> mongoConverters;
+		private final MirroredObjectsConfiguration mirroredObjectsConfiguration;
 
-		YmerConverterTestCase(ConverterTest<?> testCase, List<?> mongoConverters) {
+		YmerConverterTestCase(ConverterTest<?> testCase, List<Converter<?, ?>> mongoConverters) {
 			this.converterTest = testCase;
-			this.mongoConverters = mongoConverters;
+			var spaceClass = testCase.spaceObject.getClass();
+			List<MirroredObjectDefinition<?>> mirroredObjectDefinitions = List.of(MirroredObjectDefinition.create(spaceClass));
+			this.mirroredObjectsConfiguration = new MirroredObjectsConfiguration() {
+				@Override
+				public Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
+					return mirroredObjectDefinitions;
+				}
+
+				@Override
+				public List<Converter<?, ?>> getCustomConverters() {
+					return mongoConverters;
+				}
+			};
 		}
 
 		public YmerConverterTestCase(ConverterTest<?> testCase) {
@@ -149,13 +177,8 @@ class YmerConverterTestBaseTest {
 		}
 
 		@Override
-		protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
-			return List.of(MirroredObjectDefinition.create(converterTest.spaceObject.getClass()));
-		}
-
-		@Override
-		protected CustomConversions getCustomConversions() {
-			return new MongoCustomConversions(mongoConverters);
+		protected MirroredObjectsConfiguration getMirroredObjectsConfiguration() {
+			return mirroredObjectsConfiguration;
 		}
 
 		@Override
@@ -278,6 +301,14 @@ class YmerConverterTestBaseTest {
 			}
 		}
 
+	}
+
+	// This class is intentionally missing @ReadingConverter annotation
+	static class ReadingConverterWithoutAnnotation implements Converter<String, Long> {
+		@Override
+		public Long convert(String source) {
+			return 1L;
+		}
 	}
 
 	private static void assertFails(Executable testRun) {

@@ -13,27 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package example.mirror;
+package com.avanza.ymer;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-import com.avanza.ymer.MirroredObjectsConfiguration;
-import com.avanza.ymer.test.YmerConverterTestBase;
+import org.springframework.core.convert.converter.Converter;
 
-import example.domain.SpaceFruit;
+public interface MirroredObjectsConfiguration {
+	Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 
-class ExampleMirrorConverterTest extends YmerConverterTestBase {
-
-	@Override
-	protected MirroredObjectsConfiguration getMirroredObjectsConfiguration() {
-		return new ExampleMirrorFactory.ExampleMirroredObjectsConfiguration();
-	}
-
-	@Override
-	protected Collection<ConverterTest<?>> testCases() {
-		return List.of(
-			new ConverterTest<>(new SpaceFruit("Apple", "France", true))
-		);
+	default List<Converter<?, ?>> getCustomConverters() {
+		return Collections.emptyList();
 	}
 }
