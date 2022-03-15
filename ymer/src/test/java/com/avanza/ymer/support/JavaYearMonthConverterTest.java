@@ -33,7 +33,7 @@ public class JavaYearMonthConverterTest {
     private JavaYearMonthWriteConverter javaYearMonthWriteConverter;
 
     @Before
-    public void test() {
+    public void setup() {
         javaYearMonthReadConverter = new JavaYearMonthReadConverter();
         javaYearMonthWriteConverter = new JavaYearMonthWriteConverter();
     }
