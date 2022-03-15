@@ -25,12 +25,7 @@ import org.junit.Test;
 
 public class JavaYearMonthReadConverterTest {
 
-	private JavaYearMonthReadConverter javaYearMonthReadConverter;
-
-	@Before
-	public void setup() {
-		javaYearMonthReadConverter = new JavaYearMonthReadConverter();
-	}
+	private JavaYearMonthReadConverter javaYearMonthReadConverter = new JavaYearMonthReadConverter();
 
 	@Test
 	public void shouldConvertISOInstantValueIntoInstantWithNanoPrecision() {
