@@ -29,11 +29,7 @@ import org.junit.Test;
 public class JavaYearMonthWriteConverterTest {
 
 	private JavaYearMonthWriteConverter javaYearMonthWriteConverter;
-
-	@Before
-	public void setup() {
-		javaYearMonthWriteConverter = new JavaYearMonthWriteConverter();
-	}
+ = new JavaYearMonthWriteConverter();
 
 	@Test
 	public void shouldConvertInstantIntoISOInstantValueWithNanoPrecision() {
