@@ -17,6 +17,7 @@ package com.avanza.ymer.test;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.containsString;
