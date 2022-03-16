@@ -28,7 +28,7 @@ public class JavaYearMonthReadConverterTest {
 	private JavaYearMonthReadConverter javaYearMonthReadConverter = new JavaYearMonthReadConverter();
 
 	@Test
-	public void shouldConvertISOInstantValueIntoInstantWithNanoPrecision() {
+	public void shouldConvertStringIntoYearMonth() {
 		// Given
 		YearMonth expected = YearMonth.of(2022, 10);
 

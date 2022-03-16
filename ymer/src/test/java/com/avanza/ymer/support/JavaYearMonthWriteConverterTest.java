@@ -18,10 +18,7 @@ package com.avanza.ymer.support;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +28,7 @@ public class JavaYearMonthWriteConverterTest {
 	private JavaYearMonthWriteConverter javaYearMonthWriteConverter = new JavaYearMonthWriteConverter();
 
 	@Test
-	public void shouldConvertInstantIntoISOInstantValueWithNanoPrecision() {
+	public void shouldConvertYearMonthIntoString() {
 		//Given
 		YearMonth yearMonth = YearMonth.of(2022, 10);
 
