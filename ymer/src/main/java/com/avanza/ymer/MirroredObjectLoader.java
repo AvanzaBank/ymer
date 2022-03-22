@@ -202,7 +202,7 @@ final class MirroredObjectLoader<T> {
     }
 
     /*
-     * Holds the space representation of a document loaded form an external data source (typically mongo)
+     * Holds the space representation of a document loaded from an external data source (typically mongo)
      * and also an Optional {@link PatchedDocument} which is present if the document was patched during
      * the loading
      */
