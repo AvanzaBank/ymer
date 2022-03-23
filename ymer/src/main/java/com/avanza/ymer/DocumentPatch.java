@@ -15,6 +15,8 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.BasicDbObjectCompatibility.convertToBasicDBObject;
+
 import org.bson.Document;
 
 import com.mongodb.BasicDBObject;
@@ -36,7 +38,7 @@ public interface DocumentPatch extends BsonDocumentPatch {
 	void apply(BasicDBObject dbObject);
 
 	default void apply(Document document) {
-		BasicDBObject dbo = new BasicDBObject(document);
+		BasicDBObject dbo = convertToBasicDBObject(document);
 		apply(dbo);
 		document.putAll(dbo); // Ensures that new properties are added and replaced properties are updated.
 		document.keySet().retainAll(dbo.keySet()); // Ensures that removed properties are deleted.
@@ -46,8 +48,13 @@ public interface DocumentPatch extends BsonDocumentPatch {
 	 * Returns the version that this patch applies to. A DocumentPatch only applies 
 	 * to a single version. A DocumentPatch is expected to patch the document
 	 * to the next version.
-	 *
+	 * This patch will be applied to all documents whose version is equal or
+	 * lower than this number. After this patch has been applied, the document
+	 * will have its version updated to {@code patchedVersion + 1}. Documents
+	 * that have not had any patches applied, or otherwise are missing the
+	 * version field, will be considered to be at version {@code 1}. Therefore,
+	 * if this is the first patch to apply for a particular document type, set
+	 * this value to {@code 1}.
 	 */
 	int patchedVersion();
-	
 }
