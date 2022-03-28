@@ -142,7 +142,6 @@ MirroredObjectDefinition.create(SpaceFruit.class)
 Ymer includes three test base classes which can be used to verify that the defined `MongoConverter` can convert all mirrored space objects to bson, to test that data-migrations are applied as intended and also to check for `@SpaceClass` annotated classes that are not persisted.
 
 These tests are available for `junit4` in the `ymer-test-junit4` module and for `junit5` in the `ymer-test-junit5`-module.
-The `ymer-test` module is available as an alias for `ymer-test-junit4` for backwards-compatibility and should not be depended on.
 
 The examples provided below are using `junit5`.
 
