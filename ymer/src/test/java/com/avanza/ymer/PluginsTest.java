@@ -32,12 +32,16 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.bson.Document;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.avanza.ymer.plugin.Plugin;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.avanza.ymer.plugin.PreWriteProcessor;
 
 public class PluginsTest {
+
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private static class MyPlugin implements Plugin {
 		private final String postReadAppend;
@@ -108,7 +112,7 @@ public class PluginsTest {
 				try {
 					plugins.getPreWriteProcessing(this.getClass());
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.debug("Caught exception", e);
 					thrownException.set(e);
 				}
 			};
