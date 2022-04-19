@@ -31,6 +31,8 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 
@@ -40,6 +42,8 @@ import com.avanza.ymer.support.JavaLocalDateWriteConverter;
 import com.gigaspaces.annotation.pojo.SpaceId;
 
 public class YmerConverterTestBaseTest {
+
+	private static final Logger log = LoggerFactory.getLogger(YmerConverterTestBaseTest.class);
 
 	@Test
 	public void testingIfMirroredObjectIsMirroredPasses() throws Exception {
@@ -318,8 +322,8 @@ public class YmerConverterTestBaseTest {
 	private static void assertFails(ThrowingRunnable testRun) {
 		Throwable exception = assertThrows("Expected test to fail", Throwable.class, testRun);
 
-		if(!(exception instanceof AssertionError)) {
-			exception.printStackTrace();
+		if (!(exception instanceof AssertionError)) {
+			log.trace("Exception executing testRun", exception);
 		}
 	}
 
