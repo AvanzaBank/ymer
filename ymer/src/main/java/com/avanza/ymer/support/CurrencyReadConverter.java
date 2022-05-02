@@ -20,6 +20,15 @@ import org.springframework.data.convert.ReadingConverter;
 
 import java.util.Currency;
 
+/**
+ * Converter that converts from a String to a {@link Currency}.
+ *
+ * @deprecated
+ * The converter {@code StringToCurrencyConverter}
+ * already exist in Spring ({@code MongoConverters}).
+ * Therefore, there is no need for this class.
+ */
+@Deprecated
 @ReadingConverter
 public class CurrencyReadConverter implements Converter<String, Currency> {
 

@@ -20,15 +20,14 @@ import static org.hamcrest.Matchers.is;
 
 import java.time.YearMonth;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class JavaYearMonthWriteConverterTest {
+class JavaYearMonthWriteConverterTest {
 
-	private JavaYearMonthWriteConverter javaYearMonthWriteConverter = new JavaYearMonthWriteConverter();
+	private final JavaYearMonthWriteConverter javaYearMonthWriteConverter = new JavaYearMonthWriteConverter();
 
 	@Test
-	public void shouldConvertYearMonthIntoString() {
+	void shouldConvertYearMonthIntoString() {
 		//Given
 		YearMonth yearMonth = YearMonth.of(2022, 10);
 
@@ -38,5 +37,4 @@ public class JavaYearMonthWriteConverterTest {
 		// Then
 		assertThat(actual, is("2022-10"));
 	}
-
 }

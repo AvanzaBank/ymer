@@ -23,22 +23,22 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JavaInstantConverterTest {
+class JavaInstantConverterTest {
 
     private JavaInstantReadConverter javaInstantReadConverter;
     private JavaInstantWriteConverter javaInstantWriteConverter;
 
-    @Before
+    @BeforeEach
     public void test() {
         javaInstantReadConverter = new JavaInstantReadConverter();
         javaInstantWriteConverter = new JavaInstantWriteConverter();
     }
 
     @Test
-    public void shouldConvertSuccessfully() {
+    void shouldConvertSuccessfully() {
         // Given
         Instant expected = ZonedDateTime
                 .of(LocalDateTime.of(2020, 1, 15, 13, 37, 17, 123456789),

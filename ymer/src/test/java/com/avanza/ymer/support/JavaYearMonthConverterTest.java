@@ -18,28 +18,24 @@ package com.avanza.ymer.support;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JavaYearMonthConverterTest {
+class JavaYearMonthConverterTest {
 
     private JavaYearMonthReadConverter javaYearMonthReadConverter;
     private JavaYearMonthWriteConverter javaYearMonthWriteConverter;
 
-    @Before
+    @BeforeEach
     public void setup() {
         javaYearMonthReadConverter = new JavaYearMonthReadConverter();
         javaYearMonthWriteConverter = new JavaYearMonthWriteConverter();
     }
 
     @Test
-    public void shouldConvertSuccessfully() {
+    void shouldConvertSuccessfully() {
         // Given
         YearMonth expected = YearMonth.of(2022, 10);
 

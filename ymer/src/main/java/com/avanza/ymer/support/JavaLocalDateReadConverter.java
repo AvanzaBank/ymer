@@ -15,12 +15,15 @@
  */
 package com.avanza.ymer.support;
 
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.ReadingConverter;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
+
+/**
+ * Converter that converts from a String to a {@link LocalDate}.
+ */
 @ReadingConverter
 public class JavaLocalDateReadConverter implements Converter<String, LocalDate> {
 

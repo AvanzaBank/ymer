@@ -21,6 +21,9 @@ import java.time.format.DateTimeFormatter;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
 
+/**
+ * Converter that converts from an {@link Instant} to a String.
+ */
 @WritingConverter
 public class JavaInstantWriteConverter implements Converter<Instant, String> {
     @Override

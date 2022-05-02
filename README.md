@@ -8,8 +8,9 @@
 
 __Ymer__ is a __MongoDB__ based [SpaceDataSource and SpaceSynchronizationEndpoint](http://docs.gigaspaces.com/xap101/space-persistency.html) for __GigaSpaces__ with support to apply data migrations during initial load.
 
-## Previous verisons
+## Previous versions
 
+[v2.0.x](https://github.com/AvanzaBank/ymer/tree/v2.0.x) - Based on GigaSpaces 14.5 and Java 11
 [v1.4.x](https://github.com/AvanzaBank/ymer/tree/v1.4.x) - Based on GigaSpaces 10.1.1 and Java 8
 
 

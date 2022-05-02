@@ -21,32 +21,34 @@ import static org.hamcrest.Matchers.is;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JavaInstantWriteConverterTest {
+class JavaInstantWriteConverterTest {
 
     private JavaInstantWriteConverter javaInstantWriteConverter;
 
-    @Before
+    @BeforeEach
     public void setup() {
         javaInstantWriteConverter = new JavaInstantWriteConverter();
     }
 
     @Test
-    public void shouldConvertInstantIntoISOInstantValueWithNanoPrecision() {
+    void shouldConvertInstantIntoISOInstantValueWithNanoPrecision() {
         //Given
         String expected = "2020-07-01T13:37:17.000000470Z";
         Instant instant =
                 LocalDateTime.of(2020, 7, 1, 13, 37, 17, 470)
-                .toInstant(ZoneOffset.UTC);
+                        .toInstant(ZoneOffset.UTC);
 
         // When
         String actual = javaInstantWriteConverter.convert(instant);
 
         // Then
         assertThat(actual, is(expected));
+        assertThat(actual, is(DateTimeFormatter.ISO_INSTANT.format(instant)));
+        assertThat(actual, is(instant.toString()));
     }
-
 }

@@ -17,25 +17,26 @@ package com.avanza.ymer.support;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JavaInstantReadConverterTest {
+class JavaInstantReadConverterTest {
 
     private JavaInstantReadConverter javaInstantReadConverter;
 
-    @Before
+    @BeforeEach
     public void setup() {
         javaInstantReadConverter = new JavaInstantReadConverter();
     }
 
     @Test
-    public void shouldConvertISOInstantValueIntoInstantWithNanoPrecision() {
+    void shouldConvertISOInstantValueIntoInstantWithNanoPrecision() {
         // Given
         Instant expected =
                 LocalDateTime
@@ -46,8 +47,8 @@ public class JavaInstantReadConverterTest {
         Instant actual = javaInstantReadConverter.convert("2020-07-29T15:43:56.863Z");
 
         // Then
+        assertNotNull(actual);
         assertThat(actual.getEpochSecond(), is(expected.getEpochSecond()));
         assertThat(actual.getNano(), is(expected.getNano()));
     }
-
 }
