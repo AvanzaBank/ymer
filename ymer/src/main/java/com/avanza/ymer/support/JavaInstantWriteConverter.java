@@ -22,7 +22,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
 
 /**
- * Converter that converts from an {@link Instant} to a String.
+ * Converter that converts from an {@link Instant} to a {@link String}.
  */
 @WritingConverter
 public class JavaInstantWriteConverter implements Converter<Instant, String> {

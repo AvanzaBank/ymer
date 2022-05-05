@@ -21,7 +21,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
 
 /**
- * Converter that converts from {@link YearMonth} to a String.
+ * Converter that converts from {@link YearMonth} to a {@link String}.
  */
 @WritingConverter
 public class JavaYearMonthWriteConverter implements Converter<YearMonth, String> {

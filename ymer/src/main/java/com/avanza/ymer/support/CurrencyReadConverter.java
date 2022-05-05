@@ -15,13 +15,13 @@
  */
 package com.avanza.ymer.support;
 
+import java.util.Currency;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 
-import java.util.Currency;
-
 /**
- * Converter that converts from a String to a {@link Currency}.
+ * Converter that converts from a {@link String} to a {@link Currency}.
  *
  * @deprecated
  * The converter {@code StringToCurrencyConverter}

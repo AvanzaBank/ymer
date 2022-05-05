@@ -21,7 +21,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
 
 /**
- * Converter that converts from a {@link Currency} to a String.
+ * Converter that converts from a {@link Currency} to a {@link String}.
  *
  * @deprecated
  * The converter {@code CurrencyToStringConverter}

@@ -22,7 +22,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 
 /**
- * Converter that converts from a String to an {@link Instant}.
+ * Converter that converts from a {@link String} to an {@link Instant}.
  */
 @ReadingConverter
 public class JavaInstantReadConverter implements Converter<String, Instant> {

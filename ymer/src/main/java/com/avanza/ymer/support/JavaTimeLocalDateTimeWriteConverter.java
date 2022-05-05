@@ -23,7 +23,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
 
 /**
- * Converter that converts from a {@link LocalDateTime} to a Long. This is a good choice if
+ * Converter that converts from a {@link LocalDateTime} to a {@link Long}. This is a good choice if
  * millisecond time precision is sufficient. Otherwise {@link JavaLocalDateTimeWriteConverter}
  * could be a better choice.
  */

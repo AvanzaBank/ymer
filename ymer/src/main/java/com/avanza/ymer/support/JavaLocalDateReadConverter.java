@@ -22,7 +22,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 
 /**
- * Converter that converts from a String to a {@link LocalDate}.
+ * Converter that converts from a {@link String} to a {@link LocalDate}.
  */
 @ReadingConverter
 public class JavaLocalDateReadConverter implements Converter<String, LocalDate> {
