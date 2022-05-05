@@ -242,4 +242,4 @@ The Ymer Framework is released under version 2.0 of the [Apache License](https:/
 [license img]:https://img.shields.io/badge/License-Apache%202-blue.svg
 
 [maven]:https://search.maven.org/#search|gav|1|g:"com.avanza.ymer"
-[maven img]:https://maven-badges.herokuapp.com/maven-central/com.avanza.ymer/ymer/badge.svg
+[maven img]:https://maven-badges.herokuapp.com/maven-central/com.avanza.ymer/ymer-parent/badge.svg

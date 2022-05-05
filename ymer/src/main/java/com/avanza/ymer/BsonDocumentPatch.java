@@ -32,7 +32,13 @@ public interface BsonDocumentPatch {
 	 * Returns the version that this patch applies to. A DocumentPatch only applies
 	 * to a single version. A DocumentPatch is expected to patch the document
 	 * to the next version. <p>
-	 *
+	 * This patch will be applied to all documents whose version is equal or
+	 * lower than this number. After this patch has been applied, the document
+	 * will have its version updated to {@code patchedVersion + 1}. Documents
+	 * that have not had any patches applied, or otherwise are missing the
+	 * version field, will be considered to be at version {@code 1}. Therefore,
+	 * if this is the first patch to apply for a particular document type, set
+	 * this value to {@code 1}.
 	 */
 	int patchedVersion();
 }
