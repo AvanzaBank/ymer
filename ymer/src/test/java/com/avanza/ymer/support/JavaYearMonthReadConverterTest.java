@@ -17,18 +17,19 @@ package com.avanza.ymer.support;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.YearMonth;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class JavaYearMonthReadConverterTest {
 
-	private JavaYearMonthReadConverter javaYearMonthReadConverter = new JavaYearMonthReadConverter();
+class JavaYearMonthReadConverterTest {
+
+	private final JavaYearMonthReadConverter javaYearMonthReadConverter = new JavaYearMonthReadConverter();
 
 	@Test
-	public void shouldConvertStringIntoYearMonth() {
+	void shouldConvertStringIntoYearMonth() {
 		// Given
 		YearMonth expected = YearMonth.of(2022, 10);
 
@@ -36,6 +37,7 @@ public class JavaYearMonthReadConverterTest {
 		YearMonth actual = javaYearMonthReadConverter.convert("2022-10");
 
 		// Then
+		assertNotNull(actual);
 		assertThat(actual.getYear(), is(expected.getYear()));
 		assertThat(actual.getMonthValue(), is(expected.getMonthValue()));
 		assertThat(actual.getMonth(), is(expected.getMonth()));

@@ -20,6 +20,9 @@ import java.time.YearMonth;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 
+/**
+ * Converter that converts from a {@link String} to a {@link YearMonth}.
+ */
 @ReadingConverter
 public class JavaYearMonthReadConverter implements Converter<String, YearMonth> {
 	@Override

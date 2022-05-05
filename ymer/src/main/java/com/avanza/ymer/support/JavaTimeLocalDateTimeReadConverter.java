@@ -15,13 +15,18 @@
  */
 package com.avanza.ymer.support;
 
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.ReadingConverter;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
+
+/**
+ * Converter that converts from a {@link Long} to a {@link LocalDateTime}. This is a good choice if
+ * millisecond time precision is sufficient. Otherwise {@link JavaLocalDateTimeReadConverter}
+ * could be a better choice.
+ */
 @ReadingConverter
 public class JavaTimeLocalDateTimeReadConverter implements Converter<Long, LocalDateTime> {
 

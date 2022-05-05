@@ -15,12 +15,17 @@
  */
 package com.avanza.ymer.support;
 
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.ReadingConverter;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
+
+/**
+ * Converter that converts from a {@link String} to a {@link LocalDateTime}. This is a good choice if high time precision
+ * is more important than saving space. Otherwise {@link JavaTimeLocalDateTimeReadConverter} could be
+ * a better choice.
+ */
 @ReadingConverter
 public class JavaLocalDateTimeReadConverter implements Converter<String, LocalDateTime> {
 

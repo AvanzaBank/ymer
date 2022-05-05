@@ -15,11 +15,20 @@
  */
 package com.avanza.ymer.support;
 
+import java.util.Currency;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
 
-import java.util.Currency;
-
+/**
+ * Converter that converts from a {@link Currency} to a {@link String}.
+ *
+ * @deprecated
+ * The converter {@code CurrencyToStringConverter}
+ * already exist in Spring ({@code MongoConverters}).
+ * Therefore, there is no need for this class.
+ */
+@Deprecated
 @WritingConverter
 public class CurrencyWriteConverter implements Converter<Currency, String> {
 

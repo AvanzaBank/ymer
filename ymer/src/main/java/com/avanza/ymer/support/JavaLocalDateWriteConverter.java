@@ -15,12 +15,15 @@
  */
 package com.avanza.ymer.support;
 
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.WritingConverter;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.WritingConverter;
+
+/**
+ * Converter that converts from a {@link LocalDate} to a {@link String}.
+ */
 @WritingConverter
 public class JavaLocalDateWriteConverter implements Converter<LocalDate, String> {
 
