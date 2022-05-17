@@ -24,7 +24,7 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       - name: Maven setup
-        uses: s4u/maven-settings-action@v2
+        uses: s4u/maven-settings-action@v2.6.0
         with:
           mirrors: |
             [{
