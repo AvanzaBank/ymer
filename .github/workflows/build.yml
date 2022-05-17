@@ -12,9 +12,14 @@ jobs:
   Build:
     name: Build (Java ${{ matrix.java-version }})
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
-        java-version: [ 11, 17 ]
+        java-version: [ 11 ]
+        experimental: [ false ]
+        include:
+          - java-version: 17
+            experimental: true
     steps:
       - name: Checkout
         uses: actions/checkout@v3
