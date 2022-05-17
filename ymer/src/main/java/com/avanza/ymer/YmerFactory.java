@@ -215,7 +215,9 @@ public final class YmerFactory implements ApplicationContextAware {
 			DbRefResolver dbRef,
 			CustomConversions customConversions
 	) {
-		MappingMongoConverter converter = new MappingMongoConverter(dbRef, new MongoMappingContext());
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
+		MappingMongoConverter converter = new MappingMongoConverter(dbRef, mappingContext);
 		converter.setCustomConversions(customConversions);
 		converter.afterPropertiesSet();
 		return converter;
