@@ -34,10 +34,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.support.JavaInstantReadConverter;
 import com.avanza.ymer.support.JavaInstantWriteConverter;
@@ -54,7 +53,6 @@ import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
 
-@SuppressWarnings("deprecation")
 class ConverterTest {
 
 	private static final LocalDateTime DATE_TIME_NANO = LocalDateTime.of(1999, 12, 31, 3, 4, 5, 112);
@@ -76,24 +74,20 @@ class ConverterTest {
 	private static final YearMonth YEAR_MONTH = YearMonth.of(2022, 4);
 	private static final String YEAR_MONTH_STR = "2022-04";
 
-	private MappingMongoConverter converter;
-	private BasicDBObject doc;
-	private ExampleSpaceObj obj;
+	private final BasicDBObject doc = new BasicDBObject();
+	private final ExampleSpaceObj obj = new ExampleSpaceObj();
+	private MongoConverter converter;
 
 	@BeforeEach
 	public void beforeEachTest() {
-		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
-		converter.afterPropertiesSet();
-		doc = new BasicDBObject();
-		obj = new ExampleSpaceObj();
+		setupConverters();
 	}
 
 	private void setupConverters(Converter<?, ?>... converters) {
-		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
-		converter.setCustomConversions(new MongoCustomConversions(Arrays.asList(
+		MongoCustomConversions conversions = new MongoCustomConversions(Arrays.asList(
 				converters
-		)));
-		converter.afterPropertiesSet();
+		));
+		this.converter = YmerFactory.createMongoConverter(NoOpDbRefResolver.INSTANCE, conversions);
 	}
 
 	private ExampleSpaceObj writeAndRead(ExampleSpaceObj obj) {

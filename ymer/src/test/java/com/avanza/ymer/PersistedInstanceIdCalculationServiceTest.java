@@ -84,7 +84,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 				.configure()) {
 			mirrorPu.start();
 
-			BeanFactory applicationContext = mirrorPu.getApplicationContexts().iterator().next();
+			BeanFactory applicationContext = mirrorPu.getPrimaryApplicationContexts().iterator().next();
 			YmerSpaceSynchronizationEndpoint spaceSynchronizationEndpoint = applicationContext.getBean(YmerSpaceSynchronizationEndpoint.class);
 			PersistedInstanceIdCalculationService persistedInstanceIdCalculationService = spaceSynchronizationEndpoint.getPersistedInstanceIdCalculationService();
 
