@@ -36,7 +36,7 @@ import org.openspaces.core.GigaSpaceConfigurer;
 import org.openspaces.core.space.EmbeddedSpaceConfigurer;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 
-import com.avanza.gs.test.JVMGlobalLus;
+import com.avanza.gs.test.JVMGlobalGigaSpacesManager;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
@@ -490,7 +490,7 @@ public class MirroredObjectTest {
 	
 	private static class EmbeddedSpace {
 		private static final AtomicInteger count = new AtomicInteger();
-		EmbeddedSpaceConfigurer configurer = new EmbeddedSpaceConfigurer("MirroredObjectTest-" + count.incrementAndGet()).lookupGroups(JVMGlobalLus.getLookupGroupName());
+		EmbeddedSpaceConfigurer configurer = new EmbeddedSpaceConfigurer("MirroredObjectTest-" + count.incrementAndGet()).lookupLocators(JVMGlobalGigaSpacesManager.getLookupLocator());
 		GigaSpace space = new GigaSpaceConfigurer(configurer.create()).create();
 		public GigaSpace gigaSpace() {
 			return space;

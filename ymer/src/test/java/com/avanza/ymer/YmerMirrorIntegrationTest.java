@@ -160,7 +160,7 @@ public class YmerMirrorIntegrationTest {
 
 	@Test
 	public void findByTemplate() throws Exception {
-		SpaceObjectLoader persister = pu.getPrimaryInstanceApplicationContext(1).getBean(SpaceObjectLoader.class);
+		SpaceObjectLoader persister = pu.getPrimaryInstanceApplicationContext(0).getBean(SpaceObjectLoader.class);
 
 		gigaSpace.write(new TestSpaceObject("id1", "m1"));
 		gigaSpace.write(new TestSpaceObject("id2", "m2"));
@@ -178,7 +178,7 @@ public class YmerMirrorIntegrationTest {
 
 	@Test
 	public void processingIsApplied() throws Exception {
-		SpaceObjectLoader persister = pu.getPrimaryInstanceApplicationContext(1).getBean(SpaceObjectLoader.class);
+		SpaceObjectLoader persister = pu.getPrimaryInstanceApplicationContext(0).getBean(SpaceObjectLoader.class);
 
 		gigaSpace.write(new TestSpaceThirdObject("1", "|"));
 		assertEventually(() -> mongo.findAll(TestSpaceThirdObject.class), hasItem(new TestSpaceThirdObject("1", "a|"))); // prewrite processor prepends a
@@ -193,7 +193,7 @@ public class YmerMirrorIntegrationTest {
 
 	@Test
 	public void testSettingInstanceIdFieldsOnWrite() throws Exception {
-		TestSpaceMirrorFactory spaceMirrorFactory = mirrorPu.getApplicationContexts().iterator().next().getBean(TestSpaceMirrorFactory.class);
+		TestSpaceMirrorFactory spaceMirrorFactory = mirrorPu.getPrimaryApplicationContexts().iterator().next().getBean(TestSpaceMirrorFactory.class);
 
 		TestSpaceObject object = new TestSpaceObject();
 		object.setId("id_23");
