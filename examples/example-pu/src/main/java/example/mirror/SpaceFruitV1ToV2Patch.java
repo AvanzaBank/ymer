@@ -15,14 +15,15 @@
  */
 package example.mirror;
 
-import com.avanza.ymer.DocumentPatch;
-import com.mongodb.BasicDBObject;
+import org.bson.Document;
 
-public class SpaceFruitV1ToV2Patch implements DocumentPatch {
+import com.avanza.ymer.BsonDocumentPatch;
+
+public class SpaceFruitV1ToV2Patch implements BsonDocumentPatch {
 
 	@Override
-	public void apply(BasicDBObject dbObject) {
-		dbObject.put("organic", false);
+	public void apply(Document document) {
+		document.put("organic", false);
 	}
 
 	@Override

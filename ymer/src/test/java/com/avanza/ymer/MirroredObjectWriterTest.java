@@ -54,18 +54,18 @@ public class MirroredObjectWriterTest {
 
 	@Before
 	public void setup() {
-		DocumentPatch[] patches = { new TestSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new TestSpaceObjectV1Patch() };
 		mirroredObject = MirroredObjectDefinition.create(TestSpaceObject.class)
 												 .documentPatches(patches)
 												 .buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-		DocumentPatch[] patches2 = {};
+		BsonDocumentPatch[] patches2 = {};
 		anotherMirroredDocument =
 				MirroredObjectDefinition.create(TestSpaceOtherObject.class)
 										.keepPersistent(true)
 										.persistInstanceId(true)
 										.documentPatches(patches2)
 										.buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-		DocumentPatch[] patches1 = {};
+		BsonDocumentPatch[] patches1 = {};
 		mirroredReloadableDocument = MirroredObjectDefinition.create(TestReloadableSpaceObject.class)
 															 .documentPatches(patches1)
 															 .buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());

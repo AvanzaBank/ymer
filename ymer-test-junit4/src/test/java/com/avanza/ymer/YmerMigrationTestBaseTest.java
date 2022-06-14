@@ -39,10 +39,10 @@ public class YmerMigrationTestBaseTest {
 		Document v2 = new Document();
 		v2.put("foo", "bar");
 		v2.put("baz", "baz");
-		DocumentPatch[] patches = { new DocumentPatch() {
+		BsonDocumentPatch[] patches = { new BsonDocumentPatch() {
 			@Override
-			public void apply(BasicDBObject dbObject) {
-				dbObject.put("baz", "baz");
+			public void apply(Document document) {
+				document.put("baz", "baz");
 			}
 
 			@Override
@@ -65,10 +65,10 @@ public class YmerMigrationTestBaseTest {
 		Document v2 = new Document();
 		v2.put("foo", "bar");
 		v2.put("baz", "baz<");
-		DocumentPatch[] patches = { new DocumentPatch() {
+		BsonDocumentPatch[] patches = { new BsonDocumentPatch() {
 			@Override
-			public void apply(BasicDBObject dbObject) {
-				dbObject.put("baz", "baz");
+			public void apply(Document document) {
+				document.put("baz", "baz");
 			}
 
 			@Override
@@ -96,20 +96,20 @@ public class YmerMigrationTestBaseTest {
 		v3.put("foo", "bar");
 		v3.put("bar", "bar");
 		v3.put("baz", "baz");
-		DocumentPatch[] patches = { new DocumentPatch() {
+		BsonDocumentPatch[] patches = { new BsonDocumentPatch() {
 			@Override
-			public void apply(BasicDBObject dbObject) {
-				dbObject.put("bar", "bar");
+			public void apply(Document document) {
+				document.put("bar", "bar");
 			}
 
 			@Override
 			public int patchedVersion() {
 				return 1;
 			}
-		}, new DocumentPatch() {
+		}, new BsonDocumentPatch() {
 			@Override
-			public void apply(BasicDBObject dbObject) {
-				dbObject.put("baz", "baz");
+			public void apply(Document document) {
+				document.put("baz", "baz");
 			}
 
 			@Override
@@ -134,10 +134,10 @@ public class YmerMigrationTestBaseTest {
 		expectedV2.put("foo", "bar");
 		expectedV2.put("baz", "baz");
 
-		final DocumentPatch patch = new DocumentPatch() {
+		final BsonDocumentPatch patch = new BsonDocumentPatch() {
 			@Override
-			public void apply(BasicDBObject dbObject) {
-				dbObject.put("baz", "baz");
+			public void apply(Document document) {
+				document.put("baz", "baz");
 			}
 
 			@Override

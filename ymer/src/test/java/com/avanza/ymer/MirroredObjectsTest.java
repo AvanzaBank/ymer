@@ -44,7 +44,7 @@ public class MirroredObjectsTest {
 	
 	@Test
 	public void returnsMirroredDocumentForGivenType() throws Exception {
-		DocumentPatch[] patches = {};
+		BsonDocumentPatch[] patches = {};
 		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		assertSame(mirroredObject, mirroredObjects.getMirroredObject(FakeMirroredType.class));
@@ -52,7 +52,7 @@ public class MirroredObjectsTest {
 	
 	@Test
 	public void returnsSetOfMirroredTypes() throws Exception {
-		DocumentPatch[] patches = {};
+		BsonDocumentPatch[] patches = {};
 		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
@@ -64,7 +64,7 @@ public class MirroredObjectsTest {
 	
 	@Test
 	public void returnsSetOfMirroredTypeNames() throws Exception {
-		DocumentPatch[] patches = {};
+		BsonDocumentPatch[] patches = {};
 		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
@@ -76,7 +76,7 @@ public class MirroredObjectsTest {
 	
 	@Test
 	public void returnsAllMirroredDocuments() throws Exception {
-		DocumentPatch[] patches = {};
+		BsonDocumentPatch[] patches = {};
 		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		
@@ -87,7 +87,7 @@ public class MirroredObjectsTest {
 	
 	@Test
 	public void mirroredTypes() throws Exception {
-		DocumentPatch[] patches = {};
+		BsonDocumentPatch[] patches = {};
 		MirroredObject<FakeMirroredType> mirroredObject = MirroredObjectDefinition.create(FakeMirroredType.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjects mirroredObjects = new MirroredObjects(mirroredObject);
 		assertTrue(mirroredObjects.isMirroredType(FakeMirroredType.class));

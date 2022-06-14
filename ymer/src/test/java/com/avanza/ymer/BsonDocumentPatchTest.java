@@ -183,6 +183,7 @@ public class BsonDocumentPatchTest {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	private static class PatchV1ToV2WithDeprecatedBasicDBObject implements DocumentPatch {
 		@Override
 		public void apply(BasicDBObject dbObject) {
@@ -232,6 +233,7 @@ public class BsonDocumentPatchTest {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	private static class PatchV3ToV4WithDeprecatedBasicDBObject implements DocumentPatch {
 		@Override
 		public void apply(BasicDBObject basicDBObject) {

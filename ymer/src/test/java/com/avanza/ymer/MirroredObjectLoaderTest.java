@@ -35,7 +35,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
-import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.IndexOptions;
 
 public class MirroredObjectLoaderTest {
@@ -54,7 +53,7 @@ public class MirroredObjectLoaderTest {
 
 	@Test
 	public void loadsAllObjectsRoutedToCurrentPartition() {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		Document doc1 = new Document();
@@ -142,7 +141,7 @@ public class MirroredObjectLoaderTest {
 
 	@Test
 	public void pendingPatchesDocumentsReturnsAllDocumentsThatWasPatched() {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		Document doc1 = new Document();
@@ -174,7 +173,7 @@ public class MirroredObjectLoaderTest {
 
 	@Test
 	public void loadsAndPatchesADocumentById() throws Exception {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		final Document doc3 = new Document();
@@ -195,7 +194,7 @@ public class MirroredObjectLoaderTest {
 
 	@Test
 	public void loadByIdThrowsIllegalArgumentExceptionIfSpaceObjectNotAcceptedByFilter() throws Exception {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		final Document doc3 = new Document();
@@ -210,7 +209,7 @@ public class MirroredObjectLoaderTest {
 
 	@Test
 	public void loadByIdReturnsEmptyOptionalIfNoDocumentFoundWithGivenId() throws Exception {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		MirroredObjectLoader<FakeSpaceObject> documentLoader = new MirroredObjectLoader<>(documentCollection, FakeMirroredDocumentConverter.create(), mirroredObject, SpaceObjectFilter.acceptAll(), contextProperties, noOpPostReadProcessor());
 		assertFalse(documentLoader.loadById("id_3").isPresent());
@@ -218,7 +217,7 @@ public class MirroredObjectLoaderTest {
 
 	@Test
 	public void reloadableSpaceObjectsAreMarkedAsRestored() throws Exception {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		final Document doc3 = new Document();
@@ -240,7 +239,7 @@ public class MirroredObjectLoaderTest {
 
 	@Test
 	public void breaksIfConverterThrowsException() throws Exception {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> mirroredObject =
 				MirroredObjectDefinition.create(FakeSpaceObject.class)
 										.documentPatches(patches)
@@ -270,9 +269,9 @@ public class MirroredObjectLoaderTest {
 
 	@Test
 	public void propagatesExceptionsThrownByMigrator() throws Exception {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() {
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() {
 			@Override
-			public void apply(BasicDBObject document) {
+			public void apply(Document document) {
 				throw new IllegalArgumentException("My bigest failure");
 			}
 		} };
@@ -353,11 +352,11 @@ public class MirroredObjectLoaderTest {
 
 	}
 
-	private static class FakeSpaceObjectV1Patch implements DocumentPatch {
+	private static class FakeSpaceObjectV1Patch implements BsonDocumentPatch {
 
 		@Override
-		public void apply(BasicDBObject dbObject) {
-			dbObject.put("patched", true);
+		public void apply(Document document) {
+			document.put("patched", true);
 		}
 
 		@Override

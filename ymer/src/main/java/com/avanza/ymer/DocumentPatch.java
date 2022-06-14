@@ -24,8 +24,9 @@ import com.mongodb.BasicDBObject;
  * A DocumentPatch patches a given document from one version to the next.
  * 
  * @author Elias Lindholm (elilin)
- *
+ * @deprecated use {@link BsonDocumentPatch}
  */
+@Deprecated(since = "3.0.5")
 public interface DocumentPatch extends BsonDocumentPatch {
 	
 	/**
@@ -37,6 +38,7 @@ public interface DocumentPatch extends BsonDocumentPatch {
 	 */
 	void apply(BasicDBObject dbObject);
 
+	@Override
 	default void apply(Document document) {
 		BasicDBObject dbo = convertToBasicDBObject(document);
 		apply(dbo);
@@ -56,5 +58,6 @@ public interface DocumentPatch extends BsonDocumentPatch {
 	 * if this is the first patch to apply for a particular document type, set
 	 * this value to {@code 1}.
 	 */
+	@Override
 	int patchedVersion();
 }

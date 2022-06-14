@@ -17,17 +17,18 @@ package com.avanza.ymer;
 
 import java.util.Objects;
 
+import org.bson.Document;
+
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
-import com.mongodb.BasicDBObject;
 
 public class TestSpaceThirdObject {
 
-	public static class TestSpaceThirdObjectPatchV1 implements DocumentPatch {
+	public static class TestSpaceThirdObjectPatchV1 implements BsonDocumentPatch {
 		@Override
-		public void apply(BasicDBObject dbObject) {
-			String name = (String) dbObject.get("name");
-			dbObject.put("name", "b" + name);
+		public void apply(Document document) {
+			String name = document.getString("name");
+			document.put("name", "b" + name);
 		}
 
 		@Override
