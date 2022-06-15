@@ -28,7 +28,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
-import com.mongodb.BasicDBObject;
 
 public class YmerInitialLoadIntegrationTest {
 	
@@ -96,10 +95,10 @@ public class YmerInitialLoadIntegrationTest {
 		assertEquals(1, mirroredOtherDocument.getDocumentVersion(allOtherDocs.get(0)));
 	}
 
-	public static class TestSpaceObjectV1Patch implements DocumentPatch {
+	public static class TestSpaceObjectV1Patch implements BsonDocumentPatch {
 		@Override
-		public void apply(BasicDBObject dbObject) {
-			dbObject.put("message", "patched_" + dbObject.getString("message"));
+		public void apply(Document document) {
+			document.put("message", "patched_" + document.getString("message"));
 		}
 
 		@Override

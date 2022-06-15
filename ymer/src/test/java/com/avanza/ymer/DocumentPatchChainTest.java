@@ -29,8 +29,8 @@ public class DocumentPatchChainTest {
 	
 	@Test
 	public void appliesPatchesInCorrectOrder() throws Exception {
-		DocumentPatch v1ToV2 = mock(DocumentPatch.class);
-		DocumentPatch v2ToV3 = mock(DocumentPatch.class);
+		BsonDocumentPatch v1ToV2 = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch v2ToV3 = mock(BsonDocumentPatch.class);
 		when(v1ToV2.patchedVersion()).thenReturn(1);
 		when(v2ToV3.patchedVersion()).thenReturn(2);
 
@@ -44,8 +44,8 @@ public class DocumentPatchChainTest {
 	
 	@Test
 	public void doesNotAllowHolesInPatchChain() throws Exception {
-		DocumentPatch v1ToV2 = mock(DocumentPatch.class);
-		DocumentPatch v3ToV4 = mock(DocumentPatch.class);
+		BsonDocumentPatch v1ToV2 = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch v3ToV4 = mock(BsonDocumentPatch.class);
 		when(v1ToV2.patchedVersion()).thenReturn(1);
 		when(v3ToV4.patchedVersion()).thenReturn(3);
 
@@ -54,9 +54,9 @@ public class DocumentPatchChainTest {
 	
 	@Test
 	public void doesNotAllowMoreThanOnePatchFromGivenVersion() throws Exception {
-		DocumentPatch v1ToV2a = mock(DocumentPatch.class);
-		DocumentPatch v1ToV2b = mock(DocumentPatch.class);
-		DocumentPatch v3ToV4 = mock(DocumentPatch.class);
+		BsonDocumentPatch v1ToV2a = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch v1ToV2b = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch v3ToV4 = mock(BsonDocumentPatch.class);
 		when(v1ToV2a.patchedVersion()).thenReturn(1);
 		when(v1ToV2b.patchedVersion()).thenReturn(1);
 		when(v3ToV4.patchedVersion()).thenReturn(2);
@@ -66,8 +66,8 @@ public class DocumentPatchChainTest {
 	
 	@Test
 	public void chainWithThreePatches() throws Exception {
-		DocumentPatch p1 = mock(DocumentPatch.class);
-		DocumentPatch p2 = mock(DocumentPatch.class);
+		BsonDocumentPatch p1 = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch p2 = mock(BsonDocumentPatch.class);
 		BsonDocumentPatch p3 = mock(BsonDocumentPatch.class);
 		when(p1.patchedVersion()).thenReturn(1);
 		when(p2.patchedVersion()).thenReturn(2);
@@ -78,9 +78,9 @@ public class DocumentPatchChainTest {
 	
 	@Test
 	public void getPatchReturnsThePatchForTheGivenVersion() throws Exception {
-		DocumentPatch p2 = mock(DocumentPatch.class);
-		DocumentPatch p3 = mock(DocumentPatch.class);
-		DocumentPatch p4 = mock(DocumentPatch.class);
+		BsonDocumentPatch p2 = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch p3 = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch p4 = mock(BsonDocumentPatch.class);
 		when(p2.patchedVersion()).thenReturn(2);
 		when(p3.patchedVersion()).thenReturn(3);
 		when(p4.patchedVersion()).thenReturn(4);
@@ -93,9 +93,9 @@ public class DocumentPatchChainTest {
 	
 	@Test
 	public void throwsIllegalArgumentExceptionWhenAskingForNonExistingPatch() throws Exception {
-		DocumentPatch p2 = mock(DocumentPatch.class);
-		DocumentPatch p3 = mock(DocumentPatch.class);
-		DocumentPatch p4 = mock(DocumentPatch.class);
+		BsonDocumentPatch p2 = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch p3 = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch p4 = mock(BsonDocumentPatch.class);
 		when(p2.patchedVersion()).thenReturn(2);
 		when(p3.patchedVersion()).thenReturn(3);
 		when(p4.patchedVersion()).thenReturn(4);
@@ -106,9 +106,9 @@ public class DocumentPatchChainTest {
 	
 	@Test
 	public void throwsIllegalArgumentExceptionWhenAskingForNonExistingPatch2() throws Exception {
-		DocumentPatch p2 = mock(DocumentPatch.class);
-		DocumentPatch p3 = mock(DocumentPatch.class);
-		DocumentPatch p4 = mock(DocumentPatch.class);
+		BsonDocumentPatch p2 = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch p3 = mock(BsonDocumentPatch.class);
+		BsonDocumentPatch p4 = mock(BsonDocumentPatch.class);
 		when(p2.patchedVersion()).thenReturn(2);
 		when(p3.patchedVersion()).thenReturn(3);
 		when(p4.patchedVersion()).thenReturn(4);

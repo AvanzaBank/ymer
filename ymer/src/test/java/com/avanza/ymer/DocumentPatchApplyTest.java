@@ -21,8 +21,10 @@ import static org.hamcrest.Matchers.nullValue;
 
 import org.bson.Document;
 import org.junit.Test;
+
 import com.mongodb.BasicDBObject;
 
+@SuppressWarnings("deprecation")
 public class DocumentPatchApplyTest {
     @Test
     public void shouldHandlePatchRemovalsUsingBasicDBObject() {

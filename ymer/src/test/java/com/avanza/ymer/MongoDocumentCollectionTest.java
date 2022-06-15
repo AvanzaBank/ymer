@@ -69,7 +69,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	@Test
 	public void canLoadDocumentsRouted() throws Exception {
-		DocumentPatch[] patches = {};
+		BsonDocumentPatch[] patches = {};
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class).loadDocumentsRouted(true).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
 		// Objects WITH routed field
@@ -117,7 +117,7 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
 	@Test
 	public void canLoadDocumentsRoutedWithoutWriteBack() throws Exception {
-		DocumentPatch[] patches = {};
+		BsonDocumentPatch[] patches = {};
 		MirroredObject<FakeSpaceObject> mirroredObject = MirroredObjectDefinition.create(FakeSpaceObject.class)
 																			     .loadDocumentsRouted(true)
 																				 .writeBackPatchedDocuments(false)

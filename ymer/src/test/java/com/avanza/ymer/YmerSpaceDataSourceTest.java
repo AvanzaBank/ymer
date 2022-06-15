@@ -42,7 +42,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import com.avanza.ymer.YmerSpaceDataSource.InitialLoadCompleteDispatcher;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.gigaspaces.datasource.DataIterator;
-import com.mongodb.BasicDBObject;
 
 public class YmerSpaceDataSourceTest {
 
@@ -66,7 +65,7 @@ public class YmerSpaceDataSourceTest {
 
 	@Test
 	public void documentsMustNotBeWrittenToDbBeforeAllElementsAreLoaded() throws Exception {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		DocumentDb fakeDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb, SpaceMirrorContext.NO_EXCEPTION_LISTENER, Plugins.empty(), 1);
@@ -97,7 +96,7 @@ public class YmerSpaceDataSourceTest {
 
 	@Test
 	public void loadsAndPatchesASingleDocumentById() throws Exception {
-		DocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
 		MirroredObject<TestReloadableSpaceObject> mirroredObject = MirroredObjectDefinition.create(TestReloadableSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 		DocumentDb documentDb = FakeDocumentDb.create();
 		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(
@@ -137,36 +136,36 @@ public class YmerSpaceDataSourceTest {
 
 
 	@Test
-	public void testLoggning(){
-			DocumentPatch[] patches = {new FakeSpaceObjectV1Patch()};
-            MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
-            DocumentDb fakeDb = FakeDocumentDb.create();
-            SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb, SpaceMirrorContext.NO_EXCEPTION_LISTENER, Plugins.empty(), 1);
-            YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
-            ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", instanceId, null, numberOfInstances, 0));
+	public void testLoggning() {
+		BsonDocumentPatch[] patches = { new FakeSpaceObjectV1Patch() };
+		MirroredObject<FakeSpaceObject> patchedMirroredDocument = MirroredObjectDefinition.create(FakeSpaceObject.class).documentPatches(patches).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
+		DocumentDb fakeDb = FakeDocumentDb.create();
+		SpaceMirrorContext spaceMirror = new SpaceMirrorContext(new MirroredObjects(patchedMirroredDocument), FakeDocumentConverter.create(), fakeDb, SpaceMirrorContext.NO_EXCEPTION_LISTENER, Plugins.empty(), 1);
+		YmerSpaceDataSource ymerSpaceDataSource = new YmerSpaceDataSource(spaceMirror);
+		ymerSpaceDataSource.setClusterInfo(new ClusterInfo("", instanceId, null, numberOfInstances, 0));
 
-            DocumentCollection documentCollection = fakeDb.getCollection(patchedMirroredDocument.getCollectionName());
-			Document doc2 = new Document();
-            doc2.put("_id", 2);
-            doc2.put("spaceRouting", 2);
+		DocumentCollection documentCollection = fakeDb.getCollection(patchedMirroredDocument.getCollectionName());
+		Document doc2 = new Document();
+		doc2.put("_id", 2);
+		doc2.put("spaceRouting", 2);
 
-            documentCollection.insert(doc2);
+		documentCollection.insert(doc2);
 
-            DataIterator<Object> objectDataIterator = ymerSpaceDataSource.initialDataLoad();
-            while (objectDataIterator.hasNext()) {
-				objectDataIterator.next();
-			}
-            Awaitility.await()
-                      .until(() -> appender.getEvents()
-                                           .stream()
-                                           .filter(event -> Objects.equals(event.getLevel(), Level.INFO))
-                                           .filter(event -> Objects.equals(event.getLoggerName(),
-                                                                           YmerSpaceDataSource.class.getName()))
-                                           .map(LogEvent::getMessage)
-                                           .map(Message::getFormattedMessage)
-                                           .anyMatch(message -> message.startsWith(
-                                                   "Loaded 1 documents from fakeSpaceObject")),
-                             is(true));
+		DataIterator<Object> objectDataIterator = ymerSpaceDataSource.initialDataLoad();
+		while (objectDataIterator.hasNext()) {
+			objectDataIterator.next();
+		}
+		Awaitility.await()
+				.until(() -> appender.getEvents()
+							   .stream()
+							   .filter(event -> Objects.equals(event.getLevel(), Level.INFO))
+							   .filter(event -> Objects.equals(event.getLoggerName(),
+															   YmerSpaceDataSource.class.getName()))
+							   .map(LogEvent::getMessage)
+							   .map(Message::getFormattedMessage)
+							   .anyMatch(message -> message.startsWith(
+									   "Loaded 1 documents from fakeSpaceObject")),
+					   is(true));
 	}
 
 	private static class FakeSpaceObject {
@@ -207,11 +206,11 @@ public class YmerSpaceDataSourceTest {
 
 	}
 
-	private static class FakeSpaceObjectV1Patch implements DocumentPatch {
+	private static class FakeSpaceObjectV1Patch implements BsonDocumentPatch {
 
 		@Override
-		public void apply(BasicDBObject dbObject) {
-			dbObject.put("patched", true);
+		public void apply(Document document) {
+			document.put("patched", true);
 		}
 
 		@Override
