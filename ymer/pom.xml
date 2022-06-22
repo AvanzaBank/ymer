@@ -90,7 +90,6 @@
         <dependency>
             <groupId>uk.org.webcompere</groupId>
             <artifactId>system-stubs-core</artifactId>
-            <version>1.2.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

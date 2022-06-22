@@ -118,7 +118,7 @@
 		<jsr305.version>3.0.2</jsr305.version>
 		<gs-test.version>2.1.1</gs-test.version>
 		<testcontainers.version>1.17.2</testcontainers.version>
-		<system-stubs.version>1.2.0</system-stubs.version>
+		<system-stubs.version>2.0.1</system-stubs.version>
 
 		<!-- Maven plugins -->
 		<maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
