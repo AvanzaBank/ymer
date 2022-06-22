@@ -134,8 +134,8 @@
 		<maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
 		<maven-source-plugin.version>3.2.0</maven-source-plugin.version>
 		<maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
-		<maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-		<maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
+		<maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+		<maven-failsafe-plugin.version>3.0.0-M7</maven-failsafe-plugin.version>
 		<maven-enforcer-plugin.version>3.0.0</maven-enforcer-plugin.version>
 		<maven-scm-plugin.version>1.11.2</maven-scm-plugin.version>
 		<exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
