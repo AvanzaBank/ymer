@@ -18,6 +18,7 @@ package com.avanza.ymer;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
@@ -230,6 +231,21 @@ public class YmerMirrorIntegrationTest {
 		assertEquals(1, (int) document.getInteger("_instanceId_1"));
 		assertNull(document.get("_instanceId_4"));
 		assertEquals(6, (int) document.getInteger("_instanceId_6"));
+	}
+
+	@Test
+	public void shouldAllowCustomRoutingKeyWithPersistInstanceId() {
+		// Arrange
+		final String id = "id_24";
+		final var object = new TestSpaceObjectWithCustomRoutingKey(id, "routing_24");
+
+		gigaSpace.write(object, WriteModifiers.WRITE_ONLY);
+		assertEquals(1, gigaSpace.count(new TestSpaceObjectWithCustomRoutingKey()));
+		assertEventually(() -> mongo.findAll(TestSpaceObjectWithCustomRoutingKey.class), hasItem(object));
+
+		gigaSpace.takeById(TestSpaceObjectWithCustomRoutingKey.class, id);
+		assertEquals(0, gigaSpace.count(new TestSpaceObjectWithCustomRoutingKey()));
+		assertEventually(() -> mongo.findAll(TestSpaceObjectWithCustomRoutingKey.class), not(hasItem(object)));
 	}
 
 	public static <T> void  assertEventually(Callable<T> poller, Matcher<? super T> matcher) {

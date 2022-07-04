@@ -18,6 +18,7 @@ package com.avanza.ymer;
 import static com.avanza.ymer.MirroredObject.DOCUMENT_ROUTING_KEY;
 import static com.avanza.ymer.PersistedInstanceIdUtil.getInstanceIdFieldName;
 import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT;
+import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT_CUSTOM_ROUTINGKEY;
 import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OTHER_OBJECT;
 import static com.avanza.ymer.util.GigaSpacesInstanceIdUtil.getInstanceId;
 import static com.j_spaces.core.Constants.Mirror.FULL_MIRROR_SERVICE_CLUSTER_PARTITIONS_COUNT;
@@ -144,6 +145,7 @@ public class PersistedInstanceIdCalculationServiceTest {
 				assertThat(target.getNumberOfPartitionsThatDataIsPreparedFor(), is(new int[] { }));
 
 				target.calculatePersistedInstanceId(TEST_SPACE_OTHER_OBJECT.collectionName());
+				target.calculatePersistedInstanceId(TEST_SPACE_OBJECT_CUSTOM_ROUTINGKEY.collectionName());
 				verifyStatistics(TEST_SPACE_OTHER_OBJECT, target, new int[] { 22 });
 
 				// Now that all collections are calculated, this should contain number of instances
