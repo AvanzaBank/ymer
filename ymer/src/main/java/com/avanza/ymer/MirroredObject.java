@@ -142,13 +142,19 @@ final class MirroredObject<T> {
 	}
 
 	private void setInstanceIdFields(Document document, InstanceMetadata metadata) {
+		final Object routingKey = document.get(DOCUMENT_ROUTING_KEY);
+		if (routingKey == null) {
+			// routingkey is null in DELETE-operations.
+			return;
+		}
+
 		Set<Integer> numberOfInstancesToCalculateFor = Stream.concat(
 				metadata.getNumberOfInstances().stream(),
 				metadata.getNextNumberOfInstances().stream()
 		).collect(toSet());
 
 		numberOfInstancesToCalculateFor.forEach(numberOfInstances -> {
-			int instanceId = getInstanceId(document.get(DOCUMENT_ROUTING_KEY), numberOfInstances);
+			int instanceId = getInstanceId(routingKey, numberOfInstances);
 			document.put(getInstanceIdFieldName(numberOfInstances), instanceId);
 		});
 	}

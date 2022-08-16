@@ -42,12 +42,17 @@ public class TestSpaceMirrorObjectDefinitions implements MirroredObjectsConfigur
 			MirroredObjectDefinition.create(TestSpaceThirdObject.class)
 					.documentPatches(new TestSpaceThirdObject.TestSpaceThirdObjectPatchV1());
 
+	public static final MirroredObjectDefinition<TestSpaceObjectWithCustomRoutingKey> TEST_SPACE_OBJECT_CUSTOM_ROUTINGKEY =
+			MirroredObjectDefinition.create(TestSpaceObjectWithCustomRoutingKey.class)
+					.persistInstanceId(true);
+
 	@Override
 	public Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 		return Arrays.asList(
 				TEST_SPACE_OBJECT,
 				TEST_SPACE_OTHER_OBJECT,
-				TEST_SPACE_THIRD_OBJECT
+				TEST_SPACE_THIRD_OBJECT,
+				TEST_SPACE_OBJECT_CUSTOM_ROUTINGKEY
 		);
 	}
 }
