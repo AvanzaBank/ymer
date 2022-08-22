@@ -229,6 +229,13 @@ The `junit5` test support is packed in a distinct jar using the following coordi
 </dependency>
 ```
 
+## Previous versions
+
+| Branch                                                   | Description                           |
+|----------------------------------------------------------|---------------------------------------|
+| [v1.4.x](https://github.com/AvanzaBank/ymer/tree/v1.4.x) | Based on GigaSpaces 10.1.1 and Java 8 |
+| [gs14.5](https://github.com/AvanzaBank/ymer/tree/gs14.5) | Based on GigaSpaces 14.5 and Java 11  |
+
 ## License
 The Ymer Framework is released under version 2.0 of the [Apache License](https://www.apache.org/licenses/LICENSE-2.0).
 
