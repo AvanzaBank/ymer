@@ -159,7 +159,10 @@ final class MirroredObjectWriter {
 		new MongoCommand(MirrorOperation.UPDATE, metadata, item) {
 			@Override
 			protected void execute(Document... documents) {
-				//NO-OP!!! getDocumentCollection(item).update(documents[0]);
+				if ("true".equals(System.getProperty("ymer.skip-updates"))) {
+					return;
+				}
+				getDocumentCollection(item).update(documents[0]);
 			}
 		}.execute(item);
 		numUpdates.incrementAndGet();
