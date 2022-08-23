@@ -15,6 +15,13 @@
  */
 package com.avanza.ymer;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import com.gigaspaces.sync.DataSyncOperation;
@@ -28,9 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- *
  * @author Elias Lindholm (elilin)
- *
  */
 final class MirroredObjectWriter {
 
@@ -38,10 +43,52 @@ final class MirroredObjectWriter {
 
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
+	private final Thread statusThread;
+
+	private AtomicLong numInserts = new AtomicLong();
+	private AtomicLong numUpdates = new AtomicLong();
+	private AtomicLong numDeletes = new AtomicLong();
 
 	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
 		this.mirror = Objects.requireNonNull(mirror);
 		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
+		this.statusThread = new Thread(this::runStatusThread, "mirrored-object-writer-status");
+		this.statusThread.setDaemon(true);
+		this.statusThread.start();
+	}
+
+	private void runStatusThread() {
+		long lastNumInserts = 0;
+		long lastNumUpdates = 0;
+		long lastNumDeletes = 0;
+		long lastLogTime = System.currentTimeMillis();
+		while (true) {
+			try {
+				Thread.sleep(10_000);
+				if (lastNumInserts != numInserts.get() ||
+						lastNumUpdates != numUpdates.get() ||
+						lastNumDeletes != numDeletes.get()) {
+					long inserts = numInserts.get();
+					long updates = numUpdates.get();
+					long deletes = numDeletes.get();
+					long logTime = System.currentTimeMillis();
+					long elapsedTime = (logTime - lastLogTime) / 1000;
+					logger.info("STATUS: inserts={}, insertDelta={}, insertRate={}/s, updates={}, updateDelta={}, updateRate={}/s, deletes={}, deleteDelta={}, deleteRate={}/s",
+							inserts, inserts - lastNumInserts, (inserts - lastNumInserts) / elapsedTime,
+							updates, updates - lastNumUpdates, (updates - lastNumUpdates) / elapsedTime,
+							deletes, deletes - lastNumDeletes, (deletes - lastNumDeletes) / elapsedTime);
+					lastNumInserts = inserts;
+					lastNumUpdates = updates;
+					lastNumDeletes = deletes;
+					lastLogTime = logTime;
+				}
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				return;
+			} catch (Exception e) {
+				logger.warn("Exception occurred in status thread", e);
+			}
+		}
 	}
 
 	public void executeBulk(OperationsBatchData batch) {
@@ -106,6 +153,7 @@ final class MirroredObjectWriter {
 			}
 
 		}.execute(item);
+		numDeletes.incrementAndGet();
 	}
 
 	private void update(final Object item) {
@@ -116,6 +164,7 @@ final class MirroredObjectWriter {
 			}
 
 		}.execute(item);
+		numUpdates.incrementAndGet();
 	}
 
 	private void insertAll(List<Object> items) {
@@ -137,6 +186,7 @@ final class MirroredObjectWriter {
 					documentCollection.insertAll(dbObjects);
 				}
 			}.execute(pendingObjects.toArray());
+			numInserts.addAndGet(pendingObjects.size());
 		}
 	}
 
