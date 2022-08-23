@@ -159,7 +159,7 @@ final class MirroredObjectWriter {
 		new MongoCommand(MirrorOperation.UPDATE, metadata, item) {
 			@Override
 			protected void execute(Document... documents) {
-				getDocumentCollection(item).update(documents[0]);
+				//NO-OP!!! getDocumentCollection(item).update(documents[0]);
 			}
 		}.execute(item);
 		numUpdates.incrementAndGet();
