@@ -53,9 +53,7 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
 /**
- *
  * @author Elias Lindholm (elilin)
- *
  */
 final class MongoDocumentCollection implements DocumentCollection {
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -64,7 +62,9 @@ final class MongoDocumentCollection implements DocumentCollection {
 
 	interface IdValidator {
 		void validateHasIdField(String operation, Document obj);
+
 		void validateUpdatedExistingDocument(String operation, UpdateResult result, Document obj);
+
 		void validateDeletedExistingDocument(String operation, DeleteResult result, Document obj);
 	}
 
@@ -90,7 +90,6 @@ final class MongoDocumentCollection implements DocumentCollection {
 	public Stream<Document> findAll() {
 		return toStream(collection.find());
 	}
-
 
 	@Override
 	public Document findById(Object id) {
@@ -134,9 +133,10 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public void update(Document newVersion) {
 		idValidator.validateHasIdField("update", newVersion);
-		UpdateResult updateResult = collection.replaceOne(Filters.eq(newVersion.get("_id")),
-				newVersion,
-				new ReplaceOptions().upsert(true));
+		final UpdateResult updateResult = collection.updateOne(Filters.eq(newVersion.get("_id")), newVersion);
+		//		UpdateResult updateResult = collection.replaceOne(Filters.eq(newVersion.get("_id")),
+		//				newVersion,
+		//				new ReplaceOptions().upsert(true));
 		idValidator.validateUpdatedExistingDocument("update", updateResult, newVersion);
 	}
 
@@ -181,7 +181,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 		try {
 			collection.insertOne(document);
 		} catch (MongoWriteException e) {
-			if(e.getError().getCategory() == DUPLICATE_KEY) {
+			if (e.getError().getCategory() == DUPLICATE_KEY) {
 				throw new DuplicateDocumentKeyException(e.getMessage());
 			} else {
 				throw e;
