@@ -32,6 +32,13 @@ import org.slf4j.LoggerFactory;
 import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
+import com.mongodb.bulk.BulkWriteResult;
+import com.mongodb.client.model.DeleteOneModel;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.ReplaceOneModel;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.WriteModel;
 
 /**
  * @author Elias Lindholm (elilin)
@@ -91,32 +98,49 @@ final class MirroredObjectWriter {
 	}
 
 	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
-		List<Object> pendingWrites = new ArrayList<>();
+		Map<String, List<WriteModel<Document>>> pendingItemsByCollection = new HashMap<>();
+
 		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
 			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {
 				logger.debug("Ignored {}, not a mirrored class", bulkItem.getDataAsObject().getClass().getName());
 				continue;
 			}
+			String collectionName = mirror.getCollectionName(bulkItem.getDataAsObject().getClass());
+			List<WriteModel<Document>> pendingChanges = pendingItemsByCollection.computeIfAbsent(collectionName, x -> new ArrayList<>());
+			Document document = toDocument(metadata, bulkItem.getDataAsObject());
+
 			switch (bulkItem.getDataSyncOperationType()) {
 				case WRITE:
-					pendingWrites.add(bulkItem.getDataAsObject());
+					pendingChanges.add(new InsertOneModel<>(document));
 					break;
 				case UPDATE:
 				case PARTIAL_UPDATE:
-					insertAll(metadata, pendingWrites);
-					pendingWrites = new ArrayList<>();
-					update(metadata, bulkItem.getDataAsObject());
+					pendingChanges.add(new ReplaceOneModel<>(Filters.eq(document.get("_id")),
+							document,
+							new ReplaceOptions().upsert(true)));
 					break;
 				case REMOVE:
-					insertAll(metadata, pendingWrites);
-					pendingWrites = new ArrayList<>();
-					remove(metadata, bulkItem.getDataAsObject());
+					pendingChanges.add(new DeleteOneModel<>(Filters.eq(document.get("_id"))));
 					break;
 				default:
 					throw new UnsupportedOperationException("Bulkoperation " + bulkItem.getDataSyncOperationType() + " is not supported");
 			}
 		}
-		insertAll(metadata, pendingWrites);
+
+		for (Map.Entry<String, List<WriteModel<Document>>> pendingObjects : pendingItemsByCollection.entrySet()) {
+			DocumentCollection documentCollection = mirror.getDocumentCollection(pendingObjects.getKey());
+			BulkWriteResult result = documentCollection.bulkWrite(pendingObjects.getValue());
+
+			numInserts.addAndGet(result.getInsertedCount());
+			numUpdates.addAndGet(result.getModifiedCount());
+			numDeletes.addAndGet(result.getDeletedCount());
+		}
+	}
+
+	private Document toDocument(InstanceMetadata metadata, Object object) {
+		Document versionedDocument = mirror.toVersionedDocument(object, metadata);
+		mirror.getPreWriteProcessing(object.getClass()).preWrite(versionedDocument);
+		return versionedDocument;
 	}
 
 	private Collection<DataSyncOperation> filterSpaceObjects(DataSyncOperation[] batchDataItems) {

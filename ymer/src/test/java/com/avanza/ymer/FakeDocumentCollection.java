@@ -41,7 +41,15 @@ import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.bulk.BulkWriteInsert;
+import com.mongodb.bulk.BulkWriteResult;
+import com.mongodb.bulk.BulkWriteUpsert;
+import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.ReplaceOneModel;
+import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.WriteModel;
 
 /**
  *
@@ -90,6 +98,60 @@ class FakeDocumentCollection implements DocumentCollection {
 		}
 		// No object found, do insert
 		insert(newVersion);
+	}
+
+	@Override
+	public BulkWriteResult bulkWrite(List<? extends WriteModel<? extends Document>> bulkChanges) {
+		for (WriteModel<? extends Document> bulkChange : bulkChanges) {
+			if (bulkChange instanceof InsertOneModel) {
+				InsertOneModel<Document> model = (InsertOneModel<Document>) bulkChange;
+				insert(model.getDocument());
+			}
+			if (bulkChange instanceof UpdateOneModel) {
+				ReplaceOneModel<Document> model = (ReplaceOneModel<Document>) bulkChange;
+				update(model.getReplacement());
+			}
+			if (bulkChange instanceof DeleteOneModel) {
+				DeleteOneModel<Document> model = (DeleteOneModel<Document>) bulkChange;
+			}
+		}
+
+		return new BulkWriteResult() {
+			@Override
+			public boolean wasAcknowledged() {
+				return false;
+			}
+
+			@Override
+			public int getInsertedCount() {
+				return 0;
+			}
+
+			@Override
+			public int getMatchedCount() {
+				return 0;
+			}
+
+			@Override
+			public int getDeletedCount() {
+				return 0;
+			}
+
+			@Override
+			public int getModifiedCount() {
+				return 0;
+			}
+
+			@Override
+			public List<BulkWriteInsert> getInserts() {
+				return null;
+			}
+
+			@Override
+			public List<BulkWriteUpsert> getUpserts() {
+				return null;
+			}
+		};
 	}
 
 	@Override

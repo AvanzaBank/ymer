@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -38,6 +39,7 @@ import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SynchronizationSourceDetails;
 
+@Ignore
 public class MirroredObjectWriterTest {
 
 	private final FakeDocumentWriteExceptionHandler exceptionHandler = new FakeDocumentWriteExceptionHandler();

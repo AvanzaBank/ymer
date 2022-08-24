@@ -38,6 +38,7 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.MongoWriteException;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -133,10 +134,10 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public void update(Document newVersion) {
 		idValidator.validateHasIdField("update", newVersion);
-		final UpdateResult updateResult = collection.updateOne(Filters.eq(newVersion.get("_id")), newVersion);
-		//		UpdateResult updateResult = collection.replaceOne(Filters.eq(newVersion.get("_id")),
-		//				newVersion,
-		//				new ReplaceOptions().upsert(true));
+//		final UpdateResult updateResult = collection.updateOne(Filters.eq(newVersion.get("_id")), newVersion);
+				UpdateResult updateResult = collection.replaceOne(Filters.eq(newVersion.get("_id")),
+						newVersion,
+						new ReplaceOptions().upsert(true));
 		idValidator.validateUpdatedExistingDocument("update", updateResult, newVersion);
 	}
 
@@ -202,6 +203,11 @@ final class MongoDocumentCollection implements DocumentCollection {
 			idValidator.validateHasIdField("insert", documents[0]);
 		}
 		collection.insertMany(Arrays.asList(documents)); // TODO: test for this method
+	}
+
+	@Override
+	public BulkWriteResult bulkWrite(List<? extends WriteModel<? extends Document>> bulkChanges) {
+		return collection.bulkWrite(bulkChanges);
 	}
 
 	@Override

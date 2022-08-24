@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -24,7 +25,9 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.WriteModel;
 
 /**
  * Abstraction over {@link com.mongodb.client.MongoCollection MongoCollection}. <p>
@@ -82,6 +85,8 @@ interface DocumentCollection {
 	 * Inserts all documents in a single batch to the underlying mongo collection. <p>
 	 */
 	void insertAll(Document... documents);
+
+	BulkWriteResult bulkWrite(List<? extends WriteModel<? extends Document>> bulkChanges);
 
 	Stream<IndexInfo> getIndexes();
 
