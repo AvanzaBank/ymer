@@ -33,9 +33,7 @@ import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
 
 /**
- *
  * @author Elias Lindholm (elilin)
- *
  */
 final class MirroredObjectWriter {
 
@@ -43,10 +41,17 @@ final class MirroredObjectWriter {
 
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
+	private PerformedOperationsListener operationsListener;
 
 	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
+		this(mirror, exceptionHandler, (type, delta) -> {
+		});
+	}
+
+	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler, PerformedOperationsListener operationsListener) {
 		this.mirror = Objects.requireNonNull(mirror);
 		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
+		this.operationsListener = operationsListener;
 	}
 
 	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
@@ -111,6 +116,7 @@ final class MirroredObjectWriter {
 
 		};
 		mongoCommand.execute(item);
+		operationsListener.increment(PerformedOperationsListener.OperationType.DELETE, 1);
 	}
 
 	private void update(InstanceMetadata metadata, final Object item) {
@@ -120,6 +126,8 @@ final class MirroredObjectWriter {
 				getDocumentCollection(item).update(documents[0]);
 			}
 		}.execute(item);
+		operationsListener.increment(PerformedOperationsListener.OperationType.UPDATE, 1);
+
 	}
 
 	private void insertAll(InstanceMetadata metadata, List<Object> items) {
@@ -138,6 +146,8 @@ final class MirroredObjectWriter {
 					documentCollection.insertAll(documents);
 				}
 			}.execute(pendingObjects.toArray());
+			operationsListener.increment(PerformedOperationsListener.OperationType.INSERT, pendingObjects.size());
+
 		}
 	}
 

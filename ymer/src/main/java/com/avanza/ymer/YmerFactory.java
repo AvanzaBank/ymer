@@ -50,14 +50,15 @@ import com.mongodb.client.MongoDatabase;
 
 /**
  * @author Elias Lindholm (elilin)
- *
  */
 public final class YmerFactory implements ApplicationContextAware {
 	private static final Logger LOG = LoggerFactory.getLogger(YmerFactory.class);
 
-	private MirrorExceptionListener exceptionListener = (e, failedOperation, failedObjects) -> {};
+	private MirrorExceptionListener exceptionListener = (e, failedOperation, failedObjects) -> {
+	};
 	private ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
+	private boolean exportOperationStatisticsMBean = true;
 	private Set<Plugin> plugins = Collections.emptySet();
 	private int numParallelCollections = 1;
 	private ReloadableYmerProperties.ReloadablePropertiesBuilder ymerPropertiesBuilder = ReloadableYmerProperties.builder();
@@ -70,8 +71,8 @@ public final class YmerFactory implements ApplicationContextAware {
 	private ApplicationContext applicationContext;
 
 	public YmerFactory(Supplier<MongoDatabase> mongoDatabaseSupplier,
-					   MongoConverter mongoConverter,
-					   Collection<MirroredObjectDefinition<?>> definitions) {
+			MongoConverter mongoConverter,
+			Collection<MirroredObjectDefinition<?>> definitions) {
 		this.mongoDatabaseSupplier = mongoDatabaseSupplier;
 		this.mongoConverter = mongoConverter;
 		this.mirroredObjects = new MirroredObjects(definitions.stream(), MirroredObjectDefinitionsOverride.fromSystemProperties());
@@ -88,18 +89,18 @@ public final class YmerFactory implements ApplicationContextAware {
 	}
 
 	/**
-	 * @deprecated please use {@link #YmerFactory(MongoDatabaseFactory,MongoConverter,Collection)}
+	 * @deprecated please use {@link #YmerFactory(MongoDatabaseFactory, MongoConverter, Collection)}
 	 */
 	@Deprecated
 	public YmerFactory(MongoDbFactory mongoDbFactory,
-					   MongoConverter mongoConverter,
-					   Collection<MirroredObjectDefinition<?>> definitions) {
+			MongoConverter mongoConverter,
+			Collection<MirroredObjectDefinition<?>> definitions) {
 		this(mongoDbFactory::getDb, mongoConverter, definitions);
 	}
 
 	public YmerFactory(MongoDatabaseFactory mongoDbFactory,
-					   MongoConverter mongoConverter,
-					   Collection<MirroredObjectDefinition<?>> definitions) {
+			MongoConverter mongoConverter,
+			Collection<MirroredObjectDefinition<?>> definitions) {
 		this(mongoDbFactory::getMongoDatabase, mongoConverter, definitions);
 	}
 
@@ -124,17 +125,22 @@ public final class YmerFactory implements ApplicationContextAware {
 	 * in a state where a bulk of operations is discarded if a failure occurs during synchronization. The default behavior is to keep a failed bulk
 	 * operation first in the queue and wait for a defined interval before running a new attempt to synchronize the bulk. This blocks all
 	 * subsequent synchronization operations until the bulk succeeds.
-	 *
+	 * <p>
 	 * Default is "true"
-	 *
 	 */
 	public void setExportExceptionHandlerMBean(boolean exportExceptionHandleMBean) {
 		this.exportExceptionHandleMBean = exportExceptionHandleMBean;
 	}
 
 	/**
+	 * Defines whether an MBean exposing the number of performed operations should be exported. Default is true
+	 */
+	public void setExportOperationStatisticsMBean(boolean exportOperationStatisticsMBean) {
+		this.exportOperationStatisticsMBean = exportOperationStatisticsMBean;
+	}
+
+	/**
 	 * Sets a MirrorExceptionListener (optional). <p>
-	 *
 	 */
 	public void setExceptionListener(MirrorExceptionListener exceptionListener) {
 		this.exceptionListener = exceptionListener;
@@ -188,6 +194,9 @@ public final class YmerFactory implements ApplicationContextAware {
 		if (applicationContext != null) {
 			ymerSpaceSynchronizationEndpoint.setApplicationContext(applicationContext);
 		}
+		if (this.exportOperationStatisticsMBean) {
+			ymerSpaceSynchronizationEndpoint.registerOperationStatisticsMBean();
+		}
 		return ymerSpaceSynchronizationEndpoint;
 	}
 
@@ -196,7 +205,7 @@ public final class YmerFactory implements ApplicationContextAware {
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(mongoConverter);
 		// Set the event publisher to null to avoid deadlocks when loading data in parallel
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
-			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
+			((ApplicationEventPublisherAware) mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
 		return new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
 	}
