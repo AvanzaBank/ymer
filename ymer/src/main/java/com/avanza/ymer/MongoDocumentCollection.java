@@ -47,6 +47,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateManyModel;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
@@ -133,7 +134,9 @@ final class MongoDocumentCollection implements DocumentCollection {
 	@Override
 	public void update(Document newVersion) {
 		idValidator.validateHasIdField("update", newVersion);
-		final UpdateResult updateResult = collection.updateOne(Filters.eq(newVersion.get("_id")), newVersion);
+		final UpdateResult updateResult = collection.updateOne(Filters.eq("_id", newVersion.get("_id")),
+				new Document("$set", newVersion),
+				new UpdateOptions().upsert(true));
 		//		UpdateResult updateResult = collection.replaceOne(Filters.eq(newVersion.get("_id")),
 		//				newVersion,
 		//				new ReplaceOptions().upsert(true));
