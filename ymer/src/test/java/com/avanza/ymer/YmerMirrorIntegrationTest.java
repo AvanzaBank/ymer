@@ -267,7 +267,10 @@ public class YmerMirrorIntegrationTest {
 		// Object is marked as keep persistent, so it will not be removed from mongo
 		gigaSpace.takeById(TestNonDeleteableSpaceObject.class, o1.getId());
 		// This insert will generate a duplicate key exception
-		gigaSpace.write(o1, WriteModifiers.WRITE_ONLY);
+		TestNonDeleteableSpaceObject o3 = new TestNonDeleteableSpaceObject();
+		o3.setId("id1");
+		o3.setMessage("this_value_is_not_written_to_mongo");
+		gigaSpace.write(o3, WriteModifiers.WRITE_ONLY);
 		// This update will, however be performed
 		o2.setMessage("updated value");
 		gigaSpace.write(o2, WriteModifiers.UPDATE_ONLY);
@@ -277,6 +280,7 @@ public class YmerMirrorIntegrationTest {
 
 		assertEquals(2, gigaSpace.count(new TestNonDeleteableSpaceObject()));
 
+		// The old o1 value is stored in mongo
 		assertEventually(() -> mongo.findAll(TestNonDeleteableSpaceObject.class), hasItem(o1));
 		assertEventually(() -> mongo.findAll(TestNonDeleteableSpaceObject.class), hasItem(o2));
 	}
