@@ -46,13 +46,18 @@ public class TestSpaceMirrorObjectDefinitions implements MirroredObjectsConfigur
 			MirroredObjectDefinition.create(TestSpaceObjectWithCustomRoutingKey.class)
 					.persistInstanceId(true);
 
+	public static final MirroredObjectDefinition<TestNonDeleteableSpaceObject> TEST_SPACE_OBJECT_KEEP_PERSISTENT =
+			MirroredObjectDefinition.create(TestNonDeleteableSpaceObject.class)
+					.keepPersistent(true);
+
 	@Override
 	public Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 		return Arrays.asList(
 				TEST_SPACE_OBJECT,
 				TEST_SPACE_OTHER_OBJECT,
 				TEST_SPACE_THIRD_OBJECT,
-				TEST_SPACE_OBJECT_CUSTOM_ROUTINGKEY
+				TEST_SPACE_OBJECT_CUSTOM_ROUTINGKEY,
+				TEST_SPACE_OBJECT_KEEP_PERSISTENT
 		);
 	}
 }

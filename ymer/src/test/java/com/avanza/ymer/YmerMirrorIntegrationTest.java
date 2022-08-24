@@ -60,15 +60,15 @@ public class YmerMirrorIntegrationTest {
 	private static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
 	private static final RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
-									   .numberOfBackups(1)
-									   .numberOfPrimaries(1)
-									   .parentContext(mirrorEnvironment.getMongoClientContext())
-									   .configure();
+			.numberOfBackups(1)
+			.numberOfPrimaries(1)
+			.parentContext(mirrorEnvironment.getMongoClientContext())
+			.configure();
 
 	private static final RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
-											   	     .contextProperty("exportExceptionHandlerMBean", "true")
-											   	     .parentContext(mirrorEnvironment.getMongoClientContext())
-											   	     .configure();
+			.contextProperty("exportExceptionHandlerMBean", "true")
+			.parentContext(mirrorEnvironment.getMongoClientContext())
+			.configure();
 
 	@ClassRule
 	public static TestRule spaces = RuleChain.outerRule(mirrorEnvironment).around(pu).around(mirrorPu);
@@ -248,7 +248,77 @@ public class YmerMirrorIntegrationTest {
 		assertEventually(() -> mongo.findAll(TestSpaceObjectWithCustomRoutingKey.class), not(hasItem(object)));
 	}
 
-	public static <T> void  assertEventually(Callable<T> poller, Matcher<? super T> matcher) {
+	@Test
+	public void operationsFollowingAFailedOneShouldBePerformed() throws Exception {
+		// Assure we build a redo log by stopping the mirror
+		mirrorPu.stop();
+
+		TestNonDeleteableSpaceObject o1 = new TestNonDeleteableSpaceObject();
+		o1.setId("id1");
+		o1.setMessage("mirror_test");
+		TestNonDeleteableSpaceObject o2 = new TestNonDeleteableSpaceObject();
+		o2.setId("id2");
+		o2.setMessage("mirror_test_2");
+
+		gigaSpace.write(o1, WriteModifiers.WRITE_ONLY);
+		gigaSpace.write(o2, WriteModifiers.WRITE_ONLY);
+		o1.setMessage("updated value");
+		gigaSpace.write(o1, WriteModifiers.UPDATE_ONLY);
+		// Object is marked as keep persistent, so it will not be removed from mongo
+		gigaSpace.takeById(TestNonDeleteableSpaceObject.class, o1.getId());
+		// This insert will generate a duplicate key exception
+		gigaSpace.write(o1, WriteModifiers.WRITE_ONLY);
+		// This update will, however be performed
+		o2.setMessage("updated value");
+		gigaSpace.write(o2, WriteModifiers.UPDATE_ONLY);
+
+		// start mirror and persist to mongo
+		mirrorPu.start();
+
+		assertEquals(2, gigaSpace.count(new TestNonDeleteableSpaceObject()));
+
+		assertEventually(() -> mongo.findAll(TestNonDeleteableSpaceObject.class), hasItem(o1));
+		assertEventually(() -> mongo.findAll(TestNonDeleteableSpaceObject.class), hasItem(o2));
+	}
+
+	/**
+	 * Note: this behaviour is probably not how it should be, and this test should be changed when the logic is fixed
+	 */
+	@Test
+	public void insertsArePerformedInBulkAndAFailingOneResultsInSubsequentOnesNotBeingPerformed() throws Exception {
+		// Assure we build a redo log by stopping the mirror
+		mirrorPu.stop();
+
+		TestNonDeleteableSpaceObject o1 = new TestNonDeleteableSpaceObject();
+		o1.setId("id1");
+		o1.setMessage("mirror_test");
+		TestNonDeleteableSpaceObject o2 = new TestNonDeleteableSpaceObject();
+		o2.setId("id2");
+		o2.setMessage("mirror_test_2");
+
+		gigaSpace.write(o1, WriteModifiers.WRITE_ONLY);
+		// Object is marked as keep persistent, so it will not be removed from mongo
+		gigaSpace.takeById(TestNonDeleteableSpaceObject.class, o1.getId());
+		// This insert will generate a duplicate key exception
+		gigaSpace.write(o1, WriteModifiers.WRITE_ONLY);
+		// This insert will be performed as a batch operation together with the two operations above
+		// and will not be performed, since the insert above will fail
+		gigaSpace.write(o2, WriteModifiers.WRITE_ONLY);
+
+		// This update will be performed after the inserts
+		o1.setMessage("updated value");
+		gigaSpace.write(o1, WriteModifiers.UPDATE_ONLY);
+
+		// start mirror and persist to mongo
+		mirrorPu.start();
+
+		assertEquals(2, gigaSpace.count(new TestNonDeleteableSpaceObject()));
+
+		assertEventually(() -> mongo.findAll(TestNonDeleteableSpaceObject.class), hasItem(o1));
+		assertEquals(1, mongo.findAll(TestNonDeleteableSpaceObject.class).size());
+	}
+
+	public static <T> void assertEventually(Callable<T> poller, Matcher<? super T> matcher) {
 		await().atMost(7, SECONDS).pollInterval(50, MILLISECONDS).until(poller, matcher);
 	}
 
