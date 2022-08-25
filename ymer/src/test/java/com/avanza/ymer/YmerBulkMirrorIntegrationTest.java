@@ -26,7 +26,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import com.avanza.gs.test.RunningPu;
 import com.gigaspaces.client.WriteModifiers;
 
-public class YmerMirrorBulkIntegrationTest extends YmerMirrorIntegrationTestBase {
+/**
+ * These tests use {@link BulkMirroredObjectWriter} for persisting to MongoDB.
+ */
+public class YmerBulkMirrorIntegrationTest extends YmerMirrorIntegrationTestBase {
 
 	@Override
 	void configureTestCase(RunningPu pu, RunningPu mirrorPu) {

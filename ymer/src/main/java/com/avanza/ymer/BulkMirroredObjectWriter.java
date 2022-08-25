@@ -130,11 +130,19 @@ final class BulkMirroredObjectWriter {
 			} catch (MongoBulkWriteException e) {
 				BulkWriteError writeError = e.getWriteErrors().get(0); // always a single write error as we use an ordered operation
 				MongoBulkChange failedChange = changes.get(writeError.getIndex());
-				onException(e, failedChange);
+				mirror.onMirrorException(e, failedChange.operation, failedChange.object);
 
-				// Continue execution, skipping the failed operation
 				List<MongoBulkChange> remainingChanges = changes.subList(writeError.getIndex() + 1, changes.size());
-				execute(remainingChanges);
+
+				if (!remainingChanges.isEmpty()) {
+					logger.warn("Bulk write failed on a {} operation in collection {}: \"{}\". Will continue writing remaining {} changes",
+							failedChange.operation, collectionName, writeError.getMessage(), remainingChanges.size());
+					// Continue execution, skipping the failed operation
+					execute(remainingChanges);
+				} else {
+					logger.warn("Bulk write failed on a {} operation in collection {}: \"{}\". This was the last entry in the bulk",
+							failedChange.operation, collectionName, writeError.getMessage());
+				}
 			} catch (Exception e) {
 				exceptionHandler.handleException(e, "Operation: Bulk write, objects: " +
 						changes.stream().map(change -> change.object).collect(toList()));
@@ -155,12 +163,6 @@ final class BulkMirroredObjectWriter {
 				logger.warn("Tried to delete {} documents in current bulk write, but only {} were deleted by query. "
 						+ "MongoDB and space seems to be out of sync!", expectedRemovals, result.getDeletedCount());
 			}
-		}
-
-		private void onException(final Exception exception, MongoBulkChange change) {
-			mirror.onMirrorException(exception, change.operation, change.object);
-			exceptionHandler.handleException(exception,
-					"Operation: " + change.operation + ", object: " + change.object);
 		}
 	}
 

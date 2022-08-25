@@ -17,6 +17,9 @@ package com.avanza.ymer;
 
 import com.avanza.gs.test.RunningPu;
 
+/**
+ * These tests use {@link MirroredObjectWriter} for persisting to MongoDB.
+ */
 public class YmerNonBulkMirrorIntegrationTest extends YmerMirrorIntegrationTestBase {
 
 	@Override
