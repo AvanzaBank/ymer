@@ -44,14 +44,21 @@ public class YmerBulkMirrorIntegrationTest extends YmerMirrorIntegrationTestBase
 		TestSpaceObject object2 = new TestSpaceObject("id_2", "message2");
 
 		// This will cause the insert to fail on this object as it already exists in mongo when added to the gigaspace
-		mongo.insert(object1, TEST_SPACE_OBJECT.collectionName());
+		mongo.insert(object2, TEST_SPACE_OBJECT.collectionName());
 
-		// This object would not be written if no retries are made
+		// This message will not be inserted into the space as it is already persisted with "message2"
+		object2.setMessage("THIS_WILL_NOT_BE_WRITTEN");
+
+		// This object would not be written if no retries are made as "object2" will fail
 		TestSpaceObject object3 = new TestSpaceObject("id_3", "message3");
 
 		gigaSpace.writeMultiple(new TestSpaceObject[] {object1, object2, object3}, WriteModifiers.WRITE_ONLY);
 
-		await().until(() -> mongo.findAll(TestSpaceObject.class), containsInAnyOrder(object1, object2, object3));
+		await().until(() -> mongo.findAll(TestSpaceObject.class), containsInAnyOrder(
+				new TestSpaceObject("id_1", "message1"),
+				new TestSpaceObject("id_2", "message2"),
+				new TestSpaceObject("id_3", "message3")
+		));
 	}
 
 	@Test

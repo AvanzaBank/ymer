@@ -63,6 +63,12 @@ class FakeDocumentCollection implements DocumentCollection {
 	private final Set<IndexInfo> indexes = ConcurrentHashMap.newKeySet();
 	private final AtomicInteger idGenerator = new AtomicInteger(0);
 
+	private Supplier<RuntimeException> bulkException;
+
+	public void setBulkException(Supplier<RuntimeException> bulkException) {
+		this.bulkException = bulkException;
+	}
+
 	FakeDocumentCollection() {
 		indexes.add(new IndexInfo(singletonList(IndexField.create("_id", ASC)), "_id_", false, false, ""));
 	}
@@ -112,6 +118,10 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	private BulkWriteResult mockedBulkWrite(Consumer<BulkWriter> bulkWriter) {
+		if (bulkException != null) {
+			throw bulkException.get();
+		}
+
 		LongAdder inserts = new LongAdder();
 		LongAdder updates = new LongAdder();
 		LongAdder deletes = new LongAdder();

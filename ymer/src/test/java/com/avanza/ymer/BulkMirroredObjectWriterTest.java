@@ -36,7 +36,7 @@ public class BulkMirroredObjectWriterTest {
 
 	private MockExceptionHandler mockExceptionHandler;
 	private BulkMirroredObjectWriter bulkMirroredObjectWriter;
-	private InstanceMetadata testMetadata = new InstanceMetadata(1, null);
+	private final InstanceMetadata testMetadata = new InstanceMetadata(1, null);
 	private DocumentDb documentDb;
 	private SpaceMirrorContext mirror;
 
@@ -98,5 +98,21 @@ public class BulkMirroredObjectWriterTest {
 		));
 
 		assertThat(mockExceptionHandler.descriptions, contains("Aborted bulk operation"));
+	}
+
+	@Test
+	public void unexpectedExceptionIsSentToExceptionHandler() {
+		FakeDocumentCollection mockCollection = (FakeDocumentCollection) documentDb.getCollection(TEST_SPACE_OBJECT.collectionName());
+
+		RuntimeException testException = new RuntimeException("Unexpected exception from MongoDB");
+		mockCollection.setBulkException(() -> testException);
+
+		bulkMirroredObjectWriter.executeBulk(testMetadata, FakeBatchData.create(new FakeBulkItem(
+				new TestSpaceObject("id", "message"),
+				DataSyncOperationType.WRITE
+		)));
+
+		assertThat(mockExceptionHandler.exceptions, contains(testException));
+		assertThat(mockExceptionHandler.descriptions, contains("Operation: Bulk write, objects: [TestSpaceObject [id=id, message=message]]"));
 	}
 }
