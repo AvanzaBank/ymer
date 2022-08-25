@@ -40,7 +40,7 @@ import com.mongodb.client.MongoDatabase;
 public class MirrorEnvironment extends ExternalResource {
 
 	public static final String TEST_MIRROR_DB_NAME = "mirror_test_db";
-	private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+	private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.0");
 	private final MongoClient mongoClient;
 
 	public MirrorEnvironment() {
