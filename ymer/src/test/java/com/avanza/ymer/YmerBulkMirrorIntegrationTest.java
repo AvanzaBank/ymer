@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItems;
@@ -43,7 +44,7 @@ public class YmerBulkMirrorIntegrationTest extends YmerMirrorIntegrationTestBase
 		TestSpaceObject object2 = new TestSpaceObject("id_2", "message2");
 
 		// This will cause the insert to fail on this object as it already exists in mongo when added to the gigaspace
-		mongo.insert(object1, TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT.collectionName());
+		mongo.insert(object1, TEST_SPACE_OBJECT.collectionName());
 
 		// This object would not be written if no retries are made
 		TestSpaceObject object3 = new TestSpaceObject("id_3", "message3");
@@ -61,9 +62,7 @@ public class YmerBulkMirrorIntegrationTest extends YmerMirrorIntegrationTestBase
 		gigaSpace.writeMultiple(new TestSpaceObject[] {object1, object2}, WriteModifiers.WRITE_ONLY);
 		await().until(() -> mongo.findAll(TestSpaceObject.class), hasItems(object1, object2));
 
-		mongo.remove(new Query().addCriteria(where("_id").is("id_1")),
-				TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT.collectionName()
-		);
+		mongo.remove(new Query().addCriteria(where("_id").is("id_1")), TEST_SPACE_OBJECT.collectionName());
 
 		object2.setMessage("test");
 

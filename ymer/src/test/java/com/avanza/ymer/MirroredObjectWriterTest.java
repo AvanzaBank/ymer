@@ -31,12 +31,9 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
-import com.gigaspaces.document.SpaceDocument;
-import com.gigaspaces.metadata.SpaceTypeDescriptor;
-import com.gigaspaces.sync.DataSyncOperation;
+import com.avanza.ymer.helper.FakeBatchData;
+import com.avanza.ymer.helper.FakeBulkItem;
 import com.gigaspaces.sync.DataSyncOperationType;
-import com.gigaspaces.sync.OperationsBatchData;
-import com.gigaspaces.sync.SynchronizationSourceDetails;
 
 public class MirroredObjectWriterTest {
 
@@ -344,91 +341,6 @@ public class MirroredObjectWriterTest {
 			this.lastException = e;
 		}
 
-	}
-
-	private static class FakeBatchData implements OperationsBatchData {
-
-		private final DataSyncOperation[] batchDataItems;
-
-		private FakeBatchData(FakeBulkItem[] items) {
-			batchDataItems = items;
-		}
-
-		public static FakeBatchData create(FakeBulkItem... items) {
-			return new FakeBatchData(items);
-		}
-
-		@Override
-		public DataSyncOperation[] getBatchDataItems() {
-			return this.batchDataItems;
-		}
-
-		@Override
-		public SynchronizationSourceDetails getSourceDetails() {
-			return () -> "spaceName_container1_1:spaceName";
-		}
-
-	}
-
-	public static class FakeBulkItem implements DataSyncOperation {
-
-		private final Object item;
-		private final DataSyncOperationType operation;
-
-		public FakeBulkItem(Object item, DataSyncOperationType operation) {
-			this.item = item;
-			this.operation = operation;
-		}
-
-		@Override
-		public Object getDataAsObject() {
-			return this.item;
-		}
-
-		@Override
-		public DataSyncOperationType getDataSyncOperationType() {
-			return operation;
-		}
-
-		@Override
-		public Object getSpaceId() {
-			return null;
-		}
-
-		@Override
-		public SpaceTypeDescriptor getTypeDescriptor() {
-			return null;
-		}
-
-		@Override
-		public String getUid() {
-			return null;
-		}
-
-		@Override
-		public boolean supportsDataAsDocument() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsDataAsObject() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsGetSpaceId() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsGetTypeDescriptor() {
-			return false;
-		}
-
-		@Override
-		public SpaceDocument getDataAsDocument() {
-			return null;
-		}
 	}
 
 }

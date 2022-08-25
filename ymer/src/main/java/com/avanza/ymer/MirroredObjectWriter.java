@@ -43,7 +43,7 @@ final class MirroredObjectWriter {
 			DocumentWriteExceptionHandler exceptionHandler,
 			MirroredObjectFilterer mirroredObjectFilterer) {
 		this.mirror = Objects.requireNonNull(mirror);
-		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);;
+		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
 		this.mirroredObjectFilterer = Objects.requireNonNull(mirroredObjectFilterer);
 	}
 

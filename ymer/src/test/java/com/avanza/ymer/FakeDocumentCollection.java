@@ -16,6 +16,7 @@
 package com.avanza.ymer;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.domain.Sort.Direction.ASC;
@@ -33,16 +34,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.MongoBulkWriteException;
+import com.mongodb.ServerAddress;
+import com.mongodb.bulk.BulkWriteError;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.IndexOptions;
 
@@ -109,23 +115,34 @@ class FakeDocumentCollection implements DocumentCollection {
 		LongAdder inserts = new LongAdder();
 		LongAdder updates = new LongAdder();
 		LongAdder deletes = new LongAdder();
+		LongAdder index = new LongAdder();
+
+		Supplier<BulkWriteResult> bulkResult = () -> BulkWriteResult.acknowledged(inserts.intValue(), updates.intValue(), deletes.intValue(), updates.intValue(), emptyList(), emptyList());
 
 		bulkWriter.accept(new BulkWriter() {
 			@Override
 			public void insert(Document document) {
-				FakeDocumentCollection.this.insert(document);
+				try {
+					FakeDocumentCollection.this.insert(document);
+				} catch (DuplicateDocumentKeyException e) {
+					throw new MongoBulkWriteException(bulkResult.get(), List.of(new BulkWriteError(0, e.getMessage(), new BsonDocument(), index.intValue())),
+							null, new ServerAddress("localhost"), emptySet());
+				}
+				index.increment();
 				inserts.increment();
 			}
 
 			@Override
 			public void replace(Document document) {
 				FakeDocumentCollection.this.update(document);
+				index.increment();
 				updates.increment();
 			}
 
 			@Override
 			public void delete(Document document) {
 				FakeDocumentCollection.this.delete(document);
+				index.increment();
 				deletes.increment();
 			}
 
@@ -136,6 +153,7 @@ class FakeDocumentCollection implements DocumentCollection {
 						.filter(Objects::nonNull)
 						.forEach(it -> {
 							it.putAll(fieldsToSet);
+							index.increment();
 							updates.increment();
 						});
 			}
@@ -147,12 +165,13 @@ class FakeDocumentCollection implements DocumentCollection {
 						.filter(Objects::nonNull)
 						.forEach(it -> {
 							fieldsToUnset.forEach(it::remove);
+							index.increment();
 							updates.increment();
 						});
 			}
 		});
 
-		return BulkWriteResult.acknowledged(inserts.intValue(), updates.intValue(), deletes.intValue(), updates.intValue(), emptyList(), emptyList());
+		return bulkResult.get();
 	}
 
 	@Override
