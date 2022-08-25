@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.domain.Sort.Direction.ASC;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -41,6 +43,7 @@ import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.IndexOptions;
 
 /**
@@ -93,14 +96,48 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
+	public BulkWriteResult nonOrderedBulkWrite(Consumer<BulkWriter> bulkWriter) {
+		return mockedBulkWrite(bulkWriter);
+	}
+
+	@Override
+	public BulkWriteResult orderedBulkWrite(Consumer<BulkWriter> bulkWriter) {
+		return mockedBulkWrite(bulkWriter);
+	}
+
+	private BulkWriteResult mockedBulkWrite(Consumer<BulkWriter> bulkWriter) {
+		LongAdder inserts = new LongAdder();
+		LongAdder updates = new LongAdder();
+		LongAdder deletes = new LongAdder();
+
 		bulkWriter.accept(new BulkWriter() {
+			@Override
+			public void insert(Document document) {
+				FakeDocumentCollection.this.insert(document);
+				inserts.increment();
+			}
+
+			@Override
+			public void replace(Document document) {
+				FakeDocumentCollection.this.update(document);
+				updates.increment();
+			}
+
+			@Override
+			public void delete(Document document) {
+				FakeDocumentCollection.this.delete(document);
+				deletes.increment();
+			}
+
 			@Override
 			public void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet) {
 				ids.stream()
 						.map(document -> findById(document))
 						.filter(Objects::nonNull)
-						.forEach(it -> it.putAll(fieldsToSet));
+						.forEach(it -> {
+							it.putAll(fieldsToSet);
+							updates.increment();
+						});
 			}
 
 			@Override
@@ -108,9 +145,14 @@ class FakeDocumentCollection implements DocumentCollection {
 				ids.stream()
 						.map(document -> findById(document))
 						.filter(Objects::nonNull)
-						.forEach(it -> fieldsToUnset.forEach(it::remove));
+						.forEach(it -> {
+							fieldsToUnset.forEach(it::remove);
+							updates.increment();
+						});
 			}
 		});
+
+		return BulkWriteResult.acknowledged(inserts.intValue(), updates.intValue(), deletes.intValue(), updates.intValue(), emptyList(), emptyList());
 	}
 
 	@Override

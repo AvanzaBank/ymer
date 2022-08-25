@@ -55,6 +55,7 @@ import com.mongodb.client.MongoDatabase;
 public final class YmerFactory implements ApplicationContextAware {
 	private static final Logger LOG = LoggerFactory.getLogger(YmerFactory.class);
 
+	@SuppressWarnings("deprecation")
 	private MirrorExceptionListener exceptionListener = (e, failedOperation, failedObjects) -> {};
 	private ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
@@ -135,7 +136,9 @@ public final class YmerFactory implements ApplicationContextAware {
 	/**
 	 * Sets a MirrorExceptionListener (optional). <p>
 	 *
+	 * @deprecated This functionality is deprecated without any replacement.
 	 */
+	@Deprecated
 	public void setExceptionListener(MirrorExceptionListener exceptionListener) {
 		this.exceptionListener = exceptionListener;
 	}

@@ -23,9 +23,18 @@ import java.util.function.Supplier;
 public final class ReloadableYmerProperties {
 
 	private final Supplier<Optional<Integer>> nextNumberOfInstances;
+	private final Supplier<Boolean> useBulkWrites;
 
-	private ReloadableYmerProperties(Supplier<Optional<Integer>> nextNumberOfInstances) {
+	private ReloadableYmerProperties(
+			Supplier<Optional<Integer>> nextNumberOfInstances,
+			Supplier<Boolean> useBulkWrites
+	) {
 		this.nextNumberOfInstances = requireNonNull(nextNumberOfInstances);
+		this.useBulkWrites = requireNonNull(useBulkWrites);
+	}
+
+	public boolean useBulkWrites() {
+		return useBulkWrites.get();
 	}
 
 	public Optional<Integer> getNextNumberOfInstances() {
@@ -39,6 +48,7 @@ public final class ReloadableYmerProperties {
 
 	public static final class ReloadablePropertiesBuilder {
 		private Supplier<Optional<Integer>> nextNumberOfInstances = Optional::empty;
+		private Supplier<Boolean> useBulkWrites = () -> false;
 
 		private ReloadablePropertiesBuilder() {
 		}
@@ -57,8 +67,16 @@ public final class ReloadableYmerProperties {
 			return this;
 		}
 
+		/**
+		 * Enable this to use {@link BulkMirroredObjectWriter} instead of {@link MirroredObjectWriter} for writes.
+		 */
+		public ReloadablePropertiesBuilder useBulkWrites(Supplier<Boolean> useBulkWrites) {
+			this.useBulkWrites = useBulkWrites;
+			return this;
+		}
+
 		public ReloadableYmerProperties build() {
-			return new ReloadableYmerProperties(nextNumberOfInstances);
+			return new ReloadableYmerProperties(nextNumberOfInstances, useBulkWrites);
 		}
 	}
 }

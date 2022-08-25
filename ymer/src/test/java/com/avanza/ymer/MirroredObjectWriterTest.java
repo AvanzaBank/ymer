@@ -51,6 +51,7 @@ public class MirroredObjectWriterTest {
 	private MirrorExceptionSpy mirrorExceptionSpy;
 	private MirroredObjects mirroredObjects;
 	private InstanceMetadata testMetadata;
+	private MirroredObjectFilterer objectFilterer;
 
 	@Before
 	public void setup() {
@@ -75,7 +76,8 @@ public class MirroredObjectWriterTest {
 		documentDb = FakeDocumentDb.create();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler);
+		objectFilterer = new MirroredObjectFilterer(mirror);
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler, objectFilterer);
 		testMetadata = new InstanceMetadata(1, null);
 	}
 
@@ -236,7 +238,7 @@ public class MirroredObjectWriterTest {
 		documentDb = throwsOnUpdateDocumentDb();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler);
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler, objectFilterer);
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -256,7 +258,7 @@ public class MirroredObjectWriterTest {
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
 		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler(
-				new TransientDocumentWriteException(new Exception())));
+				new TransientDocumentWriteException(new Exception())), objectFilterer);
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -288,7 +290,7 @@ public class MirroredObjectWriterTest {
 		});
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler);
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler, objectFilterer);
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -332,6 +334,7 @@ public class MirroredObjectWriterTest {
 		});
 	}
 
+	@SuppressWarnings("deprecation")
 	static class MirrorExceptionSpy implements MirrorExceptionListener {
 
 		private Exception lastException;

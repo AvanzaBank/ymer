@@ -31,6 +31,7 @@ public class TestSpaceMirrorFactory {
 	private final MirroredObjectsConfiguration mirroredObjectsConfiguration = new TestSpaceMirrorObjectDefinitions();
 	private final AtomicReference<Integer> nextNumberOfInstances = new AtomicReference<>(null);
 	private boolean exportExceptionHandlerMBean;
+	private boolean useBulkWrites = false;
 
 	@Autowired
 	public TestSpaceMirrorFactory(MongoDatabaseFactory mongoDbFactory) {
@@ -43,6 +44,10 @@ public class TestSpaceMirrorFactory {
 
 	public void setNextNumberOfInstances(Integer nextNumberOfInstances) {
 		this.nextNumberOfInstances.set(nextNumberOfInstances);
+	}
+
+	public void setUseBulkWrites(boolean useBulkWrites) {
+		this.useBulkWrites = useBulkWrites;
 	}
 
 	public SpaceDataSource createSpaceDataSource() {
@@ -59,6 +64,7 @@ public class TestSpaceMirrorFactory {
 		ymerFactory.setPlugins(Collections.singleton(new TestProcessor.TestPlugin()));
 		ymerFactory.withProperties(configurer -> {
 			configurer.nextNumberOfInstances(() -> Optional.ofNullable(nextNumberOfInstances.get()));
+			configurer.useBulkWrites(() -> useBulkWrites);
 		});
 		return ymerFactory.createSpaceSynchronizationEndpoint();
 	}

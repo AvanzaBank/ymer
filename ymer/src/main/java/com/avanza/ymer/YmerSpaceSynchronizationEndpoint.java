@@ -50,6 +50,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	private static final ThreadFactory THREAD_FACTORY = new CustomizableThreadFactory("Ymer-Space-Synchronization-Endpoint-");
 
 	private final MirroredObjectWriter mirroredObjectWriter;
+	private final BulkMirroredObjectWriter bulkMirroredObjectWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
 	private final PersistedInstanceIdCalculationService persistedInstanceIdCalculationService;
 	private final SpaceMirrorContext spaceMirror;
@@ -65,7 +66,9 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());
 		this.spaceMirror = spaceMirror;
-		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler);
+		final MirroredObjectFilterer mirroredObjectFilterer = new MirroredObjectFilterer(spaceMirror);
+		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler, mirroredObjectFilterer);
+		this.bulkMirroredObjectWriter = new BulkMirroredObjectWriter(spaceMirror, exceptionHandler, mirroredObjectFilterer);
 		this.persistedInstanceIdCalculationService = new PersistedInstanceIdCalculationService(spaceMirror, ymerProperties);
 		this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(THREAD_FACTORY);
 		this.ymerProperties = ymerProperties;
@@ -74,7 +77,11 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
-		mirroredObjectWriter.executeBulk(getInstanceMetadata(), batchData);
+		if (ymerProperties.useBulkWrites()) {
+			bulkMirroredObjectWriter.executeBulk(getInstanceMetadata(), batchData);
+		} else {
+			mirroredObjectWriter.executeBulk(getInstanceMetadata(), batchData);
+		}
 	}
 
 	private InstanceMetadata getInstanceMetadata() {

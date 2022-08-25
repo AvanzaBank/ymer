@@ -40,18 +40,16 @@ import com.mongodb.client.MongoDatabase;
 public class MirrorEnvironment extends ExternalResource {
 
 	public static final String TEST_MIRROR_DB_NAME = "mirror_test_db";
-	private final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+	private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
 	private final MongoClient mongoClient;
 
 	public MirrorEnvironment() {
-		mongoDBContainer.start();
-
+		if (!mongoDBContainer.isRunning()) {
+			mongoDBContainer.start();
+			// leave container running until JVM stops
+			Runtime.getRuntime().addShutdownHook(new Thread(mongoDBContainer::stop));
+		}
 		mongoClient = MongoClients.create(mongoDBContainer.getReplicaSetUrl());
-	}
-
-	@Override
-	protected void after() {
-		mongoDBContainer.stop();
 	}
 
 	public MongoTemplate getMongoTemplate() {
@@ -65,7 +63,6 @@ public class MirrorEnvironment extends ExternalResource {
 
 	public void reset() {
 		getMongoDatabase().drop();
-
 	}
 
 	public ApplicationContext getMongoClientContext() {

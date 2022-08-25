@@ -20,6 +20,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
@@ -53,19 +54,20 @@ import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
 import com.gigaspaces.client.WriteModifiers;
 
-public class YmerMirrorIntegrationTest {
+public abstract class YmerMirrorIntegrationTestBase {
 
-	private MongoOperations mongo;
-	private GigaSpace gigaSpace;
+	protected MongoOperations mongo;
+	protected GigaSpace gigaSpace;
+
 	private static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
-	private static final RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
+	protected static final RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
 									   .numberOfBackups(1)
 									   .numberOfPrimaries(1)
 									   .parentContext(mirrorEnvironment.getMongoClientContext())
 									   .configure();
 
-	private static final RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
+	protected static final RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
 											   	     .contextProperty("exportExceptionHandlerMBean", "true")
 											   	     .parentContext(mirrorEnvironment.getMongoClientContext())
 											   	     .configure();
@@ -79,6 +81,8 @@ public class YmerMirrorIntegrationTest {
 		Logger.getRootLogger().setLevel(Level.INFO);
 		mongo = mirrorEnvironment.getMongoTemplate();
 		gigaSpace = pu.getClusteredGigaSpace();
+
+		configureTestCase(pu, mirrorPu);
 	}
 
 	@After
@@ -86,6 +90,8 @@ public class YmerMirrorIntegrationTest {
 		mirrorEnvironment.reset();
 		gigaSpace.clear(null);
 	}
+
+	abstract void configureTestCase(RunningPu pu, RunningPu mirrorPu);
 
 	@Test
 	public void mirrorsInsertOfTestSpaceObjects() throws Exception {
@@ -97,6 +103,24 @@ public class YmerMirrorIntegrationTest {
 		assertEquals(1, gigaSpace.count(new TestSpaceObject()));
 
 		assertEventually(() -> mongo.findAll(TestSpaceObject.class), hasItem(o1));
+	}
+
+	@Test
+	public void testInsertUpdateAndRemove() {
+		TestSpaceObject o1 = new TestSpaceObject("id_1", "message1");
+		TestSpaceObject o2 = new TestSpaceObject("id_2", "message2");
+		TestSpaceObject o3 = new TestSpaceObject("id_3", "message3");
+
+		gigaSpace.writeMultiple(new TestSpaceObject[] {o1, o2, o3}, WriteModifiers.WRITE_ONLY);
+		assertEquals(3, gigaSpace.count(new TestSpaceObject()));
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), containsInAnyOrder(o1, o2, o3));
+
+		o2.setMessage("updated");
+
+		gigaSpace.write(o2, WriteModifiers.UPDATE_ONLY);
+		gigaSpace.takeById(TestSpaceObject.class, "id_1");
+
+		assertEventually(() -> mongo.findAll(TestSpaceObject.class), containsInAnyOrder(o2, o3));
 	}
 
 	@Test
