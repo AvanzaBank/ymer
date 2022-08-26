@@ -62,15 +62,15 @@ public abstract class YmerMirrorIntegrationTestBase {
 	private static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
 	protected static final RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
-									   .numberOfBackups(1)
-									   .numberOfPrimaries(1)
-									   .parentContext(mirrorEnvironment.getMongoClientContext())
-									   .configure();
+			.numberOfBackups(1)
+			.numberOfPrimaries(1)
+			.parentContext(mirrorEnvironment.getMongoClientContext())
+			.configure();
 
 	protected static final RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
-											   	     .contextProperty("exportExceptionHandlerMBean", "true")
-											   	     .parentContext(mirrorEnvironment.getMongoClientContext())
-											   	     .configure();
+			.contextProperty("exportExceptionHandlerMBean", "true")
+			.parentContext(mirrorEnvironment.getMongoClientContext())
+			.configure();
 
 	@ClassRule
 	public static TestRule spaces = RuleChain.outerRule(mirrorEnvironment).around(pu).around(mirrorPu);
@@ -270,7 +270,32 @@ public abstract class YmerMirrorIntegrationTestBase {
 		assertEventually(() -> mongo.findAll(TestSpaceObjectWithCustomRoutingKey.class), not(hasItem(object)));
 	}
 
-	public static <T> void  assertEventually(Callable<T> poller, Matcher<? super T> matcher) {
+	@Test
+	public void shouldExposeOperationStatistics() throws Exception {
+		mirrorPu.stop();
+		String name = "se.avanzabank.space.mirror:type=OperationStatistics,name=operationStatistics";
+		final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+		final ObjectName oname = new ObjectName(name);
+		try {
+			mbs.unregisterMBean(oname);
+		} catch (Exception ignore) {
+		}
+		mirrorPu.start();
+
+		// Arrange
+		final TestSpaceObject o1 = new TestSpaceObject("id1", "message");
+		gigaSpace.write(o1);
+		o1.setMessage("updated message");
+		gigaSpace.write(o1);
+		gigaSpace.takeById(TestSpaceObject.class, o1.getId());
+
+		assertEventually(() -> mbs.getAttribute(oname, "NumPerformedOperations"), equalTo(3L));
+		assertEventually(() -> mbs.getAttribute(oname, "NumInserts"), equalTo(1L));
+		assertEventually(() -> mbs.getAttribute(oname, "NumUpdates"), equalTo(1L));
+		assertEventually(() -> mbs.getAttribute(oname, "NumDeletes"), equalTo(1L));
+	}
+
+	public static <T> void assertEventually(Callable<T> poller, Matcher<? super T> matcher) {
 		await().atMost(7, SECONDS).pollInterval(50, MILLISECONDS).until(poller, matcher);
 	}
 

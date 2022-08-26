@@ -61,11 +61,14 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	private Integer currentNumberOfPartitions;
 	private ApplicationContext applicationContext;
 
+	private PerformedOperationMetrics operationStatistics;
+
 	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror, ReloadableYmerProperties ymerProperties) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());
 		this.spaceMirror = spaceMirror;
+		this.operationStatistics = new PerformedOperationMetrics();
 		final MirroredObjectFilterer mirroredObjectFilterer = new MirroredObjectFilterer(spaceMirror);
 		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler, mirroredObjectFilterer);
 		this.bulkMirroredObjectWriter = new BulkMirroredObjectWriter(spaceMirror, exceptionHandler, mirroredObjectFilterer);
@@ -147,6 +150,12 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 					String statisticsBean = "se.avanzabank.space.mirror:type=PersistedInstanceIdCalculationService,name=collection_" + mirroredObject.getCollectionName();
 					registerMbean(persistedInstanceIdCalculationService.collectStatistics(mirroredObject), statisticsBean);
 				});
+	}
+
+	void registerOperationStatisticsMBean() {
+		String name = "se.avanzabank.space.mirror:type=OperationStatistics,name=operationStatistics";
+		registerMbean(operationStatistics, name);
+
 	}
 
 	private void registerMbean(Object object, String name) {
