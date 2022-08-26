@@ -75,8 +75,6 @@ public class YmerMirrorIntegrationTest {
 
 	@Before
 	public void setUp() {
-		BasicConfigurator.configure();
-		Logger.getRootLogger().setLevel(Level.INFO);
 		mongo = mirrorEnvironment.getMongoTemplate();
 		gigaSpace = pu.getClusteredGigaSpace();
 	}
