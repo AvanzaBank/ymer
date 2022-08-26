@@ -17,7 +17,6 @@ package com.avanza.ymer;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -120,22 +119,20 @@ final class BulkMirroredObjectWriter {
 			if (!remainingChanges.isEmpty()) {
 				int nextRetry = currentRetry + 1;
 				if (nextRetry > MAX_BULK_RETRIES) {
-					logger.warn("Bulk write failed on a {} operation in collection {}: \"{}\". Aborting after {} retries, WILL IGNORE THE FOLLOWING DATA",
-							failedChange.operation, collectionName, writeError.getMessage(), currentRetry);
-					exceptionHandler.handleException(e, "Aborted bulk operation");
+					exceptionHandler.handleException(e, "Bulk write failed on a " + failedChange.operation + ". This bulk has failed " + currentRetry + " retries, "
+							+ "remaining changes that will NOT be attempted: " + remainingChanges);
 				} else {
-					logger.warn("Bulk write failed on a {} operation in collection {}: \"{}\". Will continue writing remaining {} changes (retry #{})",
+					logger.error("Bulk write failed on a {} operation in collection {}: \"{}\". Will continue writing remaining {} changes (retry #{})",
 							failedChange.operation, collectionName, writeError.getMessage(), remainingChanges.size(), nextRetry);
 					// Continue execution, skipping the failed operation
 					executeBulk(collectionName, metadata, remainingChanges, nextRetry);
 				}
 			} else {
-				logger.warn("Bulk write failed on a {} operation in collection {}: \"{}\". This was the last entry in the bulk",
-						failedChange.operation, collectionName, writeError.getMessage());
+				logger.error("Bulk write failed on a {} operation in collection {}: \"{}\". This was the last entry in the batch",
+						failedChange.operation, collectionName, writeError.getMessage(), e);
 			}
 		} catch (Exception e) {
-			exceptionHandler.handleException(e, "Operation: Bulk write, objects: " +
-					changes.stream().map(change -> change.object).collect(toList()));
+			exceptionHandler.handleException(e, "Operation: Bulk write, changes: " + changes);
 		}
 	}
 
@@ -162,6 +159,11 @@ final class BulkMirroredObjectWriter {
 		MongoBulkChange(MirrorOperation operation, Object object) {
 			this.operation = operation;
 			this.object = object;
+		}
+
+		@Override
+		public String toString() {
+			return operation + ": " + object;
 		}
 	}
 }
