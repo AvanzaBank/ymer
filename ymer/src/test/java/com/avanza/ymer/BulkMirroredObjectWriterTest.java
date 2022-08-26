@@ -76,7 +76,8 @@ public class BulkMirroredObjectWriterTest {
 		bulkMirroredObjectWriter = new BulkMirroredObjectWriter(
 				mirror,
 				mockExceptionHandler,
-				new MirroredObjectFilterer(mirror)
+				new MirroredObjectFilterer(mirror),
+				new PerformedOperationMetrics()
 		);
 	}
 

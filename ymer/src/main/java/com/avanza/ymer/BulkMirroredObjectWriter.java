@@ -28,6 +28,7 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.avanza.ymer.PerformedOperationsListener.OperationType;
 import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.mongodb.MongoBulkWriteException;
@@ -43,14 +44,17 @@ final class BulkMirroredObjectWriter {
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
 	private final MirroredObjectFilterer objectFilterer;
+	private final PerformedOperationsListener operationsListener;
 
 	BulkMirroredObjectWriter(SpaceMirrorContext mirror,
 			DocumentWriteExceptionHandler exceptionHandler,
-			MirroredObjectFilterer objectFilterer
+			MirroredObjectFilterer objectFilterer,
+			PerformedOperationsListener operationsListener
 	) {
 		this.mirror = requireNonNull(mirror);
 		this.exceptionHandler = requireNonNull(exceptionHandler);
 		this.objectFilterer = requireNonNull(objectFilterer);
+		this.operationsListener = requireNonNull(operationsListener);
 	}
 
 	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
@@ -107,9 +111,12 @@ final class BulkMirroredObjectWriter {
 				});
 			});
 
+			addResultToStatistics(result);
 			checkResultForWarnings(updates.intValue(), removals.intValue(), result);
 
 		} catch (MongoBulkWriteException e) {
+			addResultToStatistics(e.getWriteResult());
+
 			BulkWriteError writeError = e.getWriteErrors().get(0); // always a single write error as we use an ordered operation
 			MongoBulkChange failedChange = changes.get(writeError.getIndex());
 			mirror.onMirrorException(e, failedChange.operation, failedChange.object);
@@ -134,6 +141,12 @@ final class BulkMirroredObjectWriter {
 		} catch (Exception e) {
 			exceptionHandler.handleException(e, "Operation: Bulk write, changes: " + changes);
 		}
+	}
+
+	private void addResultToStatistics(BulkWriteResult result) {
+		operationsListener.increment(OperationType.INSERT, result.getInsertedCount());
+		operationsListener.increment(OperationType.UPDATE, result.getMatchedCount());
+		operationsListener.increment(OperationType.DELETE, result.getDeletedCount());
 	}
 
 	private void checkResultForWarnings(int expectedUpdates, int expectedRemovals, BulkWriteResult result) {

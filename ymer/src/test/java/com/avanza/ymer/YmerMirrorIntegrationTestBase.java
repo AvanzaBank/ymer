@@ -282,6 +282,9 @@ public abstract class YmerMirrorIntegrationTestBase {
 		}
 		mirrorPu.start();
 
+		// Reconfigure test case for restarted Mirror PU
+		configureTestCase(pu, mirrorPu);
+
 		// Arrange
 		final TestSpaceObject o1 = new TestSpaceObject("id1", "message");
 		gigaSpace.write(o1);

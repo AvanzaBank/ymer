@@ -70,8 +70,8 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 		this.spaceMirror = spaceMirror;
 		this.operationStatistics = new PerformedOperationMetrics();
 		final MirroredObjectFilterer mirroredObjectFilterer = new MirroredObjectFilterer(spaceMirror);
-		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler, mirroredObjectFilterer);
-		this.bulkMirroredObjectWriter = new BulkMirroredObjectWriter(spaceMirror, exceptionHandler, mirroredObjectFilterer);
+		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler, mirroredObjectFilterer, operationStatistics);
+		this.bulkMirroredObjectWriter = new BulkMirroredObjectWriter(spaceMirror, exceptionHandler, mirroredObjectFilterer, operationStatistics);
 		this.persistedInstanceIdCalculationService = new PersistedInstanceIdCalculationService(spaceMirror, ymerProperties);
 		this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(THREAD_FACTORY);
 		this.ymerProperties = ymerProperties;
