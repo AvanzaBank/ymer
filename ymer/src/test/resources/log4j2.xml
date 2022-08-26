@@ -14,6 +14,9 @@
         <!-- Needs for YmerSpaceDataSourceTest#testLogging to verify logging -->
         <AppenderRef ref="List" />
     </Logger>
+    <Logger name="com.avanza.ymer" level="info" additivity="false">
+        <AppenderRef ref="Console" />
+    </Logger>
     <Root level="warn">
         <AppenderRef ref="Console" />
     </Root>
