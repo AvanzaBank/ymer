@@ -18,23 +18,24 @@ package com.avanza.ymer;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public final class ReloadableYmerProperties {
 
 	private final Supplier<Optional<Integer>> nextNumberOfInstances;
-	private final Supplier<Boolean> useBulkWrites;
+	private final BooleanSupplier useBulkWrites;
 
 	private ReloadableYmerProperties(
 			Supplier<Optional<Integer>> nextNumberOfInstances,
-			Supplier<Boolean> useBulkWrites
+			BooleanSupplier useBulkWrites
 	) {
 		this.nextNumberOfInstances = requireNonNull(nextNumberOfInstances);
 		this.useBulkWrites = requireNonNull(useBulkWrites);
 	}
 
 	public boolean useBulkWrites() {
-		return useBulkWrites.get();
+		return useBulkWrites.getAsBoolean();
 	}
 
 	public Optional<Integer> getNextNumberOfInstances() {
@@ -48,7 +49,7 @@ public final class ReloadableYmerProperties {
 
 	public static final class ReloadablePropertiesBuilder {
 		private Supplier<Optional<Integer>> nextNumberOfInstances = Optional::empty;
-		private Supplier<Boolean> useBulkWrites = () -> false;
+		private BooleanSupplier useBulkWrites = () -> false;
 
 		private ReloadablePropertiesBuilder() {
 		}
@@ -70,7 +71,7 @@ public final class ReloadableYmerProperties {
 		/**
 		 * Enable this to use {@link BulkMirroredObjectWriter} instead of {@link MirroredObjectWriter} for writes.
 		 */
-		public ReloadablePropertiesBuilder useBulkWrites(Supplier<Boolean> useBulkWrites) {
+		public ReloadablePropertiesBuilder useBulkWrites(BooleanSupplier useBulkWrites) {
 			this.useBulkWrites = useBulkWrites;
 			return this;
 		}
