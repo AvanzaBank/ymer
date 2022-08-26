@@ -18,13 +18,17 @@ package com.avanza.ymer;
 import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.bson.Document;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -76,8 +80,16 @@ public class BulkMirroredObjectWriterTest {
 		);
 	}
 
+	@After
+	public void tearDown() {
+		Configurator.reconfigure();
+	}
+
 	@Test
 	public void shouldAbortRetriesAfterTooManyFailures() {
+		// this test logs a lot of errors, so disable logs temporarily
+		Configurator.setLevel(BulkMirroredObjectWriter.class, Level.OFF);
+
 		int numObjects = 10_000;
 
 		TestSpaceObject[] objects = IntStream.range(1, numObjects)
@@ -97,7 +109,9 @@ public class BulkMirroredObjectWriterTest {
 						.toArray(FakeBulkItem[]::new)
 		));
 
-		assertThat(mockExceptionHandler.descriptions, contains("Aborted bulk operation"));
+		assertThat(mockExceptionHandler.descriptions, contains(
+				containsString("Bulk write failed on a INSERT. This bulk has failed 100 retries"))
+		);
 	}
 
 	@Test
@@ -113,6 +127,6 @@ public class BulkMirroredObjectWriterTest {
 		)));
 
 		assertThat(mockExceptionHandler.exceptions, contains(testException));
-		assertThat(mockExceptionHandler.descriptions, contains("Operation: Bulk write, objects: [TestSpaceObject [id=id, message=message]]"));
+		assertThat(mockExceptionHandler.descriptions, contains("Operation: Bulk write, changes: [INSERT: TestSpaceObject [id=id, message=message]]"));
 	}
 }
