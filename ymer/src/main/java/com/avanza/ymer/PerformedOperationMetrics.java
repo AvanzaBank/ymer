@@ -19,9 +19,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class PerformedOperationMetrics implements PerformedOperationMetricsMBean, PerformedOperationsListener {
 
-	private AtomicLong numInserts = new AtomicLong();
-	private AtomicLong numUpdates = new AtomicLong();
-	private AtomicLong numDeletes = new AtomicLong();
+	private final AtomicLong numInserts = new AtomicLong();
+	private final AtomicLong numUpdates = new AtomicLong();
+	private final AtomicLong numDeletes = new AtomicLong();
 
 	public long getNumPerformedOperations() {
 		return numInserts.get() + numUpdates.get() + numDeletes.get();

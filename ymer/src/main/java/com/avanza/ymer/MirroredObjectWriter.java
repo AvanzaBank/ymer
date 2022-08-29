@@ -41,7 +41,7 @@ final class MirroredObjectWriter {
 
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
-	private PerformedOperationsListener operationsListener;
+	private final PerformedOperationsListener operationsListener;
 
 	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
 		this(mirror, exceptionHandler, (type, delta) -> {
