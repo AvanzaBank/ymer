@@ -76,19 +76,12 @@ class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExc
 	}
 
 	private void logIrrecoverableError(Exception e, String operationDescription) {
-		if (e instanceof MongoBulkWriteException) {
-			log.error("Exception when executing mirror command! Attempted to write in bulk but it was aborted with error: {}."
-					+ "This can lead to data inconsistency in the mongo database. "
-					+ "Must be investigated ASAP.",
-					operationDescription, e);
-		} else {
-			log.error(
-					"Exception when executing mirror command! Attempted operation: {} - This command will be ignored but the rest of the commands in this bulk will be attempted. "
-							+ "This can lead to data inconsistency in the mongo database. "
-							+ "Must be investigated ASAP. "
-							+ "If this error was preceeded by a TransientDocumentWriteException the cause might be that we reattempt already performed operations, which might be fine.",
-					operationDescription, e);
-		}
+		log.error(
+				"Exception when executing mirror command! Attempted operation: {} - This command will be ignored but the rest of the commands in this bulk will be attempted. "
+						+ "This can lead to data inconsistency in the mongo database. "
+						+ "Must be investigated ASAP. "
+						+ "If this error was preceeded by a TransientDocumentWriteException the cause might be that we reattempt already performed operations, which might be fine.",
+				operationDescription, e);
 	}
 
 }

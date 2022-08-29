@@ -16,12 +16,11 @@
 package com.avanza.ymer;
 
 import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -32,50 +31,37 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.avanza.ymer.helper.MirrorExceptionSpy;
 import com.avanza.ymer.helper.FakeBatchData;
 import com.avanza.ymer.helper.FakeBulkItem;
 import com.gigaspaces.sync.DataSyncOperationType;
 
 public class BulkMirroredObjectWriterTest {
 
-	private MockExceptionHandler mockExceptionHandler;
+	private FakeDocumentWriteExceptionHandler exceptionHandler;
 	private BulkMirroredObjectWriter bulkMirroredObjectWriter;
 	private final InstanceMetadata testMetadata = new InstanceMetadata(1, null);
 	private DocumentDb documentDb;
 	private SpaceMirrorContext mirror;
-
-	private static class MockExceptionHandler implements DocumentWriteExceptionHandler {
-		private final List<Exception> exceptions = new ArrayList<>();
-		private final List<String> descriptions = new ArrayList<>();
-
-		@Override
-		public void handleException(Exception exception, String operationDescription) {
-			this.exceptions.add(exception);
-			this.descriptions.add(operationDescription);
-		}
-
-		public void reset() {
-			exceptions.clear();
-			descriptions.clear();
-		}
-	}
+	private MirrorExceptionSpy mirrorExceptionSpy;
 
 	@Before
 	public void setUp() {
 		documentDb = FakeDocumentDb.create();
-		mockExceptionHandler = new MockExceptionHandler();
+		mirrorExceptionSpy = new MirrorExceptionSpy();
+		exceptionHandler = new FakeDocumentWriteExceptionHandler();
 		TestSpaceMirrorObjectDefinitions definitions = new TestSpaceMirrorObjectDefinitions();
 		mirror = new SpaceMirrorContext(
 				new MirroredObjects(definitions.getMirroredObjectDefinitions().stream(), MirroredObjectDefinitionsOverride.noOverride()),
 				TestSpaceObjectFakeConverter.create(),
 				documentDb,
-				SpaceMirrorContext.NO_EXCEPTION_LISTENER,
+				mirrorExceptionSpy,
 				Plugins.empty(),
 				1);
 
 		bulkMirroredObjectWriter = new BulkMirroredObjectWriter(
 				mirror,
-				mockExceptionHandler,
+				exceptionHandler,
 				new MirroredObjectFilterer(mirror)
 		);
 	}
@@ -86,36 +72,42 @@ public class BulkMirroredObjectWriterTest {
 	}
 
 	@Test
-	public void shouldAbortRetriesAfterTooManyFailures() {
+	public void shouldTryToWriteAllRowsAfterManyFailures() {
 		// this test logs a lot of errors, so disable logs temporarily
 		Configurator.setLevel(BulkMirroredObjectWriter.class, Level.OFF);
 
-		int numObjects = 10_000;
-
-		TestSpaceObject[] objects = IntStream.range(1, numObjects)
+		TestSpaceObject[] objects = IntStream.rangeClosed(1, 1_000)
 				.mapToObj(i -> new TestSpaceObject("id_" + i, "message" + i))
 				.toArray(TestSpaceObject[]::new);
 
 		// This will cause each write to fail as all the objects already exists in DB
 		documentDb.getCollection(TEST_SPACE_OBJECT.collectionName())
 				.insertAll(Stream.of(objects)
+						// ensure the first 200 rows fail writing, the remaining should succeed
+						.limit(200)
 						.map(a -> mirror.toVersionedDocument(a, testMetadata))
 						.toArray(Document[]::new));
 
-		// This would lead to a StackOverflowError if the retries are not cancelled
+		// Before bulkWrite, 200 rows should already be written
+		assertThat(documentDb.getCollection(TEST_SPACE_OBJECT.collectionName()).findAll().count(), is(200L));
+
 		bulkMirroredObjectWriter.executeBulk(testMetadata, new FakeBatchData(
 				Stream.of(objects)
 						.map(spaceObject -> new FakeBulkItem(spaceObject, DataSyncOperationType.WRITE))
 						.toArray(FakeBulkItem[]::new)
 		));
 
-		assertThat(mockExceptionHandler.descriptions, contains(
-				containsString("Bulk write failed on a INSERT. This bulk has failed 100 retries"))
+		assertThat(mirrorExceptionSpy.getExceptionCount(), is(200));
+		assertThat(mirrorExceptionSpy.getLastException().getMessage(),
+				containsString("Bulk write operation error")
 		);
+
+		// After bulkWrite, the last 800 rows should be written to db
+		assertThat(documentDb.getCollection(TEST_SPACE_OBJECT.collectionName()).findAll().count(), is(1_000L));
 	}
 
 	@Test
-	public void unexpectedExceptionIsSentToExceptionHandler() {
+	public void unexpectedExceptionFromBulkWriteIsSentToExceptionHandler() {
 		FakeDocumentCollection mockCollection = (FakeDocumentCollection) documentDb.getCollection(TEST_SPACE_OBJECT.collectionName());
 
 		RuntimeException testException = new RuntimeException("Unexpected exception from MongoDB");
@@ -126,7 +118,7 @@ public class BulkMirroredObjectWriterTest {
 				DataSyncOperationType.WRITE
 		)));
 
-		assertThat(mockExceptionHandler.exceptions, contains(testException));
-		assertThat(mockExceptionHandler.descriptions, contains("Operation: Bulk write, changes: [INSERT: TestSpaceObject [id=id, message=message]]"));
+		assertThat(exceptionHandler.getLastException(), is(testException));
+		assertThat(exceptionHandler.getLastOperationDescription(), is("Operation: Bulk write, changes: [INSERT: TestSpaceObject [id=id, message=message]]"));
 	}
 }

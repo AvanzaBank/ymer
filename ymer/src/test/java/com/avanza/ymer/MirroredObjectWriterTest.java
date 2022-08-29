@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.avanza.ymer.helper.FakeBatchData;
 import com.avanza.ymer.helper.FakeBulkItem;
+import com.avanza.ymer.helper.MirrorExceptionSpy;
 import com.gigaspaces.sync.DataSyncOperationType;
 
 public class MirroredObjectWriterTest {
@@ -241,8 +242,8 @@ public class MirroredObjectWriterTest {
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
 		mirroredObjectWriter.executeBulk(testMetadata, FakeBatchData.create(bulkItem));
 
-		assertNotNull(mirrorExceptionSpy.lastException);
-		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
+		assertNotNull(mirrorExceptionSpy.getLastException());
+		assertEquals(RuntimeException.class, mirrorExceptionSpy.getLastException().getClass());
 		assertEquals(
 				"Operation: UPDATE, objects: {TestSpaceObject=[TestSpaceObject [id=1, message=hello]]}",
 				exceptionHandler.getLastOperationDescription()
@@ -293,8 +294,8 @@ public class MirroredObjectWriterTest {
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
 		mirroredObjectWriter.executeBulk(testMetadata, FakeBatchData.create(bulkItem));
 
-		assertNotNull(mirrorExceptionSpy.lastException);
-		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
+		assertNotNull(mirrorExceptionSpy.getLastException());
+		assertEquals(RuntimeException.class, mirrorExceptionSpy.getLastException().getClass());
 		assertEquals(
 				"Operation: UPDATE, objects: {TestSpaceObject=[TestSpaceObject [id=1, message=hello]]}",
 				exceptionHandler.getLastOperationDescription()
@@ -329,18 +330,6 @@ public class MirroredObjectWriterTest {
 				throw new RuntimeException();
 			}
 		});
-	}
-
-	@SuppressWarnings("deprecation")
-	static class MirrorExceptionSpy implements MirrorExceptionListener {
-
-		private Exception lastException;
-
-		@Override
-		public void onMirrorException(Exception e, MirrorOperation operation, Object[] failedObjects) {
-			this.lastException = e;
-		}
-
 	}
 
 }

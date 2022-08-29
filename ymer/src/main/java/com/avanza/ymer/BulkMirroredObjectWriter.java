@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
@@ -37,8 +38,6 @@ import com.mongodb.bulk.BulkWriteResult;
 final class BulkMirroredObjectWriter {
 
 	private static final Logger logger = LoggerFactory.getLogger(BulkMirroredObjectWriter.class);
-
-	private static final int MAX_BULK_RETRIES = 100;
 
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
@@ -76,10 +75,21 @@ final class BulkMirroredObjectWriter {
 			}
 		}
 
-		changesByCollection.forEach((collectionName, bulkChanges) -> executeBulk(collectionName, metadata, bulkChanges, 0));
+		changesByCollection.forEach((collectionName, bulkChanges) -> {
+			List<MongoBulkChange> remainingChanges = bulkChanges;
+			while (!remainingChanges.isEmpty()) {
+				remainingChanges = executeMongoDbBulk(collectionName, metadata, remainingChanges);
+			}
+		});
 	}
 
-	private void executeBulk(String collectionName, InstanceMetadata metadata, List<MongoBulkChange> changes, int currentRetry) {
+	/**
+	 * Executes a bulkWrite against mongoDB, with retries in an operation failed.
+	 *
+	 * @return list of changes that weren't written and needs to be retried.
+	 *         This happens if a row in a bulkWrite failed and needs to be skipped.
+	 */
+	private List<MongoBulkChange> executeMongoDbBulk(String collectionName, InstanceMetadata metadata, List<MongoBulkChange> changes) {
 		try {
 			DocumentCollection collection = mirror.getDocumentCollection(collectionName);
 
@@ -109,6 +119,7 @@ final class BulkMirroredObjectWriter {
 
 			checkResultForWarnings(updates.intValue(), removals.intValue(), result);
 
+			return emptyList();
 		} catch (MongoBulkWriteException e) {
 			BulkWriteError writeError = e.getWriteErrors().get(0); // always a single write error as we use an ordered operation
 			MongoBulkChange failedChange = changes.get(writeError.getIndex());
@@ -117,22 +128,17 @@ final class BulkMirroredObjectWriter {
 			List<MongoBulkChange> remainingChanges = changes.subList(writeError.getIndex() + 1, changes.size());
 
 			if (!remainingChanges.isEmpty()) {
-				int nextRetry = currentRetry + 1;
-				if (nextRetry > MAX_BULK_RETRIES) {
-					exceptionHandler.handleException(e, "Bulk write failed on a " + failedChange.operation + ". This bulk has failed " + currentRetry + " retries, "
-							+ "remaining changes that will NOT be attempted: " + remainingChanges);
-				} else {
-					logger.error("Bulk write failed on a {} operation in collection {}: \"{}\". Will continue writing remaining {} changes (retry #{})",
-							failedChange.operation, collectionName, writeError.getMessage(), remainingChanges.size(), nextRetry);
-					// Continue execution, skipping the failed operation
-					executeBulk(collectionName, metadata, remainingChanges, nextRetry);
-				}
+				logger.error("Bulk write failed on a {} operation in collection {}: \"{}\". Will continue writing remaining {} changes",
+						failedChange.operation, collectionName, writeError.getMessage(), remainingChanges.size());
 			} else {
 				logger.error("Bulk write failed on a {} operation in collection {}: \"{}\". This was the last entry in the batch",
 						failedChange.operation, collectionName, writeError.getMessage(), e);
 			}
+
+			return remainingChanges;
 		} catch (Exception e) {
 			exceptionHandler.handleException(e, "Operation: Bulk write, changes: " + changes);
+			return emptyList();
 		}
 	}
 
