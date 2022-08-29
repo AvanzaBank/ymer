@@ -132,7 +132,7 @@ final class BulkMirroredObjectWriter {
 				}
 			});
 
-			checkResultForWarnings(updates.intValue(), removals.intValue(), result);
+			checkBulkResultForWarnings(updates.intValue(), removals.intValue(), result);
 
 			return emptyList();
 		} catch (MongoBulkWriteException e) {
@@ -158,19 +158,32 @@ final class BulkMirroredObjectWriter {
 		}
 	}
 
-	private void checkResultForWarnings(int expectedUpdates, int expectedRemovals, BulkWriteResult result) {
+	private void checkBulkResultForWarnings(int expectedUpdates, int expectedRemovals, BulkWriteResult result) {
 		if (expectedUpdates != result.getMatchedCount()) {
-			logger.warn("Tried to update {} documents in current bulk write, but only {} were matched by query. "
-					+ "MongoDB and space seems to be out of sync! "
-					+ "The following ids were inserted into MongoDB as a result of update operations: [{}].",
-					expectedUpdates, result.getMatchedCount(),
-					result.getUpserts().stream()
-							.map(bson -> bson.getId().asString().getValue())
-							.collect(joining(", ")));
+			StringBuilder warningMessage = new StringBuilder();
+			warningMessage.append("Tried to update ").append(expectedUpdates).append(" documents in current bulk write, but ");
+			if (result.getMatchedCount() > 0) {
+				warningMessage.append("only ").append(result.getMatchedCount()).append(" ");
+			} else {
+				warningMessage.append("none ");
+			}
+			warningMessage.append("were matched by query. MongoDB and space seems to be out of sync! ");
+			if (!result.getUpserts().isEmpty()) {
+				warningMessage.append("The following ids were inserted into MongoDB as a result of update operations: [")
+						.append(result.getUpserts().stream()
+								.map(bson -> bson.getId().asString().getValue())
+								.collect(joining(", ")))
+						.append("].");
+			} else {
+				warningMessage.append("No rows were inserted into MongoDB as a result of this query.");
+			}
+
+			logger.warn(warningMessage.toString());
 		}
 		if (expectedRemovals != result.getDeletedCount()) {
-			logger.warn("Tried to delete {} documents in current bulk write, but only {} were deleted by query. "
-					+ "MongoDB and space seems to be out of sync!", expectedRemovals, result.getDeletedCount());
+			logger.warn("Tried to delete {} documents in current bulk write, but {} were deleted by query. "
+					+ "MongoDB and space seems to be out of sync!", expectedRemovals,
+					result.getDeletedCount() > 0 ? "only " + result.getDeletedCount() :  "none");
 		}
 	}
 
