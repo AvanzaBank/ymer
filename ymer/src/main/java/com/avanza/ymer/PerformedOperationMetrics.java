@@ -15,41 +15,41 @@
  */
 package com.avanza.ymer;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 public class PerformedOperationMetrics implements PerformedOperationMetricsMBean, PerformedOperationsListener {
 
-	private final AtomicLong numInserts = new AtomicLong();
-	private final AtomicLong numUpdates = new AtomicLong();
-	private final AtomicLong numDeletes = new AtomicLong();
+	private final LongAdder numInserts = new LongAdder();
+	private final LongAdder numUpdates = new LongAdder();
+	private final LongAdder numDeletes = new LongAdder();
 
 	public long getNumPerformedOperations() {
-		return numInserts.get() + numUpdates.get() + numDeletes.get();
+		return getNumInserts() + getNumUpdates() + getNumDeletes();
 	}
 
 	public long getNumInserts() {
-		return numInserts.get();
+		return numInserts.sum();
 	}
 
 	public long getNumUpdates() {
-		return numUpdates.get();
+		return numUpdates.sum();
 	}
 
 	public long getNumDeletes() {
-		return numDeletes.get();
+		return numDeletes.sum();
 	}
 
 	@Override
 	public void increment(OperationType type, int delta) {
 		switch (type) {
 			case INSERT:
-				numInserts.addAndGet(delta);
+				numInserts.add(delta);
 				break;
 			case UPDATE:
-				numUpdates.addAndGet(delta);
+				numUpdates.add(delta);
 				break;
 			case DELETE:
-				numDeletes.addAndGet(delta);
+				numDeletes.add(delta);
 				break;
 		}
 	}
