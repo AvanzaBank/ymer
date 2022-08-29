@@ -158,7 +158,7 @@ class FakeDocumentCollection implements DocumentCollection {
 			@Override
 			public void delete(Document document) {
 				if (bulkWriteException.get() == null) {
-					FakeDocumentCollection.this.delete(document);
+					FakeDocumentCollection.this.removeById(document);
 					index.increment();
 					deletes.increment();
 				}

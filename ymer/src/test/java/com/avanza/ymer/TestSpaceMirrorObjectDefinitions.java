@@ -32,6 +32,7 @@ public class TestSpaceMirrorObjectDefinitions implements MirroredObjectsConfigur
 	public static final MirroredObjectDefinition<TestSpaceOtherObject> TEST_SPACE_OTHER_OBJECT =
 			MirroredObjectDefinition.create(TestSpaceOtherObject.class)
 					.writeBackPatchedDocuments(false)
+					.keepPersistent(true)
 					.persistInstanceId(configurer -> configurer
 							.enabled(true)
 							.triggerCalculationOnStartup(false)
@@ -46,13 +47,18 @@ public class TestSpaceMirrorObjectDefinitions implements MirroredObjectsConfigur
 			MirroredObjectDefinition.create(TestSpaceObjectWithCustomRoutingKey.class)
 					.persistInstanceId(true);
 
+
+	public static final MirroredObjectDefinition<TestReloadableSpaceObject> TEST_RELOADABLE_OBJECT =
+			MirroredObjectDefinition.create(TestReloadableSpaceObject.class);
+
 	@Override
 	public Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 		return Arrays.asList(
 				TEST_SPACE_OBJECT,
 				TEST_SPACE_OTHER_OBJECT,
 				TEST_SPACE_THIRD_OBJECT,
-				TEST_SPACE_OBJECT_CUSTOM_ROUTINGKEY
+				TEST_SPACE_OBJECT_CUSTOM_ROUTINGKEY,
+				TEST_RELOADABLE_OBJECT
 		);
 	}
 }
