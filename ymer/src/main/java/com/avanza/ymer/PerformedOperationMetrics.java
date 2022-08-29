@@ -15,42 +15,65 @@
  */
 package com.avanza.ymer;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 public class PerformedOperationMetrics implements PerformedOperationMetricsMBean, PerformedOperationsListener {
 
-	private AtomicLong numInserts = new AtomicLong();
-	private AtomicLong numUpdates = new AtomicLong();
-	private AtomicLong numDeletes = new AtomicLong();
+	private final LongAdder numInserts = new LongAdder();
+	private final LongAdder numUpdates = new LongAdder();
+	private final LongAdder numDeletes = new LongAdder();
+	private final LongAdder numFailures = new LongAdder();
+
+	private final PerMinuteCounter batchSizePerMinute = new PerMinuteCounter();
 
 	public long getNumPerformedOperations() {
-		return numInserts.get() + numUpdates.get() + numDeletes.get();
+		return getNumInserts() + getNumUpdates() + getNumDeletes();
 	}
 
+	@Override
 	public long getNumInserts() {
-		return numInserts.get();
+		return numInserts.sum();
 	}
 
+	@Override
 	public long getNumUpdates() {
-		return numUpdates.get();
+		return numUpdates.sum();
 	}
 
+	@Override
 	public long getNumDeletes() {
-		return numDeletes.get();
+		return numDeletes.sum();
+	}
+
+	@Override
+	public long getNumFailures() {
+		return numFailures.sum();
+	}
+
+	@Override
+	public long getBatchReadRate() {
+		return batchSizePerMinute.getCurrentMinuteSum() / Math.max(1, batchSizePerMinute.getCurrentMinuteRate());
 	}
 
 	@Override
 	public void increment(OperationType type, int delta) {
 		switch (type) {
 			case INSERT:
-				numInserts.addAndGet(delta);
+				numInserts.add(delta);
 				break;
 			case UPDATE:
-				numUpdates.addAndGet(delta);
+				numUpdates.add(delta);
 				break;
 			case DELETE:
-				numDeletes.addAndGet(delta);
+				numDeletes.add(delta);
+				break;
+			case FAILURE:
+				numFailures.add(delta);
+				break;
+			case READ_BATCH:
+				batchSizePerMinute.addPerMinuteCount(delta);
 				break;
 		}
 	}
+
 }

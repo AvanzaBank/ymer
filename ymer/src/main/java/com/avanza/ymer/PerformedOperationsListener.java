@@ -19,7 +19,7 @@ package com.avanza.ymer;
 public interface PerformedOperationsListener {
 
 	enum OperationType {
-		INSERT, UPDATE, DELETE
+		INSERT, UPDATE, DELETE, READ_BATCH, FAILURE
 	}
 
 	void increment(OperationType type, int delta);

@@ -17,6 +17,12 @@ package com.avanza.ymer;
 
 import static java.util.Objects.requireNonNull;
 
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.INSERT;
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.READ_BATCH;
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.UPDATE;
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.DELETE;
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.FAILURE;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +63,7 @@ final class MirroredObjectWriter {
 	}
 
 	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
+		operationsListener.increment(READ_BATCH, batch.getBatchDataItems().length);
 		List<Object> pendingWrites = new ArrayList<>();
 		for (DataSyncOperation bulkItem : mirroredObjectFilterer.filterSpaceObjects(batch.getBatchDataItems())) {
 			switch (bulkItem.getDataSyncOperationType()) {
@@ -92,7 +99,7 @@ final class MirroredObjectWriter {
 
 		};
 		mongoCommand.execute(item);
-		operationsListener.increment(PerformedOperationsListener.OperationType.DELETE, 1);
+		operationsListener.increment(DELETE, 1);
 	}
 
 	private void update(InstanceMetadata metadata, final Object item) {
@@ -102,7 +109,7 @@ final class MirroredObjectWriter {
 				getDocumentCollection(item).update(documents[0]);
 			}
 		}.execute(item);
-		operationsListener.increment(PerformedOperationsListener.OperationType.UPDATE, 1);
+		operationsListener.increment(UPDATE, 1);
 
 	}
 
@@ -122,7 +129,7 @@ final class MirroredObjectWriter {
 					documentCollection.insertAll(documents);
 				}
 			}.execute(pendingObjects.toArray());
-			operationsListener.increment(PerformedOperationsListener.OperationType.INSERT, pendingObjects.size());
+			operationsListener.increment(INSERT, pendingObjects.size());
 
 		}
 	}
@@ -163,6 +170,7 @@ final class MirroredObjectWriter {
 					.collect(Collectors.groupingBy(o -> o.getClass().getSimpleName()));
 			exceptionHandler.handleException(exception,
 					"Operation: " + operation + ", objects: " + objectsPerType);
+			operationsListener.increment(FAILURE, 1);
 		}
 
 		protected abstract void execute(Document... documents);

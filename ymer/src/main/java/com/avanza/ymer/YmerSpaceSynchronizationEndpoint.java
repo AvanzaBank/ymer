@@ -61,7 +61,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	private Integer currentNumberOfPartitions;
 	private ApplicationContext applicationContext;
 
-	private PerformedOperationMetrics operationStatistics;
+	private final PerformedOperationMetrics operationStatistics;
 
 	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror, ReloadableYmerProperties ymerProperties) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(

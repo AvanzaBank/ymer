@@ -36,4 +36,11 @@ public interface PerformedOperationMetricsMBean {
 	 * Gets the current number of performed mongo deletes
 	 */
 	long getNumDeletes();
+
+	/**
+	 * Gets the number of failed mongo operations
+	 */
+	long getNumFailures();
+
+	long getBatchReadRate();
 }
