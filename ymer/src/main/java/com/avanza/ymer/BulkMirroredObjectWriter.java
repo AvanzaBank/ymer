@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.READ_BATCH;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
@@ -58,6 +59,7 @@ final class BulkMirroredObjectWriter {
 	}
 
 	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
+		operationsListener.increment(READ_BATCH, batch.getBatchDataItems().length);
 		Map<String, List<MongoBulkChange>> changesByCollection = new HashMap<>();
 
 		for (DataSyncOperation bulkItem : objectFilterer.filterSpaceObjects(batch.getBatchDataItems())) {
@@ -152,8 +154,8 @@ final class BulkMirroredObjectWriter {
 	private void checkResultForWarnings(int expectedUpdates, int expectedRemovals, BulkWriteResult result) {
 		if (expectedUpdates != result.getMatchedCount()) {
 			logger.warn("Tried to update {} documents in current bulk write, but only {} were matched by query. "
-					+ "MongoDB and space seems to be out of sync! "
-					+ "The following ids were inserted into MongoDB as a result of update operations: [{}].",
+							+ "MongoDB and space seems to be out of sync! "
+							+ "The following ids were inserted into MongoDB as a result of update operations: [{}].",
 					expectedUpdates, result.getMatchedCount(),
 					result.getUpserts().stream()
 							.map(bson -> bson.getId().asString().getValue())
