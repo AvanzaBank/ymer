@@ -22,6 +22,7 @@ public class PerformedOperationMetrics implements PerformedOperationMetricsMBean
 	private final LongAdder numInserts = new LongAdder();
 	private final LongAdder numUpdates = new LongAdder();
 	private final LongAdder numDeletes = new LongAdder();
+	private final LongAdder numFailures = new LongAdder();
 
 	public long getNumPerformedOperations() {
 		return getNumInserts() + getNumUpdates() + getNumDeletes();
@@ -39,6 +40,10 @@ public class PerformedOperationMetrics implements PerformedOperationMetricsMBean
 		return numDeletes.sum();
 	}
 
+	public long getNumFailures() {
+		return numFailures.sum();
+	}
+
 	@Override
 	public void increment(OperationType type, int delta) {
 		switch (type) {
@@ -50,6 +55,9 @@ public class PerformedOperationMetrics implements PerformedOperationMetricsMBean
 				break;
 			case DELETE:
 				numDeletes.add(delta);
+				break;
+			case FAILURE:
+				numFailures.add(delta);
 				break;
 		}
 	}
