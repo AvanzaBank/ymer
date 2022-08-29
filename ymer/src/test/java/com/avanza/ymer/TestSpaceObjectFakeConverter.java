@@ -22,8 +22,6 @@ import org.springframework.data.mongodb.core.query.Query;
 
 public class TestSpaceObjectFakeConverter {
 
-	public static final String FAIL_CONVERSION_MESSAGE = "";
-
 	static DocumentConverter create() {
 		return DocumentConverter.create(new DocumentConverter.Provider() {
 			@Override
