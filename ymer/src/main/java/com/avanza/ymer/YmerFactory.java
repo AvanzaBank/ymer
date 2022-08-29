@@ -15,30 +15,33 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.plugin.Plugin;
-import com.gigaspaces.datasource.SpaceDataSource;
-import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
-import com.mongodb.ReadPreference;
-import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+
+import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+
+import com.avanza.ymer.plugin.Plugin;
+import com.gigaspaces.datasource.SpaceDataSource;
+import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
+import com.mongodb.ReadPreference;
+
 /**
  * @author Elias Lindholm (elilin)
- *
  */
 public final class YmerFactory {
 
 	private MirrorExceptionListener exceptionListener = new MirrorExceptionListener() {
 		@Override
-		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {}
+		public void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects) {
+		}
 	};
 	private ReadPreference readPreference = ReadPreference.primary();
 	private boolean exportExceptionHandleMBean = true;
+	private boolean exportOperationStatisticsMBean = true;
 	private Set<Plugin> plugins = Collections.emptySet();
 	private int numParallelCollections = 1;
 
@@ -46,10 +49,9 @@ public final class YmerFactory {
 	private final MongoConverter mongoConverter;
 	private final MongoDbFactory mongoDbFactory;
 
-
 	public YmerFactory(MongoDbFactory mongoDbFactory,
-					   MongoConverter mongoConverter,
-					   Collection<MirroredObjectDefinition<?>> definitions) {
+			MongoConverter mongoConverter,
+			Collection<MirroredObjectDefinition<?>> definitions) {
 		this.mongoDbFactory = mongoDbFactory;
 		this.mongoConverter = mongoConverter;
 		this.mirroredObjects = new MirroredObjects(definitions.stream(), MirroredObjectDefinitionsOverride.fromSystemProperties());
@@ -60,13 +62,20 @@ public final class YmerFactory {
 	 * in a state where a bulk of operations is discarded if a failure occurs during synchronization. The default behavior is to keep a failed bulk
 	 * operation first in the queue and wait for a defined interval before running a new attempt to synchronize the bulk. This blocks all
 	 * subsequent synchronization operations until the bulk succeeds.
-	 *
+	 * <p>
 	 * Default is "true"
 	 *
 	 * @param exportExceptionHandleMBean
 	 */
 	public void setExportExceptionHandlerMBean(boolean exportExceptionHandleMBean) {
 		this.exportExceptionHandleMBean = exportExceptionHandleMBean;
+	}
+
+	/**
+	 * Defines whether an MBean exposing the number of performed operations should be exported. Default is true
+	 */
+	public void setExportOperationStatisticsMBean(boolean exportOperationStatisticsMBean) {
+		this.exportOperationStatisticsMBean = exportOperationStatisticsMBean;
 	}
 
 	/**
@@ -109,6 +118,9 @@ public final class YmerFactory {
 		if (this.exportExceptionHandleMBean) {
 			ymerSpaceSynchronizationEndpoint.registerExceptionHandlerMBean();
 		}
+		if (this.exportOperationStatisticsMBean) {
+			ymerSpaceSynchronizationEndpoint.registerOperationStatisticsMBean();
+		}
 		return ymerSpaceSynchronizationEndpoint;
 	}
 
@@ -117,7 +129,7 @@ public final class YmerFactory {
 		DocumentConverter documentConverter = DocumentConverter.mongoConverter(mongoConverter);
 		// Set the event publisher to null to avoid deadlocks when loading data in parallel
 		if (mongoConverter.getMappingContext() instanceof ApplicationEventPublisherAware) {
-			((ApplicationEventPublisherAware)mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
+			((ApplicationEventPublisherAware) mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
 		SpaceMirrorContext mirrorContext = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
 		return mirrorContext;

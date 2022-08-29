@@ -16,6 +16,8 @@
 package com.avanza.ymer;
 
 import java.lang.management.ManagementFactory;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.management.ObjectName;
 
@@ -25,33 +27,57 @@ import org.slf4j.LoggerFactory;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 
-final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint {
-	
+final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoint implements AutoCloseable {
+
 	private static final Logger log = LoggerFactory.getLogger(YmerSpaceSynchronizationEndpoint.class);
-	
+
 	private final MirroredObjectWriter mirroredObjectWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
+	private final Set<ObjectName> registeredMbeans = new HashSet<>();
+	private final PerformedOperationMetrics operationStatistics;
 
 	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
 				new CatchesAllDocumentWriteExceptionHandler());
-		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler);
+		this.operationStatistics = new PerformedOperationMetrics();
+		this.mirroredObjectWriter = new MirroredObjectWriter(spaceMirror, exceptionHandler, operationStatistics);
 	}
 
 	@Override
 	public void onOperationsBatchSynchronization(OperationsBatchData batchData) {
 		mirroredObjectWriter.executeBulk(batchData);
 	}
-	
+
 	void registerExceptionHandlerMBean() {
+		String name = "se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler";
+		registerMbean(name, exceptionHandler);
+	}
+
+	void registerOperationStatisticsMBean() {
+		String name = "se.avanzabank.space.mirror:type=OperationStatistics,name=operationStatistics";
+		registerMbean(name, operationStatistics);
+	}
+
+	private void registerMbean(String name, Object bean) {
 		try {
-			String name = "se.avanzabank.space.mirror:type=DocumentWriteExceptionHandler,name=documentWriteExceptionHandler";
 			log.info("Registering mbean with name {}", name);
-			ManagementFactory.getPlatformMBeanServer().registerMBean(exceptionHandler, ObjectName.getInstance(name));
+			final ObjectName objectName = ObjectName.getInstance(name);
+			ManagementFactory.getPlatformMBeanServer().registerMBean(bean, objectName);
+			registeredMbeans.add(objectName);
 		} catch (Exception e) {
-			log.warn("Exception handler MBean registration failed", e);
+			log.warn("Failed to register MBean with objectName='{}'", name, e);
 		}
 	}
 
+	@Override
+	public void close() {
+		for (ObjectName registeredMbean : registeredMbeans) {
+			try {
+				ManagementFactory.getPlatformMBeanServer().unregisterMBean(registeredMbean);
+			} catch (Exception e) {
+				log.warn("Failed to unregister MBean with objectName='{}'", registeredMbean, e);
+			}
+		}
+	}
 }
