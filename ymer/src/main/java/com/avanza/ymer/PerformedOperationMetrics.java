@@ -24,24 +24,35 @@ public class PerformedOperationMetrics implements PerformedOperationMetricsMBean
 	private final LongAdder numDeletes = new LongAdder();
 	private final LongAdder numFailures = new LongAdder();
 
+	private final PerMinuteCounter batchSizePerMinute = new PerMinuteCounter();
+
 	public long getNumPerformedOperations() {
 		return getNumInserts() + getNumUpdates() + getNumDeletes();
 	}
 
+	@Override
 	public long getNumInserts() {
 		return numInserts.sum();
 	}
 
+	@Override
 	public long getNumUpdates() {
 		return numUpdates.sum();
 	}
 
+	@Override
 	public long getNumDeletes() {
 		return numDeletes.sum();
 	}
 
+	@Override
 	public long getNumFailures() {
 		return numFailures.sum();
+	}
+
+	@Override
+	public long getBatchReadRate() {
+		return batchSizePerMinute.getCurrentMinuteSum() / Math.max(1, batchSizePerMinute.getCurrentMinuteRate());
 	}
 
 	@Override
@@ -59,6 +70,10 @@ public class PerformedOperationMetrics implements PerformedOperationMetricsMBean
 			case FAILURE:
 				numFailures.add(delta);
 				break;
+			case READ_BATCH:
+				batchSizePerMinute.addPerMinuteCount(delta);
+				break;
 		}
 	}
+
 }

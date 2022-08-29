@@ -41,4 +41,6 @@ public interface PerformedOperationMetricsMBean {
 	 * Gets the number of failed mongo operations
 	 */
 	long getNumFailures();
+
+	long getBatchReadRate();
 }

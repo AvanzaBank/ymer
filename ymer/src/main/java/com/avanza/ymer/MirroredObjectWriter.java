@@ -16,6 +16,7 @@
 package com.avanza.ymer;
 
 import static com.avanza.ymer.PerformedOperationsListener.OperationType.INSERT;
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.READ_BATCH;
 import static com.avanza.ymer.PerformedOperationsListener.OperationType.UPDATE;
 import static com.avanza.ymer.PerformedOperationsListener.OperationType.DELETE;
 import static com.avanza.ymer.PerformedOperationsListener.OperationType.FAILURE;
@@ -60,6 +61,7 @@ final class MirroredObjectWriter {
 	}
 
 	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
+		operationsListener.increment(READ_BATCH, batch.getBatchDataItems().length);
 		List<Object> pendingWrites = new ArrayList<>();
 		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
 			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {
