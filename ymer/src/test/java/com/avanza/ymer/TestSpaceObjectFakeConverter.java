@@ -22,12 +22,17 @@ import org.springframework.data.mongodb.core.query.Query;
 
 public class TestSpaceObjectFakeConverter {
 
+	public static final String FAIL_CONVERSION_MESSAGE = "";
+
 	static DocumentConverter create() {
 		return DocumentConverter.create(new DocumentConverter.Provider() {
 			@Override
 			public Document convertToBsonDocument(Object type) {
 				if (type instanceof TestSpaceObject) {
 					TestSpaceObject testSpaceObject = (TestSpaceObject) type;
+					if (testSpaceObject.isFailConversion()) {
+						throw new RuntimeException("Could not convert " + testSpaceObject);
+					}
 					Document document = new Document();
 					document.put("_id", testSpaceObject.getId());
 					if (testSpaceObject.getMessage() != null) {

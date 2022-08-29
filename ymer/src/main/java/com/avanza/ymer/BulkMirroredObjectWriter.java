@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 
 import org.bson.Document;
@@ -90,16 +91,27 @@ final class BulkMirroredObjectWriter {
 	 *         This happens if a row in a bulkWrite failed and needs to be skipped.
 	 */
 	private List<MongoBulkChange> executeMongoDbBulk(String collectionName, InstanceMetadata metadata, List<MongoBulkChange> changes) {
+		Map<Integer, Integer> bulkChangeIdToChangeMap = new HashMap<>();
 		try {
 			DocumentCollection collection = mirror.getDocumentCollection(collectionName);
 
+			AtomicInteger bulkChangeId = new AtomicInteger(0);
 			LongAdder updates = new LongAdder();
 			LongAdder removals = new LongAdder();
 
 			BulkWriteResult result = collection.orderedBulkWrite(bulkWriter -> {
-				changes.forEach(change -> {
-					Document versionedDocument = mirror.toVersionedDocument(change.object, metadata);
-					mirror.getPreWriteProcessing(change.object.getClass()).preWrite(versionedDocument);
+				for (int i = 0; i < changes.size(); i++) {
+					MongoBulkChange change = changes.get(i);
+
+					Document versionedDocument;
+					try {
+						versionedDocument = mirror.toVersionedDocument(change.object, metadata);
+						mirror.getPreWriteProcessing(change.object.getClass()).preWrite(versionedDocument);
+					} catch (Exception e) {
+						mirror.onMirrorException(e, change.operation, change.object);
+						exceptionHandler.handleException(e, "Conversion failed, operation: " + change.operation + ", change: " + change.object);
+						continue;
+					}
 
 					switch (change.operation) {
 						case INSERT:
@@ -114,7 +126,10 @@ final class BulkMirroredObjectWriter {
 							removals.increment();
 							break;
 					}
-				});
+
+					// keep track of which id in the MongoDB bulk maps to which index in this list as some items might be skipped
+					bulkChangeIdToChangeMap.put(bulkChangeId.getAndIncrement(), i);
+				}
 			});
 
 			checkResultForWarnings(updates.intValue(), removals.intValue(), result);
@@ -125,7 +140,8 @@ final class BulkMirroredObjectWriter {
 			MongoBulkChange failedChange = changes.get(writeError.getIndex());
 			mirror.onMirrorException(e, failedChange.operation, failedChange.object);
 
-			List<MongoBulkChange> remainingChanges = changes.subList(writeError.getIndex() + 1, changes.size());
+			int failedChangeIndex = bulkChangeIdToChangeMap.get(writeError.getIndex());
+			List<MongoBulkChange> remainingChanges = changes.subList(failedChangeIndex + 1, changes.size());
 
 			if (!remainingChanges.isEmpty()) {
 				logger.error("Bulk write failed on a {} operation in collection {}: \"{}\". Will continue writing remaining {} changes",

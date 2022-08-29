@@ -17,6 +17,7 @@ package com.avanza.ymer;
 
 import org.springframework.data.annotation.Id;
 
+import com.gigaspaces.annotation.pojo.SpaceExclude;
 import com.gigaspaces.annotation.pojo.SpaceId;
 import com.gigaspaces.annotation.pojo.SpaceRouting;
 
@@ -25,6 +26,7 @@ public class TestSpaceObject {
     @Id
 	private String id;
 	private String message;
+	private boolean failConversion;
 	
 	public TestSpaceObject(String id, String message) {
 		this.id = id;
@@ -50,6 +52,18 @@ public class TestSpaceObject {
 
 	public void setMessage(String message) {
 		this.message = message;
+	}
+
+	@SpaceExclude
+	public boolean isFailConversion() {
+		return failConversion;
+	}
+
+	/**
+	 * Set this to cause {@link TestSpaceObjectFakeConverter} to throw exception on converting this object.
+	 */
+	public void setFailConversion(boolean failConversion) {
+		this.failConversion = failConversion;
 	}
 
 	@Override

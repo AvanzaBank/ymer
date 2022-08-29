@@ -16,11 +16,15 @@
 package com.avanza.ymer;
 
 import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OBJECT;
+import static java.util.stream.Collectors.toList;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.iterableWithSize;
 
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -31,9 +35,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.avanza.ymer.helper.MirrorExceptionSpy;
 import com.avanza.ymer.helper.FakeBatchData;
 import com.avanza.ymer.helper.FakeBulkItem;
+import com.avanza.ymer.helper.MirrorExceptionSpy;
 import com.gigaspaces.sync.DataSyncOperationType;
 
 public class BulkMirroredObjectWriterTest {
@@ -107,11 +111,52 @@ public class BulkMirroredObjectWriterTest {
 	}
 
 	@Test
+	public void objectFailingConversionShouldBeFailWithOtherItemsWritten() {
+		// this test logs a lot of errors, so disable logs temporarily
+		Configurator.setLevel(BulkMirroredObjectWriter.class, Level.OFF);
+
+		TestSpaceObject[] objects = IntStream.rangeClosed(1, 100)
+				.mapToObj(i -> {
+					TestSpaceObject object = new TestSpaceObject("id_" + i, "message" + i);
+					// every second item fails conversion
+					if (i % 2 == 0) {
+						object.setFailConversion(true);
+					}
+					return object;
+				})
+				.toArray(TestSpaceObject[]::new);
+
+		bulkMirroredObjectWriter.executeBulk(testMetadata, new FakeBatchData(
+				Stream.of(objects)
+						.map(spaceObject -> new FakeBulkItem(spaceObject, DataSyncOperationType.WRITE))
+						.toArray(FakeBulkItem[]::new)
+		));
+
+		// Every second row should have failed conversion and been added as an exception
+		assertThat(mirrorExceptionSpy.getExceptionCount(), is(50));
+		assertThat(mirrorExceptionSpy.getLastException().getMessage(),
+				startsWith("Could not convert TestSpaceObject")
+		);
+
+		// Every second row should have been written to db
+		List<Document> objectsInDb = documentDb.getCollection(TEST_SPACE_OBJECT.collectionName()).findAll().collect(toList());
+		assertThat(objectsInDb, iterableWithSize(50));
+		assertThat(objectsInDb.stream().map(o -> o.getString("_id")).collect(toList()),
+				containsInAnyOrder(
+						Stream.of(objects)
+								.filter(o -> !o.isFailConversion())
+								.map(TestSpaceObject::getId)
+								.toArray(String[]::new)
+				)
+		);
+	}
+
+	@Test
 	public void unexpectedExceptionFromBulkWriteIsSentToExceptionHandler() {
 		FakeDocumentCollection mockCollection = (FakeDocumentCollection) documentDb.getCollection(TEST_SPACE_OBJECT.collectionName());
 
 		RuntimeException testException = new RuntimeException("Unexpected exception from MongoDB");
-		mockCollection.setBulkException(() -> testException);
+		mockCollection.setMockedBulkException(() -> testException);
 
 		bulkMirroredObjectWriter.executeBulk(testMetadata, FakeBatchData.create(new FakeBulkItem(
 				new TestSpaceObject("id", "message"),
