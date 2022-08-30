@@ -15,6 +15,12 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.INSERT;
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.READ_BATCH;
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.UPDATE;
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.DELETE;
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.FAILURE;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,9 +39,7 @@ import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
 
 /**
- *
  * @author Elias Lindholm (elilin)
- *
  */
 final class MirroredObjectWriter {
 
@@ -43,13 +47,21 @@ final class MirroredObjectWriter {
 
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
+	private final PerformedOperationsListener operationsListener;
 
 	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
+		this(mirror, exceptionHandler, (type, delta) -> {
+		});
+	}
+
+	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler, PerformedOperationsListener operationsListener) {
 		this.mirror = Objects.requireNonNull(mirror);
 		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
+		this.operationsListener = operationsListener;
 	}
 
 	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
+		operationsListener.increment(READ_BATCH, batch.getBatchDataItems().length);
 		List<Object> pendingWrites = new ArrayList<>();
 		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
 			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {
@@ -111,6 +123,7 @@ final class MirroredObjectWriter {
 
 		};
 		mongoCommand.execute(item);
+		operationsListener.increment(DELETE, 1);
 	}
 
 	private void update(InstanceMetadata metadata, final Object item) {
@@ -120,6 +133,8 @@ final class MirroredObjectWriter {
 				getDocumentCollection(item).update(documents[0]);
 			}
 		}.execute(item);
+		operationsListener.increment(UPDATE, 1);
+
 	}
 
 	private void insertAll(InstanceMetadata metadata, List<Object> items) {
@@ -138,6 +153,8 @@ final class MirroredObjectWriter {
 					documentCollection.insertAll(documents);
 				}
 			}.execute(pendingObjects.toArray());
+			operationsListener.increment(INSERT, pendingObjects.size());
+
 		}
 	}
 
@@ -177,6 +194,7 @@ final class MirroredObjectWriter {
 					.collect(Collectors.groupingBy(o -> o.getClass().getSimpleName()));
 			exceptionHandler.handleException(exception,
 					"Operation: " + operation + ", objects: " + objectsPerType);
+			operationsListener.increment(FAILURE, 1);
 		}
 
 		protected abstract void execute(Document... documents);
