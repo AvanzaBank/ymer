@@ -120,7 +120,38 @@ public class BulkMirroredObjectWriterTest {
 	}
 
 	@Test
-	public void objectFailingConversionShouldBeFailWithOtherItemsWritten() {
+	public void allRowsFailingShouldTryToWriteEachRow() {
+		TestSpaceObject[] objects = IntStream.rangeClosed(1, 5)
+				.mapToObj(i -> new TestSpaceObject("id_" + i, "message" + i))
+				.toArray(TestSpaceObject[]::new);
+
+		// This will cause each write to fail as all the objects already exists in DB
+		documentDb.getCollection(TEST_SPACE_OBJECT.collectionName())
+				.insertAll(Stream.of(objects)
+						.map(a -> mirror.toVersionedDocument(a, testMetadata))
+						.toArray(Document[]::new));
+
+		// Before bulkWrite, 5 rows should already be written
+		assertThat(documentDb.getCollection(TEST_SPACE_OBJECT.collectionName()).findAll().count(), is(5L));
+
+		// This should log an error for each row, with the last error also including stack trace
+		bulkMirroredObjectWriter.executeBulk(testMetadata, new FakeBatchData(
+				Stream.of(objects)
+						.map(spaceObject -> new FakeBulkItem(spaceObject, DataSyncOperationType.WRITE))
+						.toArray(FakeBulkItem[]::new)
+		));
+
+		assertThat(mirrorExceptionSpy.getExceptionCount(), is(5));
+		assertThat(mirrorExceptionSpy.getLastException().getMessage(),
+				containsString("Bulk write operation error")
+		);
+
+		// no more rows should be added
+		assertThat(documentDb.getCollection(TEST_SPACE_OBJECT.collectionName()).findAll().count(), is(5L));
+	}
+
+	@Test
+	public void objectFailingConversionShouldBeFailedWithOtherItemsWritten() {
 		// this test logs a lot of errors, so disable logs temporarily
 		Configurator.setLevel(BulkMirroredObjectWriter.class, Level.OFF);
 
