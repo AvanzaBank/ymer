@@ -85,7 +85,7 @@ final class BulkMirroredObjectWriter {
 	}
 
 	/**
-	 * Executes a bulkWrite against mongoDB, with retries in an operation failed.
+	 * Executes a bulkWrite against mongoDB, with possibility to retry if an operation fails.
 	 *
 	 * @return list of changes that weren't written and needs to be retried.
 	 *         This happens if a row in a bulkWrite failed and needs to be skipped.
