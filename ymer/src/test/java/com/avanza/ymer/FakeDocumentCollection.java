@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -63,10 +64,10 @@ class FakeDocumentCollection implements DocumentCollection {
 	private final Set<IndexInfo> indexes = ConcurrentHashMap.newKeySet();
 	private final AtomicInteger idGenerator = new AtomicInteger(0);
 
-	private Supplier<RuntimeException> bulkException;
+	private Supplier<RuntimeException> mockedBulkException;
 
-	public void setBulkException(Supplier<RuntimeException> bulkException) {
-		this.bulkException = bulkException;
+	public void setMockedBulkException(Supplier<RuntimeException> mockedBulkException) {
+		this.mockedBulkException = mockedBulkException;
 	}
 
 	FakeDocumentCollection() {
@@ -118,8 +119,8 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	private BulkWriteResult mockedBulkWrite(Consumer<BulkWriter> bulkWriter) {
-		if (bulkException != null) {
-			throw bulkException.get();
+		if (mockedBulkException != null) {
+			throw mockedBulkException.get();
 		}
 
 		LongAdder inserts = new LongAdder();
@@ -128,60 +129,75 @@ class FakeDocumentCollection implements DocumentCollection {
 		LongAdder index = new LongAdder();
 
 		Supplier<BulkWriteResult> bulkResult = () -> BulkWriteResult.acknowledged(inserts.intValue(), updates.intValue(), deletes.intValue(), updates.intValue(), emptyList(), emptyList());
+		AtomicReference<MongoBulkWriteException> bulkWriteException = new AtomicReference<>(null);
 
 		bulkWriter.accept(new BulkWriter() {
 			@Override
 			public void insert(Document document) {
-				try {
-					FakeDocumentCollection.this.insert(document);
-				} catch (DuplicateDocumentKeyException e) {
-					throw new MongoBulkWriteException(bulkResult.get(), List.of(new BulkWriteError(0, e.getMessage(), new BsonDocument(), index.intValue())),
-							null, new ServerAddress("localhost"), emptySet());
+				if (bulkWriteException.get() == null) {
+					try {
+						FakeDocumentCollection.this.insert(document);
+						index.increment();
+						inserts.increment();
+					} catch (DuplicateDocumentKeyException e) {
+						bulkWriteException.set(new MongoBulkWriteException(bulkResult.get(), List.of(new BulkWriteError(0, e.getMessage(), new BsonDocument(), index.intValue())),
+								null, new ServerAddress("localhost"), emptySet()));
+					}
 				}
-				index.increment();
-				inserts.increment();
 			}
 
 			@Override
 			public void replace(Document document) {
-				FakeDocumentCollection.this.update(document);
-				index.increment();
-				updates.increment();
+				if (bulkWriteException.get() == null) {
+					FakeDocumentCollection.this.update(document);
+					index.increment();
+					updates.increment();
+				}
 			}
 
 			@Override
 			public void delete(Document document) {
-				FakeDocumentCollection.this.delete(document);
-				index.increment();
-				deletes.increment();
+				if (bulkWriteException.get() == null) {
+					FakeDocumentCollection.this.removeById(document);
+					index.increment();
+					deletes.increment();
+				}
 			}
 
 			@Override
 			public void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet) {
-				ids.stream()
-						.map(document -> findById(document))
-						.filter(Objects::nonNull)
-						.forEach(it -> {
-							it.putAll(fieldsToSet);
-							index.increment();
-							updates.increment();
-						});
+				if (bulkWriteException.get() == null) {
+					ids.stream()
+							.map(document -> findById(document))
+							.filter(Objects::nonNull)
+							.forEach(it -> {
+								it.putAll(fieldsToSet);
+								index.increment();
+								updates.increment();
+							});
+				}
 			}
 
 			@Override
 			public void unsetFieldsPartialByIds(Set<Object> ids, Set<String> fieldsToUnset) {
-				ids.stream()
-						.map(document -> findById(document))
-						.filter(Objects::nonNull)
-						.forEach(it -> {
-							fieldsToUnset.forEach(it::remove);
-							index.increment();
-							updates.increment();
-						});
+				if (bulkWriteException.get() == null) {
+					ids.stream()
+							.map(document -> findById(document))
+							.filter(Objects::nonNull)
+							.forEach(it -> {
+								fieldsToUnset.forEach(it::remove);
+								index.increment();
+								updates.increment();
+							});
+				}
 			}
 		});
 
-		return bulkResult.get();
+		if (bulkWriteException.get() != null) {
+			throw bulkWriteException.get();
+		} else {
+			return bulkResult.get();
+		}
 	}
 
 	@Override

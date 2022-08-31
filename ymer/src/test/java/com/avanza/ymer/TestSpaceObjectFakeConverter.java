@@ -28,6 +28,9 @@ public class TestSpaceObjectFakeConverter {
 			public Document convertToBsonDocument(Object type) {
 				if (type instanceof TestSpaceObject) {
 					TestSpaceObject testSpaceObject = (TestSpaceObject) type;
+					if (testSpaceObject.isFailConversion()) {
+						throw new RuntimeException("Could not convert " + testSpaceObject);
+					}
 					Document document = new Document();
 					document.put("_id", testSpaceObject.getId());
 					if (testSpaceObject.getMessage() != null) {
