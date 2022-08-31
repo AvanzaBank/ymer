@@ -88,7 +88,7 @@ final class BulkMirroredObjectWriter {
 	 * Executes a bulkWrite against mongoDB, with possibility to retry if an operation fails.
 	 *
 	 * @return list of changes that weren't written and needs to be retried.
-	 *         This happens if a row in a bulkWrite failed and needs to be skipped.
+	 * This happens if a row in a bulkWrite fails and needs to be skipped.
 	 */
 	private List<MongoBulkChange> executeMongoDbBulk(String collectionName, InstanceMetadata metadata, List<MongoBulkChange> changes) {
 		Map<Integer, Integer> bulkChangeIdToChangeMap = new HashMap<>();
@@ -96,6 +96,7 @@ final class BulkMirroredObjectWriter {
 			DocumentCollection collection = mirror.getDocumentCollection(collectionName);
 
 			AtomicInteger bulkChangeId = new AtomicInteger(0);
+			LongAdder insertions = new LongAdder();
 			LongAdder updates = new LongAdder();
 			LongAdder removals = new LongAdder();
 
@@ -116,6 +117,7 @@ final class BulkMirroredObjectWriter {
 					switch (change.operation) {
 						case INSERT:
 							bulkWriter.insert(versionedDocument);
+							insertions.increment();
 							break;
 						case UPDATE:
 							bulkWriter.replace(versionedDocument);
@@ -132,7 +134,7 @@ final class BulkMirroredObjectWriter {
 				}
 			});
 
-			checkBulkResultForWarnings(updates.intValue(), removals.intValue(), result);
+			checkBulkResultForWarnings(insertions.intValue(), updates.intValue(), removals.intValue(), result);
 
 			return emptyList();
 		} catch (MongoBulkWriteException e) {
@@ -158,7 +160,14 @@ final class BulkMirroredObjectWriter {
 		}
 	}
 
-	private void checkBulkResultForWarnings(int expectedUpdates, int expectedRemovals, BulkWriteResult result) {
+	private void checkBulkResultForWarnings(int expectedInsertions, int expectedUpdates, int expectedRemovals, BulkWriteResult result) {
+		if (expectedInsertions != result.getInsertedCount()) {
+			logger.warn("Current bulk write contained {} insertions, but {} documents were inserted by this operation. "
+							+ "MongoDB and space seems to be out of sync!",
+					expectedInsertions,
+					result.getInsertedCount() > 0 ? "only " + result.getInsertedCount() : "no");
+		}
+
 		if (expectedUpdates != result.getMatchedCount()) {
 			StringBuilder warningMessage = new StringBuilder();
 			warningMessage.append("Tried to update ").append(expectedUpdates).append(" documents in current bulk write, but ");
@@ -167,23 +176,31 @@ final class BulkMirroredObjectWriter {
 			} else {
 				warningMessage.append("none ");
 			}
-			warningMessage.append("were matched by query. MongoDB and space seems to be out of sync! ");
+			warningMessage.append("were matched by this operation. ");
+			warningMessage.append("MongoDB and space seems to be out of sync! ");
 			if (!result.getUpserts().isEmpty()) {
-				warningMessage.append("The following ids were inserted into MongoDB as a result of update operations: [")
+				warningMessage.append("The following ids were inserted by upsert into MongoDB as a result of update operations: [")
 						.append(result.getUpserts().stream()
 								.map(bson -> bson.getId().asString().getValue())
 								.collect(joining(", ")))
 						.append("].");
 			} else {
-				warningMessage.append("No rows were inserted into MongoDB as a result of this query.");
+				warningMessage.append("No documents were inserted by upsert into MongoDB as a result of these updates.");
 			}
 
 			logger.warn(warningMessage.toString());
+		} else if (result.getMatchedCount() != result.getModifiedCount()) {
+			logger.warn("An update operation containing {} updates only resulted in {} modified documents in MongoDB. "
+							+ "Each updated space object should result in a modification in MongoDB. "
+							+ "MongoDB and space seems to be out of sync!",
+					result.getMatchedCount(), result.getModifiedCount());
 		}
+
 		if (expectedRemovals != result.getDeletedCount()) {
 			logger.warn("Tried to delete {} documents in current bulk write, but {} were deleted by query. "
-					+ "MongoDB and space seems to be out of sync!", expectedRemovals,
-					result.getDeletedCount() > 0 ? "only " + result.getDeletedCount() :  "none");
+							+ "MongoDB and space seems to be out of sync!",
+					expectedRemovals,
+					result.getDeletedCount() > 0 ? "only " + result.getDeletedCount() : "none");
 		}
 	}
 
