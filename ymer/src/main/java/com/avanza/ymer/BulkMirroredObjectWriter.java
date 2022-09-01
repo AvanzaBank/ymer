@@ -15,6 +15,7 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.PerformedOperationsListener.OperationType.READ_BATCH;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -30,6 +31,7 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.avanza.ymer.PerformedOperationsListener.OperationType;
 import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.mongodb.MongoBulkWriteException;
@@ -43,17 +45,28 @@ final class BulkMirroredObjectWriter {
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
 	private final MirroredObjectFilterer objectFilterer;
+	private final PerformedOperationsListener operationsListener;
 
 	BulkMirroredObjectWriter(SpaceMirrorContext mirror,
 			DocumentWriteExceptionHandler exceptionHandler,
-			MirroredObjectFilterer objectFilterer
+			MirroredObjectFilterer mirroredObjectFilterer) {
+		this(mirror, exceptionHandler, mirroredObjectFilterer, (type, delta) -> {
+		});
+	}
+
+	BulkMirroredObjectWriter(SpaceMirrorContext mirror,
+			DocumentWriteExceptionHandler exceptionHandler,
+			MirroredObjectFilterer objectFilterer,
+			PerformedOperationsListener operationsListener
 	) {
 		this.mirror = requireNonNull(mirror);
 		this.exceptionHandler = requireNonNull(exceptionHandler);
 		this.objectFilterer = requireNonNull(objectFilterer);
+		this.operationsListener = requireNonNull(operationsListener);
 	}
 
 	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
+		operationsListener.increment(READ_BATCH, batch.getBatchDataItems().length);
 		Map<String, List<MongoBulkChange>> changesByCollection = new HashMap<>();
 
 		for (DataSyncOperation bulkItem : objectFilterer.filterSpaceObjects(batch.getBatchDataItems())) {
@@ -78,8 +91,9 @@ final class BulkMirroredObjectWriter {
 
 		changesByCollection.forEach((collectionName, bulkChanges) -> {
 			List<MongoBulkChange> remainingChanges = bulkChanges;
+			int attempt = 1;
 			while (!remainingChanges.isEmpty()) {
-				remainingChanges = executeMongoDbBulk(collectionName, metadata, remainingChanges);
+				remainingChanges = executeMongoDbBulk(collectionName, metadata, remainingChanges, attempt++);
 			}
 		});
 	}
@@ -90,8 +104,11 @@ final class BulkMirroredObjectWriter {
 	 * @return list of changes that weren't written and needs to be retried.
 	 * This happens if a row in a bulkWrite fails and needs to be skipped.
 	 */
-	private List<MongoBulkChange> executeMongoDbBulk(String collectionName, InstanceMetadata metadata, List<MongoBulkChange> changes) {
-		Map<Integer, Integer> bulkChangeIdToChangeMap = new HashMap<>();
+	private List<MongoBulkChange> executeMongoDbBulk(String collectionName,
+			InstanceMetadata metadata,
+			List<MongoBulkChange> changes,
+			int attempt) {
+		final Map<Integer, Integer> bulkChangeIdToChangeMap = new HashMap<>();
 		try {
 			DocumentCollection collection = mirror.getDocumentCollection(collectionName);
 
@@ -109,8 +126,12 @@ final class BulkMirroredObjectWriter {
 						versionedDocument = mirror.toVersionedDocument(change.object, metadata);
 						mirror.getPreWriteProcessing(change.object.getClass()).preWrite(versionedDocument);
 					} catch (Exception e) {
-						mirror.onMirrorException(e, change.operation, change.object);
-						exceptionHandler.handleException(e, "Conversion failed, operation: " + change.operation + ", change: " + change.object);
+						// after the first attempt, this error will already have been logged & handled earlier on
+						if (attempt == 1) {
+							mirror.onMirrorException(e, change.operation, change.object);
+							exceptionHandler.handleException(e, "Conversion failed, operation: " + change.operation + ", change: " + change.object);
+							operationsListener.increment(OperationType.FAILURE, 1);
+						}
 						continue;
 					}
 
@@ -134,30 +155,41 @@ final class BulkMirroredObjectWriter {
 				}
 			});
 
+			addResultToStatistics(result);
 			checkBulkResultForWarnings(insertions.intValue(), updates.intValue(), removals.intValue(), result);
 
 			return emptyList();
 		} catch (MongoBulkWriteException e) {
+			addResultToStatistics(e.getWriteResult());
+
 			BulkWriteError writeError = e.getWriteErrors().get(0); // always a single write error as we use an ordered operation
 			MongoBulkChange failedChange = changes.get(writeError.getIndex());
 			mirror.onMirrorException(e, failedChange.operation, failedChange.object);
+			operationsListener.increment(OperationType.FAILURE, 1);
 
 			int failedChangeIndex = bulkChangeIdToChangeMap.get(writeError.getIndex());
 			List<MongoBulkChange> remainingChanges = changes.subList(failedChangeIndex + 1, changes.size());
 
 			if (!remainingChanges.isEmpty()) {
-				logger.error("Bulk write failed on a {} operation in collection {}: \"{}\". Will continue writing remaining {} changes",
-						failedChange.operation, collectionName, writeError.getMessage(), remainingChanges.size());
+				logger.error("Bulk write failed attempt {} on a {} operation in collection {}: \"{}\". Will continue writing remaining {} changes",
+						attempt, failedChange.operation, collectionName, writeError.getMessage(), remainingChanges.size());
 			} else {
-				logger.error("Bulk write failed on a {} operation in collection {}: \"{}\". This was the last entry in the batch",
-						failedChange.operation, collectionName, writeError.getMessage(), e);
+				logger.error("Bulk write failed attempt {} on a {} operation in collection {}: \"{}\". This was the last entry in the batch",
+						attempt, failedChange.operation, collectionName, writeError.getMessage(), e);
 			}
 
 			return remainingChanges;
 		} catch (Exception e) {
 			exceptionHandler.handleException(e, "Operation: Bulk write, changes: " + changes);
+			operationsListener.increment(OperationType.FAILURE, changes.size());
 			return emptyList();
 		}
+	}
+
+	private void addResultToStatistics(BulkWriteResult result) {
+		operationsListener.increment(OperationType.INSERT, result.getInsertedCount());
+		operationsListener.increment(OperationType.UPDATE, result.getMatchedCount());
+		operationsListener.increment(OperationType.DELETE, result.getDeletedCount());
 	}
 
 	private void checkBulkResultForWarnings(int expectedInsertions, int expectedUpdates, int expectedRemovals, BulkWriteResult result) {

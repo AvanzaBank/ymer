@@ -20,7 +20,6 @@ import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_SPACE_OTHER_
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
@@ -56,6 +55,7 @@ public class BulkMirroredObjectWriterTest {
 	private SpaceMirrorContext mirror;
 	private MirrorExceptionSpy mirrorExceptionSpy;
 	private DocumentConverter documentConverter;
+	private PerformedOperationMetrics metrics;
 
 	@Before
 	public void setUp() {
@@ -63,6 +63,7 @@ public class BulkMirroredObjectWriterTest {
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		exceptionHandler = new FakeDocumentWriteExceptionHandler();
 		documentConverter = TestSpaceObjectFakeConverter.create();
+		metrics = new PerformedOperationMetrics();
 		TestSpaceMirrorObjectDefinitions definitions = new TestSpaceMirrorObjectDefinitions();
 		mirror = new SpaceMirrorContext(
 				new MirroredObjects(definitions.getMirroredObjectDefinitions().stream(), MirroredObjectDefinitionsOverride.noOverride()),
@@ -75,7 +76,8 @@ public class BulkMirroredObjectWriterTest {
 		bulkMirroredObjectWriter = new BulkMirroredObjectWriter(
 				mirror,
 				exceptionHandler,
-				new MirroredObjectFilterer(mirror)
+				new MirroredObjectFilterer(mirror),
+				metrics
 		);
 	}
 
@@ -117,6 +119,10 @@ public class BulkMirroredObjectWriterTest {
 
 		// After bulkWrite, the last 800 rows should be written to db
 		assertThat(documentDb.getCollection(TEST_SPACE_OBJECT.collectionName()).findAll().count(), is(1_000L));
+
+		// verify recorded metrics
+		assertThat(metrics.getNumInserts(), is(800L));
+		assertThat(metrics.getNumFailures(), is(200L));
 	}
 
 	@Test
@@ -128,7 +134,7 @@ public class BulkMirroredObjectWriterTest {
 		// This will cause each write to fail as all the objects already exists in DB
 		documentDb.getCollection(TEST_SPACE_OBJECT.collectionName())
 				.insertAll(Stream.of(objects)
-						.map(a -> mirror.toVersionedDocument(a, testMetadata))
+						.map(o -> mirror.toVersionedDocument(o, testMetadata))
 						.toArray(Document[]::new));
 
 		// Before bulkWrite, 5 rows should already be written
@@ -148,6 +154,10 @@ public class BulkMirroredObjectWriterTest {
 
 		// no more rows should be added
 		assertThat(documentDb.getCollection(TEST_SPACE_OBJECT.collectionName()).findAll().count(), is(5L));
+
+		// verify recorded metrics
+		assertThat(metrics.getNumInserts(), is(0L));
+		assertThat(metrics.getNumFailures(), is(5L));
 	}
 
 	@Test
@@ -166,6 +176,10 @@ public class BulkMirroredObjectWriterTest {
 				})
 				.toArray(TestSpaceObject[]::new);
 
+		// Cause a writing failure in the middle of the operation
+		documentDb.getCollection(TEST_SPACE_OBJECT.collectionName())
+				.insert(mirror.toVersionedDocument(objects[50], testMetadata));
+
 		bulkMirroredObjectWriter.executeBulk(testMetadata, new FakeBatchData(
 				Stream.of(objects)
 						.map(spaceObject -> new FakeBulkItem(spaceObject, DataSyncOperationType.WRITE))
@@ -173,10 +187,7 @@ public class BulkMirroredObjectWriterTest {
 		));
 
 		// Every second row should have failed conversion and been added as an exception
-		assertThat(mirrorExceptionSpy.getExceptionCount(), is(50));
-		assertThat(mirrorExceptionSpy.getLastException().getMessage(),
-				startsWith("Could not convert TestSpaceObject")
-		);
+		assertThat(mirrorExceptionSpy.getExceptionCount(), is(51));
 
 		// Every second row should have been written to db
 		List<Document> objectsInDb = documentDb.getCollection(TEST_SPACE_OBJECT.collectionName()).findAll().collect(toList());
@@ -189,6 +200,10 @@ public class BulkMirroredObjectWriterTest {
 								.toArray(String[]::new)
 				)
 		);
+
+		// verify recorded metrics
+		assertThat(metrics.getNumInserts(), is(49L));
+		assertThat(metrics.getNumFailures(), is(51L));
 	}
 
 	@Test
@@ -240,6 +255,10 @@ public class BulkMirroredObjectWriterTest {
 
 		List<Document> persisted = documentDb.getCollection(mirroredObject.getCollectionName()).findAll().collect(toList());
 		assertEquals(3, persisted.size());
+
+		// verify recorded metrics
+		assertThat(metrics.getNumInserts(), is(3L));
+		assertThat(metrics.getNumFailures(), is(0L));
 	}
 
 	@Test
@@ -308,6 +327,11 @@ public class BulkMirroredObjectWriterTest {
 		List<Document> persisted = documentDb.getCollection(mirroredObject.getCollectionName()).findAll().collect(toList());
 		assertEquals(1, persisted.size());
 		assertEquals(expected, persisted.get(0));
+
+		// verify recorded metrics
+		assertThat(metrics.getNumInserts(), is(0L));
+		assertThat(metrics.getNumUpdates(), is(1L));
+		assertThat(metrics.getNumFailures(), is(0L));
 	}
 
 	@Test
@@ -329,6 +353,11 @@ public class BulkMirroredObjectWriterTest {
 		List<Document> persisted = documentDb.getCollection(mirroredObject.getCollectionName()).findAll().collect(toList());
 		assertEquals(1, persisted.size());
 		assertEquals(expected, persisted.get(0));
+
+		// verify recorded metrics
+		assertThat(metrics.getNumInserts(), is(0L));
+		assertThat(metrics.getNumUpdates(), is(1L));
+		assertThat(metrics.getNumFailures(), is(0L));
 	}
 
 	@Test
@@ -346,6 +375,11 @@ public class BulkMirroredObjectWriterTest {
 
 		List<Document> persisted = documentDb.getCollection(mirroredObject.getCollectionName()).findAll().collect(toList());
 		assertEquals(0, persisted.size());
+
+		// verify recorded metrics
+		assertThat(metrics.getNumInserts(), is(0L));
+		assertThat(metrics.getNumDeletes(), is(1L));
+		assertThat(metrics.getNumFailures(), is(0L));
 	}
 
 	@Test
@@ -363,6 +397,11 @@ public class BulkMirroredObjectWriterTest {
 		List<Document> persisted = documentDb.getCollection(anotherMirroredDocument.getCollectionName()).findAll().collect(toList());
 		assertEquals(1, persisted.size());
 		assertEquals(expected, persisted.get(0));
+
+		// verify recorded metrics
+		assertThat(metrics.getNumInserts(), is(0L));
+		assertThat(metrics.getNumDeletes(), is(0L));
+		assertThat(metrics.getNumFailures(), is(0L));
 	}
 
 	@Test
@@ -454,6 +493,10 @@ public class BulkMirroredObjectWriterTest {
 		assertEquals(2, persisted.size());
 		assertEquals(2, persisted.get(0).get("_id"));
 		assertEquals(3, persisted.get(1).get("_id"));
+
+		// verify recorded metrics
+		assertThat(metrics.getNumInserts(), is(2L));
+		assertThat(metrics.getNumFailures(), is(0L));
 	}
 
 	private DocumentDb throwsOnUpdateDocumentDb() {
