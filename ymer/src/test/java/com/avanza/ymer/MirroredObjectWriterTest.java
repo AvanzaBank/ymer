@@ -31,12 +31,10 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
-import com.gigaspaces.document.SpaceDocument;
-import com.gigaspaces.metadata.SpaceTypeDescriptor;
-import com.gigaspaces.sync.DataSyncOperation;
+import com.avanza.ymer.helper.FakeBatchData;
+import com.avanza.ymer.helper.FakeBulkItem;
+import com.avanza.ymer.helper.MirrorExceptionSpy;
 import com.gigaspaces.sync.DataSyncOperationType;
-import com.gigaspaces.sync.OperationsBatchData;
-import com.gigaspaces.sync.SynchronizationSourceDetails;
 
 public class MirroredObjectWriterTest {
 
@@ -51,6 +49,7 @@ public class MirroredObjectWriterTest {
 	private MirrorExceptionSpy mirrorExceptionSpy;
 	private MirroredObjects mirroredObjects;
 	private InstanceMetadata testMetadata;
+	private MirroredObjectFilterer objectFilterer;
 
 	@Before
 	public void setup() {
@@ -75,7 +74,8 @@ public class MirroredObjectWriterTest {
 		documentDb = FakeDocumentDb.create();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler);
+		objectFilterer = new MirroredObjectFilterer(mirror);
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler, objectFilterer);
 		testMetadata = new InstanceMetadata(1, null);
 	}
 
@@ -236,14 +236,14 @@ public class MirroredObjectWriterTest {
 		documentDb = throwsOnUpdateDocumentDb();
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler);
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler, objectFilterer);
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
 		mirroredObjectWriter.executeBulk(testMetadata, FakeBatchData.create(bulkItem));
 
-		assertNotNull(mirrorExceptionSpy.lastException);
-		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
+		assertNotNull(mirrorExceptionSpy.getLastException());
+		assertEquals(RuntimeException.class, mirrorExceptionSpy.getLastException().getClass());
 		assertEquals(
 				"Operation: UPDATE, objects: {TestSpaceObject=[TestSpaceObject [id=1, message=hello]]}",
 				exceptionHandler.getLastOperationDescription()
@@ -256,7 +256,7 @@ public class MirroredObjectWriterTest {
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
 		mirroredObjectWriter = new MirroredObjectWriter(mirror, new FakeDocumentWriteExceptionHandler(
-				new TransientDocumentWriteException(new Exception())));
+				new TransientDocumentWriteException(new Exception())), objectFilterer);
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
@@ -288,14 +288,14 @@ public class MirroredObjectWriterTest {
 		});
 		mirrorExceptionSpy = new MirrorExceptionSpy();
 		mirror = new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, mirrorExceptionSpy, Plugins.empty(), 1);
-		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler);
+		mirroredObjectWriter = new MirroredObjectWriter(mirror, exceptionHandler, objectFilterer);
 
 		TestSpaceObject item1 = new TestSpaceObject("1", "hello");
 		FakeBulkItem bulkItem = new FakeBulkItem(item1, DataSyncOperationType.UPDATE);
 		mirroredObjectWriter.executeBulk(testMetadata, FakeBatchData.create(bulkItem));
 
-		assertNotNull(mirrorExceptionSpy.lastException);
-		assertEquals(RuntimeException.class, mirrorExceptionSpy.lastException.getClass());
+		assertNotNull(mirrorExceptionSpy.getLastException());
+		assertEquals(RuntimeException.class, mirrorExceptionSpy.getLastException().getClass());
 		assertEquals(
 				"Operation: UPDATE, objects: {TestSpaceObject=[TestSpaceObject [id=1, message=hello]]}",
 				exceptionHandler.getLastOperationDescription()
@@ -330,102 +330,6 @@ public class MirroredObjectWriterTest {
 				throw new RuntimeException();
 			}
 		});
-	}
-
-	static class MirrorExceptionSpy implements MirrorExceptionListener {
-
-		private Exception lastException;
-
-		@Override
-		public void onMirrorException(Exception e, MirrorOperation operation, Object[] failedObjects) {
-			this.lastException = e;
-		}
-
-	}
-
-	private static class FakeBatchData implements OperationsBatchData {
-
-		private final DataSyncOperation[] batchDataItems;
-
-		private FakeBatchData(FakeBulkItem[] items) {
-			batchDataItems = items;
-		}
-
-		public static FakeBatchData create(FakeBulkItem... items) {
-			return new FakeBatchData(items);
-		}
-
-		@Override
-		public DataSyncOperation[] getBatchDataItems() {
-			return this.batchDataItems;
-		}
-
-		@Override
-		public SynchronizationSourceDetails getSourceDetails() {
-			return () -> "spaceName_container1_1:spaceName";
-		}
-
-	}
-
-	public static class FakeBulkItem implements DataSyncOperation {
-
-		private final Object item;
-		private final DataSyncOperationType operation;
-
-		public FakeBulkItem(Object item, DataSyncOperationType operation) {
-			this.item = item;
-			this.operation = operation;
-		}
-
-		@Override
-		public Object getDataAsObject() {
-			return this.item;
-		}
-
-		@Override
-		public DataSyncOperationType getDataSyncOperationType() {
-			return operation;
-		}
-
-		@Override
-		public Object getSpaceId() {
-			return null;
-		}
-
-		@Override
-		public SpaceTypeDescriptor getTypeDescriptor() {
-			return null;
-		}
-
-		@Override
-		public String getUid() {
-			return null;
-		}
-
-		@Override
-		public boolean supportsDataAsDocument() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsDataAsObject() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsGetSpaceId() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsGetTypeDescriptor() {
-			return false;
-		}
-
-		@Override
-		public SpaceDocument getDataAsDocument() {
-			return null;
-		}
 	}
 
 }

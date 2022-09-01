@@ -24,6 +24,7 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.IndexOptions;
 
 /**
@@ -66,10 +67,16 @@ interface DocumentCollection {
 	 */
 	void update(Document document);
 
+
 	/**
-	 * Perform multiple write operations in bulk
+	 * Perform multiple write operations in a non-ordered bulk
 	 */
-	void bulkWrite(Consumer<BulkWriter> bulkWriter);
+	BulkWriteResult nonOrderedBulkWrite(Consumer<BulkWriter> bulkWriter);
+
+	/**
+	 * Perform multiple write operations in an ordered bulk
+	 */
+	BulkWriteResult orderedBulkWrite(Consumer<BulkWriter> bulkWriter);
 
 	/**
 	 * Inserts the given object into the underlying mongo collection. <p>
@@ -90,6 +97,12 @@ interface DocumentCollection {
 	void createIndex(Document keys, IndexOptions indexOptions);
 
 	interface BulkWriter {
+
+		void insert(Document document);
+
+		void replace(Document document);
+
+		void delete(Document document);
 
 		void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet);
 

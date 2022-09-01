@@ -22,6 +22,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoClientException;
 import com.mongodb.MongoNotPrimaryException;
 import com.mongodb.MongoSocketException;
@@ -76,9 +77,11 @@ class RethrowsTransientDocumentWriteExceptionHandler implements DocumentWriteExc
 
 	private void logIrrecoverableError(Exception e, String operationDescription) {
 		log.error(
-				"Exception when executing mirror command! Attempted operation: {} - This command will be ignored but the rest of the commands in this bulk will be attempted. This can lead to data inconsistency in the mongo database. Must be investigated ASAP. If this error was preceeded by a TransientDocumentWriteException the cause might be that we reattempt already performed operations, which might be fine.",
-				operationDescription,
-				e);
+				"Exception when executing mirror command! Attempted operation: {} - This command will be ignored but the rest of the commands in this bulk will be attempted. "
+						+ "This can lead to data inconsistency in the mongo database. "
+						+ "Must be investigated ASAP. "
+						+ "If this error was preceeded by a TransientDocumentWriteException the cause might be that we reattempt already performed operations, which might be fine.",
+				operationDescription, e);
 	}
 
 }

@@ -38,13 +38,17 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.MongoWriteException;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.BulkWriteOptions;
+import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.ReplaceOneModel;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.Updates;
@@ -140,10 +144,37 @@ final class MongoDocumentCollection implements DocumentCollection {
 		idValidator.validateUpdatedExistingDocument("update", updateResult, newVersion);
 	}
 
-	@Override
-	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
+	public BulkWriteResult nonOrderedBulkWrite(Consumer<BulkWriter> bulkWriter) {
+		return bulkWrite(bulkWriter, false);
+	}
+
+	public BulkWriteResult orderedBulkWrite(Consumer<BulkWriter> bulkWriter) {
+		return bulkWrite(bulkWriter, true);
+	}
+
+	private BulkWriteResult bulkWrite(Consumer<BulkWriter> bulkWriter, boolean ordered) {
 		List<WriteModel<Document>> writeModels = new ArrayList<>();
 		bulkWriter.accept(new BulkWriter() {
+			@Override
+			public void insert(Document document) {
+				idValidator.validateHasIdField("insert", document);
+				writeModels.add(new InsertOneModel<>(document));
+			}
+
+			@Override
+			public void replace(Document newVersion) {
+				idValidator.validateHasIdField("replace", newVersion);
+				writeModels.add(new ReplaceOneModel<>(Filters.eq(newVersion.get("_id")),
+						newVersion,
+						new ReplaceOptions().upsert(true)));
+			}
+
+			@Override
+			public void delete(Document document) {
+				idValidator.validateHasIdField("delete", document);
+				writeModels.add(new DeleteOneModel<>(Filters.eq(document.get("_id"))));
+			}
+
 			@Override
 			public void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet) {
 				Bson updates = toUpdates(fieldsToSet);
@@ -168,11 +199,7 @@ final class MongoDocumentCollection implements DocumentCollection {
 				addUpdates(ids, updates);
 			}
 		});
-		if (writeModels.isEmpty()) {
-			log.debug("Skipping bulkWrite because no operations provided");
-		} else {
-			collection.bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
-		}
+		return collection.bulkWrite(writeModels, new BulkWriteOptions().ordered(ordered));
 	}
 
 	@Override

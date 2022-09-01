@@ -13,16 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.avanza.ymer;
+package com.avanza.ymer.helper;
 
-/**
- * @author Elias Lindholm (elilin)
- *
- * @deprecated This functionality deprecated without any replacement.
- */
-@Deprecated
-public interface MirrorExceptionListener {
+import com.avanza.ymer.MirrorExceptionListener;
+import com.avanza.ymer.MirrorOperation;
 
-	void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects);
-	
+@SuppressWarnings("deprecation")
+public class MirrorExceptionSpy implements MirrorExceptionListener {
+	private Exception lastException;
+	private int exceptionCount = 0;
+
+	@Override
+	public void onMirrorException(Exception e, MirrorOperation operation, Object[] failedObjects) {
+		this.lastException = e;
+		this.exceptionCount++;
+	}
+
+	public Exception getLastException() {
+		return lastException;
+	}
+
+	public int getExceptionCount() {
+		return exceptionCount;
+	}
 }

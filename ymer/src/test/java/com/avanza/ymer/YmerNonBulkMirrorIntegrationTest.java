@@ -15,14 +15,17 @@
  */
 package com.avanza.ymer;
 
-/**
- * @author Elias Lindholm (elilin)
- *
- * @deprecated This functionality deprecated without any replacement.
- */
-@Deprecated
-public interface MirrorExceptionListener {
+import com.avanza.gs.test.RunningPu;
 
-	void onMirrorException(Exception e, MirrorOperation failedOperation, Object[] failedObjects);
-	
+/**
+ * These tests use {@link MirroredObjectWriter} for persisting to MongoDB.
+ */
+public class YmerNonBulkMirrorIntegrationTest extends YmerMirrorIntegrationTestBase {
+
+	@Override
+	void configureTestCase(RunningPu pu, RunningPu mirrorPu) {
+		TestSpaceMirrorFactory spaceMirrorFactory = mirrorPu.getPrimaryApplicationContexts().iterator().next().getBean(TestSpaceMirrorFactory.class);
+		spaceMirrorFactory.setUseBulkWrites(false);
+	}
+
 }

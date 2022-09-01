@@ -15,6 +15,8 @@
  */
 package com.avanza.ymer;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.domain.Sort.Direction.ASC;
@@ -30,17 +32,25 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.MongoBulkWriteException;
+import com.mongodb.ServerAddress;
+import com.mongodb.bulk.BulkWriteError;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.IndexOptions;
 
 /**
@@ -53,6 +63,12 @@ class FakeDocumentCollection implements DocumentCollection {
 	private final ConcurrentLinkedQueue<Document> collection = new ConcurrentLinkedQueue<>();
 	private final Set<IndexInfo> indexes = ConcurrentHashMap.newKeySet();
 	private final AtomicInteger idGenerator = new AtomicInteger(0);
+
+	private Supplier<RuntimeException> mockedBulkException;
+
+	public void setMockedBulkException(Supplier<RuntimeException> mockedBulkException) {
+		this.mockedBulkException = mockedBulkException;
+	}
 
 	FakeDocumentCollection() {
 		indexes.add(new IndexInfo(singletonList(IndexField.create("_id", ASC)), "_id_", false, false, ""));
@@ -93,24 +109,95 @@ class FakeDocumentCollection implements DocumentCollection {
 	}
 
 	@Override
-	public void bulkWrite(Consumer<BulkWriter> bulkWriter) {
+	public BulkWriteResult nonOrderedBulkWrite(Consumer<BulkWriter> bulkWriter) {
+		return mockedBulkWrite(bulkWriter);
+	}
+
+	@Override
+	public BulkWriteResult orderedBulkWrite(Consumer<BulkWriter> bulkWriter) {
+		return mockedBulkWrite(bulkWriter);
+	}
+
+	private BulkWriteResult mockedBulkWrite(Consumer<BulkWriter> bulkWriter) {
+		if (mockedBulkException != null) {
+			throw mockedBulkException.get();
+		}
+
+		LongAdder inserts = new LongAdder();
+		LongAdder updates = new LongAdder();
+		LongAdder deletes = new LongAdder();
+		LongAdder index = new LongAdder();
+
+		Supplier<BulkWriteResult> bulkResult = () -> BulkWriteResult.acknowledged(inserts.intValue(), updates.intValue(), deletes.intValue(), updates.intValue(), emptyList(), emptyList());
+		AtomicReference<MongoBulkWriteException> bulkWriteException = new AtomicReference<>(null);
+
 		bulkWriter.accept(new BulkWriter() {
 			@Override
+			public void insert(Document document) {
+				if (bulkWriteException.get() == null) {
+					try {
+						FakeDocumentCollection.this.insert(document);
+						index.increment();
+						inserts.increment();
+					} catch (DuplicateDocumentKeyException e) {
+						bulkWriteException.set(new MongoBulkWriteException(bulkResult.get(), List.of(new BulkWriteError(0, e.getMessage(), new BsonDocument(), index.intValue())),
+								null, new ServerAddress("localhost"), emptySet()));
+					}
+				}
+			}
+
+			@Override
+			public void replace(Document document) {
+				if (bulkWriteException.get() == null) {
+					FakeDocumentCollection.this.update(document);
+					index.increment();
+					updates.increment();
+				}
+			}
+
+			@Override
+			public void delete(Document document) {
+				if (bulkWriteException.get() == null) {
+					FakeDocumentCollection.this.removeById(document);
+					index.increment();
+					deletes.increment();
+				}
+			}
+
+			@Override
 			public void updatePartialByIds(Set<Object> ids, Map<String, Object> fieldsToSet) {
-				ids.stream()
-						.map(document -> findById(document))
-						.filter(Objects::nonNull)
-						.forEach(it -> it.putAll(fieldsToSet));
+				if (bulkWriteException.get() == null) {
+					ids.stream()
+							.map(document -> findById(document))
+							.filter(Objects::nonNull)
+							.forEach(it -> {
+								it.putAll(fieldsToSet);
+								index.increment();
+								updates.increment();
+							});
+				}
 			}
 
 			@Override
 			public void unsetFieldsPartialByIds(Set<Object> ids, Set<String> fieldsToUnset) {
-				ids.stream()
-						.map(document -> findById(document))
-						.filter(Objects::nonNull)
-						.forEach(it -> fieldsToUnset.forEach(it::remove));
+				if (bulkWriteException.get() == null) {
+					ids.stream()
+							.map(document -> findById(document))
+							.filter(Objects::nonNull)
+							.forEach(it -> {
+								fieldsToUnset.forEach(it::remove);
+								index.increment();
+								updates.increment();
+							});
+				}
 			}
 		});
+
+		if (bulkWriteException.get() != null) {
+			throw bulkWriteException.get();
+		} else {
+			return bulkResult.get();
+		}
 	}
 
 	@Override

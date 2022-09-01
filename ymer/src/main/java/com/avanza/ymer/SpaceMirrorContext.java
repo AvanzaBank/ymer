@@ -31,6 +31,7 @@ import com.avanza.ymer.plugin.PreWriteProcessor;
  * @author Elias Lindholm (elilin)
  *
  */
+@SuppressWarnings("deprecation")
 final class SpaceMirrorContext {
 
 	public static final MirrorExceptionListener NO_EXCEPTION_LISTENER = (e, failedOperation, failedObjects) -> {};
@@ -38,6 +39,8 @@ final class SpaceMirrorContext {
 	private final MirroredObjects mirroredObjects;
 	private final DocumentConverter documentConverter;
 	private final Map<Class<?>, DocumentCollection> documentCollectionByMirroredType = new ConcurrentHashMap<>();
+	private final Map<String, DocumentCollection> documentCollectionByName = new ConcurrentHashMap<>();
+
 	private final DocumentDb documentDb;
 	private final MirrorExceptionListener mirrorExceptionListener;
 	private final Plugins plugins;
@@ -57,6 +60,7 @@ final class SpaceMirrorContext {
 					mirroredObject.getReadPreference()
 			);
 			this.documentCollectionByMirroredType.put(mirroredObject.getMirroredType(), documentCollection);
+			this.documentCollectionByName.put(mirroredObject.getCollectionName(), documentCollection);
 		}
 	}
 
@@ -70,6 +74,10 @@ final class SpaceMirrorContext {
 
 	DocumentCollection getDocumentCollection(Class<?> type) {
 		return documentCollectionByMirroredType.get(type);
+	}
+
+	DocumentCollection getDocumentCollection(String collectionName) {
+		return documentCollectionByName.get(collectionName);
 	}
 
 	DocumentCollection getDocumentCollection(MirroredObject<?> document) {

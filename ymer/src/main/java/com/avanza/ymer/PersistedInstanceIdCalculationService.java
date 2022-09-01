@@ -235,7 +235,7 @@ public class PersistedInstanceIdCalculationService implements PersistedInstanceI
 		try (Stream<List<Document>> batches = StreamUtils.buffer(collection.findByQuery(query), BATCH_SIZE);
 				RepeatingTask ignore = new RepeatingTask(Duration.ofSeconds(30), progressLogger)) {
 
-			batches.forEach(batch -> collection.bulkWrite(bulkWriter -> {
+			batches.forEach(batch -> collection.nonOrderedBulkWrite(bulkWriter -> {
 				numberOfPartitionsSet.forEach(numberOfPartitions -> {
 					String fieldName = getInstanceIdFieldName(numberOfPartitions);
 					Map<Integer, List<Document>> updatesByInstanceId = batch.stream()

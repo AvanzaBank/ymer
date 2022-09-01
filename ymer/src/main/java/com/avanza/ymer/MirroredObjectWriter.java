@@ -15,6 +15,8 @@
  */
 package com.avanza.ymer;
 
+import static java.util.Objects.requireNonNull;
+
 import static com.avanza.ymer.PerformedOperationsListener.OperationType.INSERT;
 import static com.avanza.ymer.PerformedOperationsListener.OperationType.READ_BATCH;
 import static com.avanza.ymer.PerformedOperationsListener.OperationType.UPDATE;
@@ -22,20 +24,15 @@ import static com.avanza.ymer.PerformedOperationsListener.OperationType.DELETE;
 import static com.avanza.ymer.PerformedOperationsListener.OperationType.FAILURE;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.gigaspaces.sync.DataSyncOperation;
-import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
 
 /**
@@ -43,31 +40,32 @@ import com.gigaspaces.sync.OperationsBatchData;
  */
 final class MirroredObjectWriter {
 
-	private static final Logger logger = LoggerFactory.getLogger(MirroredObjectWriter.class);
-
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
+	private final MirroredObjectFilterer mirroredObjectFilterer;
 	private final PerformedOperationsListener operationsListener;
 
-	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
-		this(mirror, exceptionHandler, (type, delta) -> {
+	MirroredObjectWriter(SpaceMirrorContext mirror,
+			DocumentWriteExceptionHandler exceptionHandler,
+			MirroredObjectFilterer mirroredObjectFilterer) {
+		this(mirror, exceptionHandler, mirroredObjectFilterer, (type, delta) -> {
 		});
 	}
 
-	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler, PerformedOperationsListener operationsListener) {
-		this.mirror = Objects.requireNonNull(mirror);
-		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
-		this.operationsListener = operationsListener;
+	MirroredObjectWriter(SpaceMirrorContext mirror,
+			DocumentWriteExceptionHandler exceptionHandler,
+			MirroredObjectFilterer mirroredObjectFilterer,
+			PerformedOperationsListener operationsListener) {
+		this.mirror = requireNonNull(mirror);
+		this.exceptionHandler = requireNonNull(exceptionHandler);
+		this.mirroredObjectFilterer = requireNonNull(mirroredObjectFilterer);
+		this.operationsListener = requireNonNull(operationsListener);
 	}
 
 	public void executeBulk(InstanceMetadata metadata, OperationsBatchData batch) {
 		operationsListener.increment(READ_BATCH, batch.getBatchDataItems().length);
 		List<Object> pendingWrites = new ArrayList<>();
-		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
-			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {
-				logger.debug("Ignored {}, not a mirrored class", bulkItem.getDataAsObject().getClass().getName());
-				continue;
-			}
+		for (DataSyncOperation bulkItem : mirroredObjectFilterer.filterSpaceObjects(batch.getBatchDataItems())) {
 			switch (bulkItem.getDataSyncOperationType()) {
 				case WRITE:
 					pendingWrites.add(bulkItem.getDataAsObject());
@@ -88,28 +86,6 @@ final class MirroredObjectWriter {
 			}
 		}
 		insertAll(metadata, pendingWrites);
-	}
-
-	private Collection<DataSyncOperation> filterSpaceObjects(DataSyncOperation[] batchDataItems) {
-		ArrayList<DataSyncOperation> result = new ArrayList<>(batchDataItems.length);
-		for (DataSyncOperation bulkItem : batchDataItems) {
-			if (isReloaded(bulkItem)) {
-				continue;
-			}
-			if (bulkItem.getDataSyncOperationType() == DataSyncOperationType.REMOVE
-					&& mirror.keepPersistent(bulkItem.getDataAsObject().getClass())) {
-				continue;
-			}
-			result.add(bulkItem);
-		}
-		return result;
-	}
-
-	private boolean isReloaded(DataSyncOperation bulkItem) {
-		Object item = bulkItem.getDataAsObject();
-		return (bulkItem.getDataSyncOperationType() == DataSyncOperationType.WRITE || bulkItem.getDataSyncOperationType() == DataSyncOperationType.UPDATE)
-				&& item instanceof ReloadableSpaceObject
-				&& ReloadableSpaceObjectUtil.isReloaded((ReloadableSpaceObject) item);
 	}
 
 	private void remove(InstanceMetadata metadata, final Object item) {

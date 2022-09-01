@@ -46,7 +46,7 @@ public class MirrorEnvironment extends ExternalResource {
 	private static final String DEFAULT_MONGOVERSION = "4.0";
 
 	public static final String TEST_MIRROR_DB_NAME = "mirror_test_db";
-	private final MongoDBContainer mongoDBContainer = setupMongoDb();
+	private static final MongoDBContainer mongoDBContainer = setupMongoDb();
 	private final MongoClient mongoClient;
 
 	private static MongoDBContainer setupMongoDb() {
@@ -63,14 +63,12 @@ public class MirrorEnvironment extends ExternalResource {
 	}
 
 	public MirrorEnvironment() {
-		mongoDBContainer.start();
-
+		if (!mongoDBContainer.isRunning()) {
+			mongoDBContainer.start();
+			// leave container running until JVM stops
+			Runtime.getRuntime().addShutdownHook(new Thread(mongoDBContainer::stop));
+		}
 		mongoClient = MongoClients.create(mongoDBContainer.getReplicaSetUrl());
-	}
-
-	@Override
-	protected void after() {
-		mongoDBContainer.stop();
 	}
 
 	public MongoTemplate getMongoTemplate() {
@@ -84,7 +82,6 @@ public class MirrorEnvironment extends ExternalResource {
 
 	public void reset() {
 		getMongoDatabase().drop();
-
 	}
 
 	public ApplicationContext getMongoClientContext() {
