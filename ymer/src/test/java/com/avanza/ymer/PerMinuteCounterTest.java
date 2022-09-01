@@ -32,7 +32,8 @@ public class PerMinuteCounterTest {
 	@Test
 	public void shouldCalculateSumAndRateCallsDuringForSameMinute() {
 		Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
-		Clock c = Mockito.spy(Clock.systemDefaultZone());
+		Clock c = Mockito.mock(Clock.class);
+		Mockito.when(c.getZone()).thenReturn(ZoneId.systemDefault());
 		Mockito.when(c.instant()).thenReturn(now, now.plusSeconds(20), now.plusSeconds(40));
 
 		final PerMinuteCounter perMinuteCounter = new PerMinuteCounter(c);
@@ -50,7 +51,8 @@ public class PerMinuteCounterTest {
 	@Test
 	public void shouldCalculateSumAndRateForDifferentMinute() {
 		Instant now = Instant.now();
-		Clock c = Mockito.spy(Clock.systemDefaultZone());
+		Clock c = Mockito.mock(Clock.class);
+		Mockito.when(c.getZone()).thenReturn(ZoneId.systemDefault());
 		Mockito.when(c.instant()).thenReturn(now, now.plusSeconds(61));
 
 		final PerMinuteCounter perMinuteCounter = new PerMinuteCounter(c);
