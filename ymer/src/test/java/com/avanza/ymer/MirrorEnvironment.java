@@ -15,17 +15,26 @@
  */
 package com.avanza.ymer;
 
+import java.net.UnknownHostException;
+
+import org.junit.rules.ExternalResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.utility.DockerImageName;
 
-import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.MongoClientURI;
+
 /**
  *
  * @author Elias Lindholm (elilin)
@@ -33,17 +42,48 @@ import com.mongodb.DBObject;
  */
 public class MirrorEnvironment {
 
+	private static final Logger LOG = LoggerFactory.getLogger(MirrorEnvironment.class);
+	private static final String DEFAULT_MONGOVERSION = "4.0";
+
+	private static final MongoDBContainer mongoDBContainer = setupMongoDb();
 	public static final String TEST_MIRROR_DB_NAME = "mirror_test_db";
 
-	private final Fongo mongoServer = new Fongo(MirrorEnvironment.class.getSimpleName());
-
-	public MongoTemplate getMongoTemplate() {
-		SimpleMongoDbFactory simpleMongoDbFactory = new SimpleMongoDbFactory(mongoServer.getMongo(), TEST_MIRROR_DB_NAME);
-		return new MongoTemplate(simpleMongoDbFactory);
+	private static MongoDBContainer setupMongoDb() {
+		String mongoVersionProperty = System.getProperty("integrationTest.mongoVersion");
+		String mongoVersion;
+		if (mongoVersionProperty != null) {
+			LOG.info("Using supplied mongoVersion {} for integration tests", mongoVersionProperty);
+			mongoVersion = mongoVersionProperty;
+		} else {
+			LOG.info("Using default mongoVersion {} for integration tests", DEFAULT_MONGOVERSION);
+			mongoVersion = DEFAULT_MONGOVERSION;
+		}
+		return new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoVersion));
 	}
 
-	private DB getMongoDb() {
-		return this.mongoServer.getMongo().getDB(TEST_MIRROR_DB_NAME);
+	public MirrorEnvironment() {
+		if (!mongoDBContainer.isRunning()) {
+			mongoDBContainer.start();
+			// leave container running until JVM stops
+			Runtime.getRuntime().addShutdownHook(new Thread(mongoDBContainer::stop));
+		}
+	}
+
+	public MongoTemplate getMongoTemplate() {
+		return new MongoTemplate(getMongoDbFactory());
+	}
+
+	private MongoDbFactory getMongoDbFactory() {
+		try {
+			MongoClientURI uri = new MongoClientURI(mongoDBContainer.getReplicaSetUrl(TEST_MIRROR_DB_NAME));
+			return new SimpleMongoDbFactory(uri);
+		} catch (UnknownHostException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public DB getMongoDb() {
+		return getMongoTemplate().getDb();
 	}
 
 	public void dropAllMongoCollections() {
@@ -56,7 +96,7 @@ public class MirrorEnvironment {
 
 	public ApplicationContext getMongoClientContext() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.getBeanFactory().registerSingleton("mongoDbFactory", new SimpleMongoDbFactory(mongoServer.getMongo(), TEST_MIRROR_DB_NAME));
+		context.getBeanFactory().registerSingleton("mongoDbFactory", getMongoDbFactory());
 		context.refresh();
 		return context;
 	}
