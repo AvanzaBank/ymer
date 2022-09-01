@@ -23,18 +23,17 @@ import static org.mockito.Mockito.verify;
 
 import org.junit.Before;
 import org.junit.Test;
-import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObject;
 
 public class IdValidatorImplTest {
-	private final Fongo mongoServer = new Fongo("test");
+	private final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 	private final IdValidatorImpl idValidator = spy(new IdValidatorImpl("collectionName"));
 	private DocumentCollection collection;
 
 	@Before
 	public void beforeEachTest() {
 		collection = new MongoDocumentCollection(
-				mongoServer.getDB("db-name")
+				mirrorEnvironment.getMongoDb()
 						.getCollection("collectionName"),
 				idValidator
 		);

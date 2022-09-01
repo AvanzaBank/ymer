@@ -18,7 +18,6 @@ package com.avanza.ymer;
 import com.avanza.ymer.MirroredObjectLoader.LoadedDocument;
 import com.avanza.ymer.plugin.PostReadProcessor;
 import com.gigaspaces.annotation.pojo.SpaceId;
-import com.github.fakemongo.Fongo;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -39,10 +38,9 @@ import static org.junit.Assert.assertTrue;
  */
 public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 
-	private static final String DBNAME = "testdb";
 	private static final String COLLECTION_NAME = "testcollection";
 
-	Fongo mongoServer = new Fongo("mongo server 1");
+	private final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
 
 	private DB db;
@@ -53,9 +51,9 @@ public class MongoDocumentCollectionTest extends DocumentCollectionContract {
 	 */
 	@Override
 	protected DocumentCollection createEmptyCollection() {
-		db = mongoServer.getDB(DBNAME);
+		db = mirrorEnvironment.getMongoDb();
 		db.dropDatabase();
-		db = mongoServer.getDB(DBNAME);
+		db = mirrorEnvironment.getMongoDb();
 
 		mongoDbCollection = db.getCollection(COLLECTION_NAME);
 		return new MongoDocumentCollection(mongoDbCollection);

@@ -15,20 +15,20 @@
  */
 package com.avanza.ymer;
 
-import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
-import com.github.fakemongo.Fongo;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 
 
 public class MongoPartitionFilterTest {
@@ -36,7 +36,7 @@ public class MongoPartitionFilterTest {
 	private final MirroredObject<TestSpaceObject> mirroredObject = 
 		MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(new TestSpaceObjectV1Patch()).buildMirroredDocument(MirroredObjectDefinitionsOverride.noOverride());
 
-	public final Fongo mongoRule = new Fongo("db");
+	private final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
 	@Test
 	public void canQueryAllNumbers() throws Exception {
@@ -44,7 +44,7 @@ public class MongoPartitionFilterTest {
 		final int ID_LOWER_BOUND = -100;
 		final int ID_UPPER_BOUND = 100;
 
-		DBCollection collection = mongoRule.getMongo().getDB("_test").getCollection("testCollection");
+		DBCollection collection = mirrorEnvironment.getMongoDb().getCollection("testCollection");
 		for (int i = ID_LOWER_BOUND; i < ID_UPPER_BOUND; i++) {
 			collection.insert(BasicDBObjectBuilder.start("_id", i).add("_routingKey", ((Integer)i).hashCode()).get());
 		}
