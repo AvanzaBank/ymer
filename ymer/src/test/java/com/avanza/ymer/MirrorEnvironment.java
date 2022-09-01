@@ -20,11 +20,14 @@ import static com.mongodb.client.model.Updates.unset;
 
 import org.bson.Document;
 import org.junit.rules.ExternalResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
@@ -38,19 +41,33 @@ import com.mongodb.client.MongoDatabase;
  */
 public class MirrorEnvironment extends ExternalResource {
 
+	private static final Logger LOG = LoggerFactory.getLogger(MirrorEnvironment.class);
+	private static final String DEFAULT_MONGOVERSION = "4.0";
+
 	public static final String TEST_MIRROR_DB_NAME = "mirror_test_db";
-	private final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:3.6");
+	private static final MongoDBContainer mongoDBContainer = setupMongoDb();
 	private final MongoClient mongoClient;
 
-	public MirrorEnvironment() {
-		mongoDBContainer.start();
-
-		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
+	private static MongoDBContainer setupMongoDb() {
+		String mongoVersionProperty = System.getProperty("integrationTest.mongoVersion");
+		String mongoVersion;
+		if (mongoVersionProperty != null) {
+			LOG.info("Using supplied mongoVersion {} for integration tests", mongoVersionProperty);
+			mongoVersion = mongoVersionProperty;
+		} else {
+			LOG.info("Using default mongoVersion {} for integration tests", DEFAULT_MONGOVERSION);
+			mongoVersion = DEFAULT_MONGOVERSION;
+		}
+		return new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoVersion));
 	}
 
-	@Override
-	protected void after() {
-		mongoDBContainer.stop();
+	public MirrorEnvironment() {
+		if (!mongoDBContainer.isRunning()) {
+			mongoDBContainer.start();
+			// leave container running until JVM stops
+			Runtime.getRuntime().addShutdownHook(new Thread(mongoDBContainer::stop));
+		}
+		mongoClient = new MongoClient(new MongoClientURI(mongoDBContainer.getReplicaSetUrl()));
 	}
 
 	public MongoTemplate getMongoTemplate() {
@@ -64,7 +81,6 @@ public class MirrorEnvironment extends ExternalResource {
 
 	public void reset() {
 		getMongoDatabase().drop();
-
 	}
 
 	public ApplicationContext getMongoClientContext() {
