@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 
 import java.lang.management.ManagementFactory;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -56,15 +57,15 @@ public class YmerMirrorIntegrationTest {
 	private static final MirrorEnvironment mirrorEnvironment = new MirrorEnvironment();
 
 	private static final RunningPu pu = PuConfigurers.partitionedPu("classpath:/test-pu.xml")
-									   .numberOfBackups(1)
-									   .numberOfPrimaries(1)
-									   .parentContext(mirrorEnvironment.getMongoClientContext())
-									   .configure();
+			.numberOfBackups(1)
+			.numberOfPrimaries(1)
+			.parentContext(mirrorEnvironment.getMongoClientContext())
+			.configure();
 
 	private static final RunningPu mirrorPu = PuConfigurers.mirrorPu("classpath:/test-mirror-pu.xml")
-											   	     .contextProperty("exportExceptionHandlerMBean", "true")
-											   	     .parentContext(mirrorEnvironment.getMongoClientContext())
-											   	     .configure();
+			.contextProperty("exportExceptionHandlerMBean", "true")
+			.parentContext(mirrorEnvironment.getMongoClientContext())
+			.configure();
 
 	@ClassRule
 	public static TestRule spaces = RuleChain.outerRule(pu).around(mirrorPu);
@@ -205,6 +206,57 @@ public class YmerMirrorIntegrationTest {
 			@Override
 			public void describeFailureTo(Description description) {
 				description.appendText("Count of " + mirroredType.getName());
+				countMatcher.describeTo(description);
+			}
+		};
+	}
+
+	@Test
+	public void shouldExposeOperationStatistics() throws Exception {
+		mirrorPu.stop();
+		String name = "se.avanzabank.space.mirror:type=OperationStatistics,name=operationStatistics";
+		final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+		final ObjectName oname = new ObjectName(name);
+		try {
+			mbs.unregisterMBean(oname);
+		} catch (Exception ignore) {
+		}
+		mirrorPu.start();
+
+		// Arrange
+		final TestSpaceObject o1 = new TestSpaceObject("id1", "message");
+		gigaSpace.write(o1);
+		o1.setMessage("updated message");
+		gigaSpace.write(o1);
+		gigaSpace.takeById(TestSpaceObject.class, o1.getId());
+
+		assertEventually(genericProbe(() -> mbs.getAttribute(oname, "NumPerformedOperations"), equalTo(3L), "num performed operation"));
+		assertEventually(genericProbe(() -> mbs.getAttribute(oname, "NumInserts"), equalTo(1L), "num inserts"));
+		assertEventually(genericProbe(() -> mbs.getAttribute(oname, "NumUpdates"), equalTo(1L), "num updates"));
+		assertEventually(genericProbe(() -> mbs.getAttribute(oname, "NumDeletes"), equalTo(1L), "num deletes"));
+	}
+
+	private Probe genericProbe(Callable<Object> check, final Matcher<Object> countMatcher, String desc) {
+		return new Probe() {
+			Object result;
+
+			@Override
+			public void sample() {
+				try {
+					result = check.call();
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+			@Override
+			public boolean isSatisfied() {
+				return countMatcher.matches(result);
+			}
+
+			@Override
+			public void describeFailureTo(Description description) {
+				description.appendText(desc);
 				countMatcher.describeTo(description);
 			}
 		};

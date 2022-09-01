@@ -15,22 +15,26 @@
  */
 package com.avanza.ymer;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.gigaspaces.sync.DataSyncOperation;
 import com.gigaspaces.sync.DataSyncOperationType;
 import com.gigaspaces.sync.OperationsBatchData;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 /**
- *
  * @author Elias Lindholm (elilin)
- *
  */
 final class MirroredObjectWriter {
 
@@ -38,13 +42,21 @@ final class MirroredObjectWriter {
 
 	private final SpaceMirrorContext mirror;
 	private final DocumentWriteExceptionHandler exceptionHandler;
+	private final PerformedOperationsListener operationsListener;
 
 	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler) {
+		this(mirror, exceptionHandler, (type, delta) -> {
+		});
+	}
+
+	MirroredObjectWriter(SpaceMirrorContext mirror, DocumentWriteExceptionHandler exceptionHandler, PerformedOperationsListener operationsListener) {
 		this.mirror = Objects.requireNonNull(mirror);
 		this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
+		this.operationsListener = operationsListener;
 	}
 
 	public void executeBulk(OperationsBatchData batch) {
+		operationsListener.increment(PerformedOperationsListener.OperationType.READ_BATCH, batch.getBatchDataItems().length);
 		List<Object> pendingWrites = new ArrayList<Object>();
 		for (DataSyncOperation bulkItem : filterSpaceObjects(batch.getBatchDataItems())) {
 			if (!mirror.isMirroredType(bulkItem.getDataAsObject().getClass())) {
@@ -52,23 +64,23 @@ final class MirroredObjectWriter {
 				continue;
 			}
 			switch (bulkItem.getDataSyncOperationType()) {
-			case WRITE:
-				pendingWrites.add(bulkItem.getDataAsObject());
-				break;
-			case UPDATE:
-			case PARTIAL_UPDATE:
-				insertAll(pendingWrites);
-				pendingWrites = new ArrayList<>();
-				update(bulkItem.getDataAsObject());
-				break;
-			case REMOVE:
-				insertAll(pendingWrites);
-				pendingWrites = new ArrayList<>();
-				remove(bulkItem.getDataAsObject());
-				break;
-			default:
-				throw new UnsupportedOperationException("Bulkoperation " + bulkItem.getDataSyncOperationType()
-						+ " is not supported");
+				case WRITE:
+					pendingWrites.add(bulkItem.getDataAsObject());
+					break;
+				case UPDATE:
+				case PARTIAL_UPDATE:
+					insertAll(pendingWrites);
+					pendingWrites = new ArrayList<>();
+					update(bulkItem.getDataAsObject());
+					break;
+				case REMOVE:
+					insertAll(pendingWrites);
+					pendingWrites = new ArrayList<>();
+					remove(bulkItem.getDataAsObject());
+					break;
+				default:
+					throw new UnsupportedOperationException("Bulkoperation " + bulkItem.getDataSyncOperationType()
+							+ " is not supported");
 			}
 		}
 		insertAll(pendingWrites);
@@ -106,6 +118,7 @@ final class MirroredObjectWriter {
 			}
 
 		}.execute(item);
+		operationsListener.increment(PerformedOperationsListener.OperationType.DELETE, 1);
 	}
 
 	private void update(final Object item) {
@@ -116,6 +129,7 @@ final class MirroredObjectWriter {
 			}
 
 		}.execute(item);
+		operationsListener.increment(PerformedOperationsListener.OperationType.UPDATE, 1);
 	}
 
 	private void insertAll(List<Object> items) {
@@ -137,6 +151,7 @@ final class MirroredObjectWriter {
 					documentCollection.insertAll(dbObjects);
 				}
 			}.execute(pendingObjects.toArray());
+			operationsListener.increment(PerformedOperationsListener.OperationType.INSERT, pendingObjects.size());
 		}
 	}
 
@@ -174,6 +189,7 @@ final class MirroredObjectWriter {
 					.collect(Collectors.groupingBy(o -> o.getClass().getSimpleName()));
 			exceptionHandler.handleException(exception,
 					"Operation: " + operation + ", objects: " + objectsPerType);
+			operationsListener.increment(PerformedOperationsListener.OperationType.FAILURE, 1);
 		}
 
 		protected abstract void execute(DBObject... dbOBject);
