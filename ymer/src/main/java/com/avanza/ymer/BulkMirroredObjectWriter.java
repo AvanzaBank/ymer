@@ -222,9 +222,8 @@ final class BulkMirroredObjectWriter {
 
 			logger.warn(warningMessage.toString());
 		} else if (result.getMatchedCount() != result.getModifiedCount()) {
-			logger.warn("An update operation containing {} updates only resulted in {} modified documents in MongoDB. "
-							+ "Each updated space object should result in a modification in MongoDB. "
-							+ "MongoDB and space seems to be out of sync!",
+			// this is expected to happen if space objects without changes are written to space
+			logger.debug("An update operation containing {} updates only resulted in {} modified documents in MongoDB",
 					result.getMatchedCount(), result.getModifiedCount());
 		}
 
