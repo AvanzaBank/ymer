@@ -18,10 +18,10 @@ package com.avanza.ymer;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 class PerMinuteCounter {
 
@@ -38,7 +38,7 @@ class PerMinuteCounter {
 
 	public void addPerMinuteCount(long value) {
 		Long currentTime = getLocalDateTime();
-		map.computeIfAbsent(currentTime, m -> new ArrayList<>()).add(value);
+		map.computeIfAbsent(currentTime, m -> new CopyOnWriteArrayList<>()).add(value);
 		map.keySet().stream()
 				.filter(k -> currentTime - k > 60_000)
 				.forEach(map::remove);
