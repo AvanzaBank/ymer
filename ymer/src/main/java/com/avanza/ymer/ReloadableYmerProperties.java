@@ -49,7 +49,7 @@ public final class ReloadableYmerProperties {
 
 	public static final class ReloadablePropertiesBuilder {
 		private Supplier<Optional<Integer>> nextNumberOfInstances = Optional::empty;
-		private BooleanSupplier useBulkWrites = () -> false;
+		private BooleanSupplier useBulkWrites = () -> true;
 
 		private ReloadablePropertiesBuilder() {
 		}
@@ -70,6 +70,7 @@ public final class ReloadableYmerProperties {
 
 		/**
 		 * Enable this to use {@link BulkMirroredObjectWriter} instead of {@link MirroredObjectWriter} for writes.
+		 * This is default {@code true} and not using bulkWrites is deprecated and will be removed in a future version.
 		 */
 		public ReloadablePropertiesBuilder useBulkWrites(BooleanSupplier useBulkWrites) {
 			this.useBulkWrites = useBulkWrites;

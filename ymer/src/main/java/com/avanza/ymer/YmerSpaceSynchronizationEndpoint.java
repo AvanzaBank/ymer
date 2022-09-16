@@ -63,6 +63,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 
 	private final PerformedOperationMetrics operationStatistics;
 
+	@SuppressWarnings("deprecation")
 	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror, ReloadableYmerProperties ymerProperties) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),
