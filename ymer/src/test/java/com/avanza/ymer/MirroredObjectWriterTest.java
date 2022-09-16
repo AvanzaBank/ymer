@@ -36,6 +36,7 @@ import com.avanza.ymer.helper.FakeBulkItem;
 import com.avanza.ymer.helper.MirrorExceptionSpy;
 import com.gigaspaces.sync.DataSyncOperationType;
 
+@Deprecated
 public class MirroredObjectWriterTest {
 
 	private final FakeDocumentWriteExceptionHandler exceptionHandler = new FakeDocumentWriteExceptionHandler();
