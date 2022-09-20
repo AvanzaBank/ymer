@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.avanza.ymer</groupId>
 		<artifactId>ymer-parent</artifactId>
-		<version>3.0.10-SNAPSHOT</version>
+		<version>3.0.10</version>
 	</parent>
 	<artifactId>ymer-test-junit4</artifactId>
 	<dependencies>
