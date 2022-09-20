@@ -37,7 +37,11 @@ import com.gigaspaces.sync.OperationsBatchData;
 
 /**
  * @author Elias Lindholm (elilin)
+ *
+ * @deprecated Usage of this slower writer is not recommended.
+ * The much faster {@link BulkMirroredObjectWriter} should be used instead.
  */
+@Deprecated
 final class MirroredObjectWriter {
 
 	private final SpaceMirrorContext mirror;

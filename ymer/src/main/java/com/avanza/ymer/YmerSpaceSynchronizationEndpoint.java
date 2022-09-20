@@ -49,6 +49,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 	private static final Logger log = LoggerFactory.getLogger(YmerSpaceSynchronizationEndpoint.class);
 	private static final ThreadFactory THREAD_FACTORY = new CustomizableThreadFactory("Ymer-Space-Synchronization-Endpoint-");
 
+	@SuppressWarnings("deprecation")
 	private final MirroredObjectWriter mirroredObjectWriter;
 	private final BulkMirroredObjectWriter bulkMirroredObjectWriter;
 	private final ToggleableDocumentWriteExceptionHandler exceptionHandler;
@@ -63,6 +64,7 @@ final class YmerSpaceSynchronizationEndpoint extends SpaceSynchronizationEndpoin
 
 	private final PerformedOperationMetrics operationStatistics;
 
+	@SuppressWarnings("deprecation")
 	public YmerSpaceSynchronizationEndpoint(SpaceMirrorContext spaceMirror, ReloadableYmerProperties ymerProperties) {
 		exceptionHandler = ToggleableDocumentWriteExceptionHandler.create(
 				new RethrowsTransientDocumentWriteExceptionHandler(),

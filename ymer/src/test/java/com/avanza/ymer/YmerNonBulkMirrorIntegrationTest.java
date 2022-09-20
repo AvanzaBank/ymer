@@ -19,7 +19,10 @@ import com.avanza.gs.test.RunningPu;
 
 /**
  * These tests use {@link MirroredObjectWriter} for persisting to MongoDB.
+ *
+ * @deprecated This test is not needed anymore when MirroredObjectWriter is removed
  */
+@Deprecated
 public class YmerNonBulkMirrorIntegrationTest extends YmerMirrorIntegrationTestBase {
 
 	@Override
