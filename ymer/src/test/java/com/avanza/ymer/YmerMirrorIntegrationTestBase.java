@@ -15,12 +15,16 @@
  */
 package com.avanza.ymer;
 
+import static com.avanza.ymer.TestSpaceMirrorObjectDefinitions.TEST_OBJECT_WITH_COMPLEX_KEY;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
@@ -35,9 +39,6 @@ import java.util.concurrent.Callable;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.bson.Document;
 import org.hamcrest.Matcher;
 import org.junit.After;
@@ -52,6 +53,8 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
+import com.avanza.ymer.space.ComplexId;
+import com.avanza.ymer.space.SpaceObjectWithComplexKey;
 import com.gigaspaces.client.WriteModifiers;
 
 public abstract class YmerMirrorIntegrationTestBase {
@@ -268,6 +271,32 @@ public abstract class YmerMirrorIntegrationTestBase {
 		gigaSpace.takeById(TestSpaceObjectWithCustomRoutingKey.class, id);
 		assertEquals(0, gigaSpace.count(new TestSpaceObjectWithCustomRoutingKey()));
 		assertEventually(() -> mongo.findAll(TestSpaceObjectWithCustomRoutingKey.class), not(hasItem(object)));
+	}
+
+	@Test
+	public void testWritingObjectWithComplexKey() {
+		// Write two objects to space
+		SpaceObjectWithComplexKey spaceObject1 = new SpaceObjectWithComplexKey(new ComplexId("key", 1), "test1");
+		SpaceObjectWithComplexKey spaceObject2 = new SpaceObjectWithComplexKey(new ComplexId("key", 2), "test1");
+
+		gigaSpace.writeMultiple(new SpaceObjectWithComplexKey[] {spaceObject1, spaceObject2}, WriteModifiers.WRITE_ONLY);
+
+		assertEquals(2, gigaSpace.count(new SpaceObjectWithComplexKey()));
+		assertEventually(() -> mongo.findAll(SpaceObjectWithComplexKey.class), hasItems(spaceObject1, spaceObject2));
+
+		// Delete collection and write again with UPDATE, triggering these objects to be inserted on an update operation,
+		// which should log warnings about this
+		mongo.dropCollection(TEST_OBJECT_WITH_COMPLEX_KEY.collectionName());
+
+		spaceObject1.setMessage("test2");
+		spaceObject2.setMessage("test2");
+
+		// Before the commit that added this test, this would result in an exception thrown in the test log about
+		// not being able to handle the complex key
+		gigaSpace.writeMultiple(new SpaceObjectWithComplexKey[] {spaceObject1, spaceObject2}, WriteModifiers.UPDATE_ONLY);
+
+		// Assert objects added with UPDATE will still be written to space (with a warning in the log)
+		assertEventually(() -> mongo.findAll(SpaceObjectWithComplexKey.class), hasItems(spaceObject1, spaceObject2));
 	}
 
 	@Test

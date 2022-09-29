@@ -156,8 +156,11 @@ final class BulkMirroredObjectWriter {
 			});
 
 			addResultToStatistics(result);
-			checkBulkResultForWarnings(insertions.intValue(), updates.intValue(), removals.intValue(), result);
-
+			try {
+				checkBulkResultForWarnings(insertions.intValue(), updates.intValue(), removals.intValue(), result);
+			} catch (Exception e) {
+				logger.warn("Error while checking for warnings in bulkWrite result", e);
+			}
 			return emptyList();
 		} catch (MongoBulkWriteException e) {
 			addResultToStatistics(e.getWriteResult());
@@ -213,7 +216,7 @@ final class BulkMirroredObjectWriter {
 			if (!result.getUpserts().isEmpty()) {
 				warningMessage.append("The following ids were inserted by upsert into MongoDB as a result of update operations: [")
 						.append(result.getUpserts().stream()
-								.map(bson -> bson.getId().asString().getValue())
+								.map(bson -> bson.getId().toString())
 								.collect(joining(", ")))
 						.append("].");
 			} else {
