@@ -54,8 +54,7 @@ public class TestSpaceMirrorObjectDefinitions implements MirroredObjectsConfigur
 
 	public static final MirroredObjectDefinition<SpaceObjectWithComplexKey> TEST_OBJECT_WITH_COMPLEX_KEY =
 			MirroredObjectDefinition.create(SpaceObjectWithComplexKey.class)
-					.loadDocumentsRouted(true)
-					.persistInstanceId(true);
+					.loadDocumentsRouted(true);
 
 	@Override
 	public Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
