@@ -190,9 +190,13 @@ final class BulkMirroredObjectWriter {
 	}
 
 	private void addResultToStatistics(BulkWriteResult result) {
-		operationsListener.increment(OperationType.INSERT, result.getInsertedCount());
-		operationsListener.increment(OperationType.UPDATE, result.getMatchedCount());
-		operationsListener.increment(OperationType.DELETE, result.getDeletedCount());
+		try {
+			operationsListener.increment(OperationType.INSERT, result.getInsertedCount());
+			operationsListener.increment(OperationType.UPDATE, result.getMatchedCount());
+			operationsListener.increment(OperationType.DELETE, result.getDeletedCount());
+		} catch (Exception e) {
+			logger.warn("Error while adding bulk write result to statistics", e);
+		}
 	}
 
 	private void checkBulkResultForWarnings(int expectedInsertions, int expectedUpdates, int expectedRemovals, BulkWriteResult result) {
