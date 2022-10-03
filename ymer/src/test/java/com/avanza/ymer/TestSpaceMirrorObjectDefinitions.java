@@ -20,6 +20,7 @@ import java.util.Collection;
 
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV1Patch;
 import com.avanza.ymer.YmerInitialLoadIntegrationTest.TestSpaceObjectV2Patch;
+import com.avanza.ymer.space.SpaceObjectWithComplexKey;
 
 public class TestSpaceMirrorObjectDefinitions implements MirroredObjectsConfiguration {
 
@@ -51,6 +52,10 @@ public class TestSpaceMirrorObjectDefinitions implements MirroredObjectsConfigur
 	public static final MirroredObjectDefinition<TestReloadableSpaceObject> TEST_RELOADABLE_OBJECT =
 			MirroredObjectDefinition.create(TestReloadableSpaceObject.class);
 
+	public static final MirroredObjectDefinition<SpaceObjectWithComplexKey> TEST_OBJECT_WITH_COMPLEX_KEY =
+			MirroredObjectDefinition.create(SpaceObjectWithComplexKey.class)
+					.loadDocumentsRouted(true);
+
 	@Override
 	public Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
 		return Arrays.asList(
@@ -58,7 +63,8 @@ public class TestSpaceMirrorObjectDefinitions implements MirroredObjectsConfigur
 				TEST_SPACE_OTHER_OBJECT,
 				TEST_SPACE_THIRD_OBJECT,
 				TEST_SPACE_OBJECT_CUSTOM_ROUTINGKEY,
-				TEST_RELOADABLE_OBJECT
+				TEST_RELOADABLE_OBJECT,
+				TEST_OBJECT_WITH_COMPLEX_KEY
 		);
 	}
 }
