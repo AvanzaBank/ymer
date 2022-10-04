@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.avanza.ymer</groupId>
         <artifactId>ymer-parent</artifactId>
-        <version>3.0.11-SNAPSHOT</version>
+        <version>3.0.12-SNAPSHOT</version>
     </parent>
 
     <artifactId>ymer-test-common</artifactId>
