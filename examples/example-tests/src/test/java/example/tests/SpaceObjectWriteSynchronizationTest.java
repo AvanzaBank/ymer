@@ -41,22 +41,26 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.avanza.gs.test.PuConfigurers;
 import com.avanza.gs.test.RunningPu;
-import com.github.fakemongo.Fongo;
-import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
 
+import de.bwaldvogel.mongo.MongoServer;
 import example.domain.SpaceFruit;
 
 public class SpaceObjectWriteSynchronizationTest {
-	
-	private Fongo fongo = new Fongo("fongoDb");
+
+	private MongoServer mongoServer = InMemoryMongoServer.getInstance();
+	private MongoClient mongoClient = new MongoClient(new ServerAddress(mongoServer.getLocalAddress()));
 	private RunningPu pu;
 	private RunningPu mirrorPu;
+
 
 	@After
 	public void shutdownPus() throws Exception {
 		closeSafe(pu);
 		closeSafe(mirrorPu);
+		mongoClient.close();
+		mongoServer.shutdownNow();
 	}
 	
 	@Test
@@ -64,12 +68,12 @@ public class SpaceObjectWriteSynchronizationTest {
 		pu = PuConfigurers.partitionedPu("classpath:example-pu.xml")
 									.numberOfPrimaries(1)
 									.numberOfBackups(1)
-								    .parentContext(createSingleInstanceAppContext(fongo.getMongo()))
+								    .parentContext(createSingleInstanceAppContext(mongoClient))
 								    .configure();
 		pu.start();
 
 		mirrorPu = PuConfigurers.mirrorPu("classpath:example-mirror-pu.xml")
-		   	     				.parentContext(createSingleInstanceAppContext(fongo.getMongo()))
+		   	     				.parentContext(createSingleInstanceAppContext(mongoClient))
 		   	     				.configure();
 		mirrorPu.start();
 		
@@ -79,8 +83,8 @@ public class SpaceObjectWriteSynchronizationTest {
 		gigaSpace.write(new SpaceFruit("apple", "Spain", true));
 		
 		assertEventuallyPasses(() -> {
-			DBCursor cursor = fongo.getDB("exampleDb").getCollection("spaceFruit").find();
-			assertEquals("Expected spaceFruit count in mongodb", 2, cursor.count());
+			long nbrOfSpaceFruits = mongoClient.getDatabase("exampleDb").getCollection("spaceFruit").countDocuments();
+			assertEquals("Expected spaceFruit count in mongodb", 2, nbrOfSpaceFruits);
 		});
 	}
 	
