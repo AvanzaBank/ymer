@@ -119,7 +119,7 @@ public abstract class YmerMigrationTestBase {
 			this.expectedPatchedVersion = expectedPatchedVersion;
 			this.fromVersion = oldVersion;
 			this.spaceObjectType = spaceObjectType;
-			this.displayName = spaceObjectType.getCanonicalName();
+			this.displayName = "";
 		}
 
 		public MigrationTest(String displayName, Document oldVersionDoc, Document expectedPatchedVersion, int oldVersion, Class<?> spaceObjectType) {
