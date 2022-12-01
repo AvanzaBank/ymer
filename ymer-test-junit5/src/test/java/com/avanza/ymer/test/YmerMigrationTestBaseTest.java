@@ -21,10 +21,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.junit.jupiter.params.provider.Arguments;
 
 import com.avanza.ymer.BsonDocumentPatch;
 import com.avanza.ymer.MirroredObjectDefinition;
@@ -157,6 +161,56 @@ class YmerMigrationTestBaseTest {
 				mirroredObjects);
 
 		assertPasses(() -> suite.migratesTheOldDocumentToTheNextDocumentVersion(suite.testCase));
+	}
+
+	@Nested
+	class StreamArgumentsTest {
+		@Test
+		void migratesTheOldDocumentToTheNextDocumentVersion_OnePatch_PassesIfNextVersionMatchesExpectedVersion() {
+			Document v1 = new Document();
+			v1.put("foo", "bar");
+
+			Document v2 = new Document();
+			v2.put("foo", "bar");
+			v2.put("baz", "baz");
+			BsonDocumentPatch[] patches = { new BsonDocumentPatch() {
+				@Override
+				public void apply(Document document) {
+					document.put("baz", "baz");
+				}
+
+				@Override
+				public int patchedVersion() {
+					return 1;
+				}
+			} };
+
+			final Collection<MirroredObjectDefinition<?>> mirroredObjects = List.of(MirroredObjectDefinition.create(TestSpaceObject.class).documentPatches(patches));
+
+			final MigrationTest testCase = new MigrationTest(v1, v2, 1, TestSpaceObject.class);
+			assertPasses(() -> new FakeStreamTestSuite(testCase, mirroredObjects).migratesTheOldDocumentToTheNextDocumentVersion(testCase));
+		}
+
+		 class FakeStreamTestSuite extends YmerMigrationTestBase {
+
+			final MigrationTest testCase;
+			final Collection<MirroredObjectDefinition<?>> mirroredObjects;
+
+			FakeStreamTestSuite(MigrationTest testCase, Collection<MirroredObjectDefinition<?>> mirroredObjects) {
+				this.testCase = testCase;
+				this.mirroredObjects = mirroredObjects;
+			}
+
+			@Override
+			protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
+				return mirroredObjects;
+			}
+
+			@Override
+			protected Stream<Arguments> testCaseStream() {
+				return Stream.of(Arguments.of(Named.named("testCase",testCase)));
+			}
+		}
 	}
 
 	static class FakeTestSuite extends YmerMigrationTestBase {

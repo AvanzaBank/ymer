@@ -19,10 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
+import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.avanza.ymer.MirroredObjectDefinition;
@@ -66,7 +68,7 @@ import com.avanza.ymer.MirroredObjectTestHelper;
 public abstract class YmerMigrationTestBase {
 
 	@ParameterizedTest
-	@MethodSource("testCases")
+	@MethodSource("testCaseStream")
 	void migratesTheOldDocumentToTheNextDocumentVersion(MigrationTest migrationTest) {
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectsHelper(migrationTest.spaceObjectType);
 
@@ -82,7 +84,7 @@ public abstract class YmerMigrationTestBase {
 	}
 
 	@ParameterizedTest
-	@MethodSource("testCases")
+	@MethodSource("testCaseStream")
 	void oldVersionShouldRequirePatching(MigrationTest migrationTest) {
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectsHelper(migrationTest.spaceObjectType);
 		mirroredDocument.setDocumentVersion(migrationTest.toBePatched, migrationTest.fromVersion);
@@ -90,7 +92,7 @@ public abstract class YmerMigrationTestBase {
 	}
 
 	@ParameterizedTest
-	@MethodSource("testCases")
+	@MethodSource("testCaseStream")
 	void targetSpaceTypeShouldBeAMirroredType(MigrationTest migrationTest) {
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectsHelper(migrationTest.spaceObjectType);
 		assertTrue(mirroredDocument.isMirroredType(), "Mirroring of " + migrationTest.getClass());
@@ -102,7 +104,13 @@ public abstract class YmerMigrationTestBase {
 
 	protected abstract Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 
-	protected abstract Collection<MigrationTest> testCases();
+	protected Collection<MigrationTest> testCases() {
+		throw new IllegalStateException("You need to Override either the 'testCases' or the 'testCaseStream' method.");
+	}
+
+	protected Stream<Arguments> testCaseStream() {
+		return testCases().stream().map(Arguments::of);
+	}
 
 	protected static class MigrationTest {
 
