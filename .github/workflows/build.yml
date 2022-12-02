@@ -12,6 +12,8 @@ jobs:
   Build:
     name: Build (Java ${{ matrix.java-version }}, MongoDB ${{ matrix.mongo-version }})
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     strategy:
       matrix:
         java-version: [ 11, 17 ]
