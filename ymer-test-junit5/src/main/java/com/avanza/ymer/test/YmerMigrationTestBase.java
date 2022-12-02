@@ -65,7 +65,7 @@ import com.avanza.ymer.MirroredObjectTestHelper;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class YmerMigrationTestBase {
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "[{index}] {0}")
 	@MethodSource("testCases")
 	void migratesTheOldDocumentToTheNextDocumentVersion(MigrationTest migrationTest) {
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectsHelper(migrationTest.spaceObjectType);
@@ -81,7 +81,7 @@ public abstract class YmerMigrationTestBase {
 		assertEquals(migrationTest.fromVersion + 1, mirroredDocument.getDocumentVersion(patched));
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "[{index}] {0}")
 	@MethodSource("testCases")
 	void oldVersionShouldRequirePatching(MigrationTest migrationTest) {
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectsHelper(migrationTest.spaceObjectType);
@@ -89,7 +89,7 @@ public abstract class YmerMigrationTestBase {
 		assertTrue(mirroredDocument.requiresPatching(migrationTest.toBePatched), "Should require patching: " + migrationTest.toBePatched);
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "[{index}] {0}")
 	@MethodSource("testCases")
 	void targetSpaceTypeShouldBeAMirroredType(MigrationTest migrationTest) {
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectsHelper(migrationTest.spaceObjectType);
@@ -105,7 +105,7 @@ public abstract class YmerMigrationTestBase {
 	protected abstract Collection<MigrationTest> testCases();
 
 	protected static class MigrationTest {
-
+   		final String displayName;
 		final Document toBePatched;
 		final Document expectedPatchedVersion;
 		final int fromVersion;
@@ -119,11 +119,20 @@ public abstract class YmerMigrationTestBase {
 			this.expectedPatchedVersion = expectedPatchedVersion;
 			this.fromVersion = oldVersion;
 			this.spaceObjectType = spaceObjectType;
+			this.displayName = "";
+		}
+
+		public MigrationTest(String displayName, Document oldVersionDoc, Document expectedPatchedVersion, int oldVersion, Class<?> spaceObjectType) {
+			this.toBePatched = oldVersionDoc;
+			this.expectedPatchedVersion = expectedPatchedVersion;
+			this.fromVersion = oldVersion;
+			this.spaceObjectType = spaceObjectType;
+			this.displayName = displayName;
 		}
 
 		@Override
 		public String toString() {
-			return "MigrationTest: " + spaceObjectType;
+			return "MigrationTest: " + spaceObjectType + ": " + displayName;
 		}
 	}
 }
