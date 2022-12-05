@@ -196,6 +196,38 @@ class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
 ```
 
 ```java
+class ExampleMirrorMigrationTest extends YmerMigrationTestBase {
+
+	@Override
+	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
+		return ExampleMirrorFactory.getDefinitions();
+	}
+
+	@Override
+	protected Stream<Arguments> testCaseStream() {
+		return Stream.of(
+				named("v1 to v2",Arguments.of(spaceFruitV1ToV2MigrationTest()))
+		);
+	}
+	
+	private static MigrationTest spaceFruitV1ToV2MigrationTest() {
+		Document v1Doc = new Document();
+		v1Doc.put("_id", "apple");
+		v1Doc.put("_class", "examples.domain.SpaceFruit");
+		v1Doc.put("origin", "Spain");
+		
+		Document v2Doc = new Document();
+		v2Doc.put("_id", "apple");
+		v2Doc.put("_class", "examples.domain.SpaceFruit");
+		v2Doc.put("origin", "Spain");
+		v2Doc.put("organic", false);
+		
+		return new MigrationTest(v1Doc, v2Doc, 1, SpaceFruit.class);
+	}
+}
+```
+
+```java
 class ExampleMirroredTypesTest extends YmerMirroredTypesTestBase {
 
 	@Override
@@ -206,6 +238,16 @@ class ExampleMirroredTypesTest extends YmerMirroredTypesTestBase {
 	@Override
 	protected String basePackageForScanning() {
 		return "examples.domain.";
+	}
+}
+```
+
+```java
+class ExampleMirroredTypesTest extends YmerMirroredTypesTestBase {
+
+	@Override
+	protected Stream<Arguments> testCaseStream() {
+		return Stream.of(Arguments.of(Named.named("testCase",testCase)));
 	}
 }
 ```
