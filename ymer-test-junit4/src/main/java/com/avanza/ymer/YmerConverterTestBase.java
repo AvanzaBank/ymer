@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.matcher.AssertionMatcher;
@@ -38,11 +37,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 
 /**
@@ -131,26 +128,15 @@ public abstract class YmerConverterTestBase {
 	}
 
 	private MirroredObjectTestHelper getMirroredObjectHelper(Class<?> objectClass) {
-		return MirroredObjectTestHelper.fromDefinitions(getMirroredObjectDefinitions(), objectClass);
-	}
-
-	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
-		return getMirroredObjectsConfiguration().getMirroredObjectDefinitions();
-	}
-
-	protected CustomConversions getCustomConversions() {
-		return new MongoCustomConversions(
-				getMirroredObjectsConfiguration().getCustomConverters()
-		);
+		return MirroredObjectTestHelper.fromDefinitions(getMirroredObjectsConfiguration().getMirroredObjectDefinitions(), objectClass);
 	}
 
 	protected abstract MirroredObjectsConfiguration getMirroredObjectsConfiguration();
 
 	private MongoConverter createMongoConverter() {
 		return YmerFactory.createMongoConverter(
-				NoOpDbRefResolver.INSTANCE,
-				getCustomConversions(),
-				Optional.empty());
+				getMirroredObjectsConfiguration(),
+				NoOpDbRefResolver.INSTANCE);
 	}
 
 	protected static List<Object[]> buildTestCases(ConverterTest<?>... list) {

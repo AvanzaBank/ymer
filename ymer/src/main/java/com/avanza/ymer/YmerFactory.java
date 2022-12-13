@@ -19,7 +19,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -112,7 +111,7 @@ public final class YmerFactory implements ApplicationContextAware {
 	) {
 		this(
 				mongoDbFactory::getMongoDatabase,
-				createMongoConverter(mongoDbFactory, mirroredObjectsConfiguration),
+				createMongoConverter(mirroredObjectsConfiguration, mongoDbFactory),
 				mirroredObjectsConfiguration.getMirroredObjectDefinitions()
 		);
 	}
@@ -215,27 +214,26 @@ public final class YmerFactory implements ApplicationContextAware {
 		return new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
 	}
 
-	static MongoConverter createMongoConverter(
-			MongoDatabaseFactory mongoDbFactory,
-			MirroredObjectsConfiguration mirroredObjectsConfiguration
-	) {
-		return createMongoConverter(
-				new DefaultDbRefResolver(mongoDbFactory),
-				new MongoCustomConversions(mirroredObjectsConfiguration.getCustomConverters()),
-				mirroredObjectsConfiguration.getMapKeyDotReplacement()
-		);
+	public static MongoConverter createMongoConverter(
+			YmerConverterConfiguration converterConfiguration,
+			MongoDatabaseFactory mongoDbFactory) {
+		return createMongoConverter(converterConfiguration, new DefaultDbRefResolver(mongoDbFactory));
 	}
 
-	static MongoConverter createMongoConverter(
-			DbRefResolver dbRef,
-			CustomConversions customConversions,
-			Optional<String> mapKeyDotReplacement) {
-		MongoMappingContext mappingContext = new MongoMappingContext();
+	public static MappingMongoConverter createMongoConverter(
+			YmerConverterConfiguration converterConfiguration,
+			DbRefResolver dbRefResolver) {
+
+		final CustomConversions customConversions = new MongoCustomConversions(converterConfiguration.getCustomConverters());
+
+		final MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
-		MappingMongoConverter converter = new MappingMongoConverter(dbRef, mappingContext);
+
+		final MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		converter.setCustomConversions(customConversions);
-		mapKeyDotReplacement.ifPresent(converter::setMapKeyDotReplacement);
+		converterConfiguration.getMapKeyDotReplacement().ifPresent(converter::setMapKeyDotReplacement);
 		converter.afterPropertiesSet();
 		return converter;
 	}
+
 }

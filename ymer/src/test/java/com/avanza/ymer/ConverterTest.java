@@ -30,6 +30,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Currency;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,7 +41,6 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 
 import com.avanza.ymer.support.JavaInstantReadConverter;
@@ -93,10 +93,18 @@ class ConverterTest {
 	}
 
 	private void setupConverters(Optional<String> mapKeyReplacement, Converter<?, ?>... converters) {
-		MongoCustomConversions conversions = new MongoCustomConversions(Arrays.asList(
-				converters
-		));
-		this.converter = YmerFactory.createMongoConverter(NoOpDbRefResolver.INSTANCE, conversions, mapKeyReplacement);
+		YmerConverterConfiguration conf = new YmerConverterConfiguration() {
+			@Override
+			public List<Converter<?, ?>> getCustomConverters() {
+				return Arrays.asList(converters);
+			}
+
+			@Override
+			public Optional<String> getMapKeyDotReplacement() {
+				return mapKeyReplacement;
+			}
+		};
+		this.converter = YmerFactory.createMongoConverter(conf, NoOpDbRefResolver.INSTANCE);
 	}
 
 	private ExampleSpaceObj writeAndRead(ExampleSpaceObj obj) {
