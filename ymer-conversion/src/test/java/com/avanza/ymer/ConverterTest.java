@@ -18,6 +18,7 @@ package com.avanza.ymer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isA;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Instant;
@@ -214,7 +215,7 @@ class ConverterTest {
 		ExampleSpaceObj result = converter.read(ExampleSpaceObj.class, doc);
 
 		// Assert
-		Assertions.assertAll(
+		assertAll(
 				() -> assertThat(result.getId(), is("id_1")),
 				() -> assertThat(result.getFile(), is("account")),
 				() -> assertThat(result.getLocalDateTimeNano(), is(DATE_TIME_NANO)),
@@ -249,7 +250,7 @@ class ConverterTest {
 		converter.write(obj, doc);
 
 		// Assert
-		Assertions.assertAll(
+		assertAll(
 				() -> assertThat(doc.get("_id"), is("id_2")),
 				() -> assertThat(doc.get("file"), is("account")),
 				() -> assertThat(doc.get("localDateTimeNano"), is(DATE_TIME_NANO_STR)),
@@ -288,7 +289,7 @@ class ConverterTest {
 		converter.write(obj, doc);
 
 		// Assert
-		Assertions.assertAll(
+		assertAll(
 				() -> assertThat(doc.get("_id"), is("id_2")),
 				() -> assertThat(doc.get("file"), is("account")),
 
@@ -316,7 +317,7 @@ class ConverterTest {
 
 		// Assert
 		Document mapDoc = (Document) doc.get("map");
-		Assertions.assertAll(
+		assertAll(
 				() -> assertThat(mapDoc.size(), is(2)),
 				() -> assertThat(mapDoc.get("key#with#dot"), is("value.with.dot")),
 				() -> assertThat(mapDoc.get("key_no_dot"), is("value_no_dot")));
