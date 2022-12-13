@@ -134,7 +134,7 @@ public abstract class YmerConverterTestBase {
 	protected abstract MirroredObjectsConfiguration getMirroredObjectsConfiguration();
 
 	private MongoConverter createMongoConverter() {
-		return YmerFactory.createMongoConverter(
+		return YmerConverterFactory.createMongoConverter(
 				getMirroredObjectsConfiguration(),
 				NoOpDbRefResolver.INSTANCE);
 	}

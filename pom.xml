@@ -4,6 +4,9 @@
 	<groupId>com.avanza.ymer</groupId>
 	<artifactId>ymer-parent</artifactId>
 	<version>3.0.13-SNAPSHOT</version>
+	<modules>
+		<module>ymer-conversion</module>
+	</modules>
 	<packaging>pom</packaging>
 	<name>${project.artifactId}</name>
 	<description>${project.artifactId}</description>

@@ -46,7 +46,7 @@ import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import com.avanza.ymer.MirroredObjectTestHelper;
 import com.avanza.ymer.MirroredObjectsConfiguration;
 import com.avanza.ymer.TestDocumentConverter;
-import com.avanza.ymer.YmerFactory;
+import com.avanza.ymer.YmerConverterFactory;
 
 /**
  * Base class for testing that objects may be marshalled to a mongo document and
@@ -136,7 +136,7 @@ public abstract class YmerConverterTestBase {
 	protected abstract MirroredObjectsConfiguration getMirroredObjectsConfiguration();
 
 	private MongoConverter createMongoConverter() {
-		return YmerFactory.createMongoConverter(
+		return YmerConverterFactory.createMongoConverter(
 				getMirroredObjectsConfiguration(),
 				NoOpDbRefResolver.INSTANCE);
 	}

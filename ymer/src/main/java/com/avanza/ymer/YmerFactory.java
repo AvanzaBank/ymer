@@ -32,15 +32,9 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.avanza.ymer.plugin.Plugin;
 import com.gigaspaces.datasource.SpaceDataSource;
@@ -90,7 +84,7 @@ public final class YmerFactory implements ApplicationContextAware {
 	}
 
 	/**
-	 * @deprecated please use {@link #YmerFactory(MongoDatabaseFactory, MongoConverter, Collection)}
+	 * @deprecated please use {@link #YmerFactory(MongoDatabaseFactory, MirroredObjectsConfiguration)}
 	 */
 	@Deprecated
 	public YmerFactory(MongoDbFactory mongoDbFactory,
@@ -98,7 +92,7 @@ public final class YmerFactory implements ApplicationContextAware {
 			Collection<MirroredObjectDefinition<?>> definitions) {
 		this(mongoDbFactory::getDb, mongoConverter, definitions);
 	}
-
+	
 	public YmerFactory(MongoDatabaseFactory mongoDbFactory,
 			MongoConverter mongoConverter,
 			Collection<MirroredObjectDefinition<?>> definitions) {
@@ -111,7 +105,7 @@ public final class YmerFactory implements ApplicationContextAware {
 	) {
 		this(
 				mongoDbFactory::getMongoDatabase,
-				createMongoConverter(mirroredObjectsConfiguration, mongoDbFactory),
+				YmerConverterFactory.createMongoConverter(mirroredObjectsConfiguration, mongoDbFactory),
 				mirroredObjectsConfiguration.getMirroredObjectDefinitions()
 		);
 	}
@@ -212,28 +206,6 @@ public final class YmerFactory implements ApplicationContextAware {
 			((ApplicationEventPublisherAware) mongoConverter.getMappingContext()).setApplicationEventPublisher(null);
 		}
 		return new SpaceMirrorContext(mirroredObjects, documentConverter, documentDb, exceptionListener, new Plugins(plugins), numParallelCollections);
-	}
-
-	public static MongoConverter createMongoConverter(
-			YmerConverterConfiguration converterConfiguration,
-			MongoDatabaseFactory mongoDbFactory) {
-		return createMongoConverter(converterConfiguration, new DefaultDbRefResolver(mongoDbFactory));
-	}
-
-	public static MappingMongoConverter createMongoConverter(
-			YmerConverterConfiguration converterConfiguration,
-			DbRefResolver dbRefResolver) {
-
-		final CustomConversions customConversions = new MongoCustomConversions(converterConfiguration.getCustomConverters());
-
-		final MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
-
-		final MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
-		converter.setCustomConversions(customConversions);
-		converterConfiguration.getMapKeyDotReplacement().ifPresent(converter::setMapKeyDotReplacement);
-		converter.afterPropertiesSet();
-		return converter;
 	}
 
 }

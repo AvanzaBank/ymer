@@ -15,13 +15,6 @@
  */
 package com.avanza.ymer;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isA;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,6 +28,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.converter.Converter;
@@ -53,9 +49,6 @@ import com.avanza.ymer.support.JavaTimeLocalDateTimeReadConverter;
 import com.avanza.ymer.support.JavaTimeLocalDateTimeWriteConverter;
 import com.avanza.ymer.support.JavaYearMonthReadConverter;
 import com.avanza.ymer.support.JavaYearMonthWriteConverter;
-import com.gigaspaces.annotation.pojo.SpaceClass;
-import com.gigaspaces.annotation.pojo.SpaceId;
-import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
 
 class ConverterTest {
@@ -104,7 +97,7 @@ class ConverterTest {
 				return mapKeyReplacement;
 			}
 		};
-		this.converter = YmerFactory.createMongoConverter(conf, NoOpDbRefResolver.INSTANCE);
+		this.converter = YmerConverterFactory.createMongoConverter(conf, NoOpDbRefResolver.INSTANCE);
 	}
 
 	private ExampleSpaceObj writeAndRead(ExampleSpaceObj obj) {
@@ -122,8 +115,8 @@ class ConverterTest {
 		ExampleSpaceObj result = writeAndRead(obj);
 
 		// Assert
-		assertThat(doc.get("instant"), isA(String.class));
-		assertEquals(INSTANT, result.getInstant());
+		MatcherAssert.assertThat(doc.get("instant"), Matchers.isA(String.class));
+		Assertions.assertEquals(INSTANT, result.getInstant());
 	}
 
 	@Test
@@ -136,8 +129,8 @@ class ConverterTest {
 		ExampleSpaceObj result = writeAndRead(obj);
 
 		// Assert
-		assertThat(doc.get("localDateTimeNano"), isA(String.class));
-		assertEquals(DATE_TIME_NANO, result.getLocalDateTimeNano());
+		MatcherAssert.assertThat(doc.get("localDateTimeNano"), Matchers.isA(String.class));
+		Assertions.assertEquals(DATE_TIME_NANO, result.getLocalDateTimeNano());
 	}
 
 	@Test
@@ -150,8 +143,8 @@ class ConverterTest {
 		ExampleSpaceObj result = writeAndRead(obj);
 
 		// Assert
-		assertThat(doc.get("localDateTimeMillis"), isA(Long.class));
-		assertEquals(DATE_TIME_MILLIS, result.getLocalDateTimeMillis());
+		MatcherAssert.assertThat(doc.get("localDateTimeMillis"), Matchers.isA(Long.class));
+		Assertions.assertEquals(DATE_TIME_MILLIS, result.getLocalDateTimeMillis());
 	}
 
 	@Test
@@ -164,8 +157,8 @@ class ConverterTest {
 		ExampleSpaceObj result = writeAndRead(obj);
 
 		// Assert
-		assertThat(doc.get("localDate"), isA(String.class));
-		assertEquals(DATE, result.getLocalDate());
+		MatcherAssert.assertThat(doc.get("localDate"), Matchers.isA(String.class));
+		Assertions.assertEquals(DATE, result.getLocalDate());
 	}
 
 	@Test
@@ -177,8 +170,8 @@ class ConverterTest {
 		ExampleSpaceObj result = writeAndRead(obj);
 
 		// Assert
-		assertThat(doc.get("currency"), isA(String.class));
-		assertEquals(CURRENCY, result.getCurrency());
+		MatcherAssert.assertThat(doc.get("currency"), Matchers.isA(String.class));
+		Assertions.assertEquals(CURRENCY, result.getCurrency());
 	}
 
 	@Test
@@ -191,8 +184,8 @@ class ConverterTest {
 		ExampleSpaceObj result = writeAndRead(obj);
 
 		// Assert
-		assertThat(doc.get("yearMonth"), isA(String.class));
-		assertEquals(YEAR_MONTH, result.getYearMonth());
+		MatcherAssert.assertThat(doc.get("yearMonth"), Matchers.isA(String.class));
+		Assertions.assertEquals(YEAR_MONTH, result.getYearMonth());
 	}
 
 	@Test
@@ -218,15 +211,15 @@ class ConverterTest {
 		ExampleSpaceObj result = converter.read(ExampleSpaceObj.class, doc);
 
 		// Assert
-		assertAll(
-				() -> assertThat(result.getId(), is("id_1")),
-				() -> assertThat(result.getFile(), is("account")),
-				() -> assertThat(result.getLocalDateTimeNano(), is(DATE_TIME_NANO)),
-				() -> assertThat(result.getInstant(), is(INSTANT)),
-				() -> assertThat(result.getLocalDate(), is(DATE)),
-				() -> assertThat(result.getCurrency(), is(CURRENCY)),
-				() -> assertThat(result.getYearMonth(), is(YEAR_MONTH)),
-				() -> assertThat(result.getLocalDateTimeMillis(), is(DATE_TIME_MILLIS))
+		Assertions.assertAll(
+				() -> MatcherAssert.assertThat(result.getId(), Matchers.is("id_1")),
+				() -> MatcherAssert.assertThat(result.getFile(), Matchers.is("account")),
+				() -> MatcherAssert.assertThat(result.getLocalDateTimeNano(), Matchers.is(DATE_TIME_NANO)),
+				() -> MatcherAssert.assertThat(result.getInstant(), Matchers.is(INSTANT)),
+				() -> MatcherAssert.assertThat(result.getLocalDate(), Matchers.is(DATE)),
+				() -> MatcherAssert.assertThat(result.getCurrency(), Matchers.is(CURRENCY)),
+				() -> MatcherAssert.assertThat(result.getYearMonth(), Matchers.is(YEAR_MONTH)),
+				() -> MatcherAssert.assertThat(result.getLocalDateTimeMillis(), Matchers.is(DATE_TIME_MILLIS))
 		);
 	}
 
@@ -253,18 +246,18 @@ class ConverterTest {
 		converter.write(obj, doc);
 
 		// Assert
-		assertAll(
-				() -> assertThat(doc.get("_id"), is("id_2")),
-				() -> assertThat(doc.get("file"), is("account")),
-				() -> assertThat(doc.get("localDateTimeNano"), is(DATE_TIME_NANO_STR)),
-				() -> assertThat(doc.get("instant"), is(INSTANT_STR)),
-				() -> assertThat(doc.get("localDate"), is(DATE_STR)),
-				() -> assertThat(doc.get("currency"), is(CURRENCY_STR)),
-				() -> assertThat(doc.get("yearMonth"), is(YEAR_MONTH_STR)),
+		Assertions.assertAll(
+				() -> MatcherAssert.assertThat(doc.get("_id"), Matchers.is("id_2")),
+				() -> MatcherAssert.assertThat(doc.get("file"), Matchers.is("account")),
+				() -> MatcherAssert.assertThat(doc.get("localDateTimeNano"), Matchers.is(DATE_TIME_NANO_STR)),
+				() -> MatcherAssert.assertThat(doc.get("instant"), Matchers.is(INSTANT_STR)),
+				() -> MatcherAssert.assertThat(doc.get("localDate"), Matchers.is(DATE_STR)),
+				() -> MatcherAssert.assertThat(doc.get("currency"), Matchers.is(CURRENCY_STR)),
+				() -> MatcherAssert.assertThat(doc.get("yearMonth"), Matchers.is(YEAR_MONTH_STR)),
 
 				// JavaLocalDateWriteConverter will be used since it is first in the converter list.
 				// This is why this assertion compares the String and not the Long.
-				() -> assertThat(doc.get("localDateTimeMillis"), is(DATE_TIME_MILLIS_STR))
+				() -> MatcherAssert.assertThat(doc.get("localDateTimeMillis"), Matchers.is(DATE_TIME_MILLIS_STR))
 		);
 	}
 
@@ -292,17 +285,17 @@ class ConverterTest {
 		converter.write(obj, doc);
 
 		// Assert
-		assertAll(
-				() -> assertThat(doc.get("_id"), is("id_2")),
-				() -> assertThat(doc.get("file"), is("account")),
+		Assertions.assertAll(
+				() -> MatcherAssert.assertThat(doc.get("_id"), Matchers.is("id_2")),
+				() -> MatcherAssert.assertThat(doc.get("file"), Matchers.is("account")),
 
-				() -> assertThat(doc.get("instant"), is(INSTANT_STR)),
-				() -> assertThat(doc.get("localDate"), is(DATE_STR)),
-				() -> assertThat(doc.get("currency"), is(CURRENCY_STR)),
-				() -> assertThat(doc.get("yearMonth"), is(YEAR_MONTH_STR)),
+				() -> MatcherAssert.assertThat(doc.get("instant"), Matchers.is(INSTANT_STR)),
+				() -> MatcherAssert.assertThat(doc.get("localDate"), Matchers.is(DATE_STR)),
+				() -> MatcherAssert.assertThat(doc.get("currency"), Matchers.is(CURRENCY_STR)),
+				() -> MatcherAssert.assertThat(doc.get("yearMonth"), Matchers.is(YEAR_MONTH_STR)),
 
 				// This should be a Long since the JavaTimeLocalDateTime converters are first.
-				() -> assertThat(doc.get("localDateTimeMillis"), is(DATE_TIME_MILLIS_LONG))
+				() -> MatcherAssert.assertThat(doc.get("localDateTimeMillis"), Matchers.is(DATE_TIME_MILLIS_LONG))
 				// We do not verify localDateTimeNano. It will have lost precision due to the JavaTimeLocalDateTime converters.
 				// () -> assertThat(doc.get("localDateTimeNano"), is(DATE_TIME_NANO_STR)),
 
@@ -320,10 +313,10 @@ class ConverterTest {
 
 		// Assert
 		Document mapDoc = (Document) doc.get("map");
-		assertAll(
-				() -> assertThat(mapDoc.size(), is(2)),
-				() -> assertThat(mapDoc.get("key#with#dot"), is("value.with.dot")),
-				() -> assertThat(mapDoc.get("key_no_dot"), is("value_no_dot")));
+		Assertions.assertAll(
+				() -> MatcherAssert.assertThat(mapDoc.size(), Matchers.is(2)),
+				() -> MatcherAssert.assertThat(mapDoc.get("key#with#dot"), Matchers.is("value.with.dot")),
+				() -> MatcherAssert.assertThat(mapDoc.get("key_no_dot"), Matchers.is("value_no_dot")));
 	}
 
 	@Test
@@ -332,10 +325,9 @@ class ConverterTest {
 		obj.setMap(Map.of("key.with.dot", "value.with.dot", "key_no_dot", "value_no_dot"));
 
 		BasicDBObject doc = new BasicDBObject();
-		assertThrows(MappingException.class, () -> converter.write(obj, doc));
+		Assertions.assertThrows(MappingException.class, () -> converter.write(obj, doc));
 	}
 
-	@SpaceClass
 	public static class ExampleSpaceObj {
 
 		@Id
@@ -349,7 +341,6 @@ class ConverterTest {
 		private LocalDateTime localDateTimeMillis;
 		private Map<String, String> map;
 
-		@SpaceId(autoGenerate = true)
 		public String getId() {
 			return id;
 		}
@@ -358,7 +349,6 @@ class ConverterTest {
 			this.id = id;
 		}
 
-		@SpaceRouting
 		public String getFile() {
 			return file;
 		}
