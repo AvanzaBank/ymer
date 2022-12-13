@@ -118,7 +118,7 @@
 		<log4j.version>2.17.2</log4j.version>
 		<gigaspaces.version>16.2.1</gigaspaces.version>
 		<jsr305.version>3.0.2</jsr305.version>
-		<gs-test.version>2.1.7</gs-test.version>
+		<gs-test.version>gs16.2.1-SNAPSHOT</gs-test.version>
 		<testcontainers.version>1.17.2</testcontainers.version>
 		<system-stubs.version>2.0.1</system-stubs.version>
 
