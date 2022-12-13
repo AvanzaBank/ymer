@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.matcher.AssertionMatcher;
@@ -78,26 +79,26 @@ public abstract class YmerConverterTestBase {
 		assertTrue("Mirroring of " + testCase.getClass(), mirroredDocument.isMirroredType());
 	}
 
-    @Test
-    public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() {
-        Object spaceObject = testCase.spaceObject;
+	@Test
+	public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() {
+		Object spaceObject = testCase.spaceObject;
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectHelper(spaceObject.getClass());
 		TestDocumentConverter documentConverter = TestDocumentConverter.create(createMongoConverter());
 		ensureSpaceId(spaceObject);
 
-        Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
-        Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
-        Document recreatedBasicDbObject = documentConverter.convertToBsonDocument(reCreated);
+		Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
+		Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
+		Document recreatedBasicDbObject = documentConverter.convertToBsonDocument(reCreated);
 
-        assertNotNull("No id field defined. @SpaceId annotations are ignored by persistence framework, use @Id for id field (Typically the same as is annotated with @SpaceId)", recreatedBasicDbObject.get("_id"));
-        assertEquals(basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
-    }
+		assertNotNull("No id field defined. @SpaceId annotations are ignored by persistence framework, use @Id for id field (Typically the same as is annotated with @SpaceId)", recreatedBasicDbObject.get("_id"));
+		assertEquals(basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
+	}
 
-    @Test
-    public void testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty() throws Exception {
-    	Object spaceObject = testCase.spaceObject;
-    	Field[] fields = spaceObject.getClass().getDeclaredFields();
-    	List<String> emptyFields = new LinkedList<>();
+	@Test
+	public void testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty() throws Exception {
+		Object spaceObject = testCase.spaceObject;
+		Field[] fields = spaceObject.getClass().getDeclaredFields();
+		List<String> emptyFields = new LinkedList<>();
 
 		for (Field field : fields) {
 			field.setAccessible(true);
@@ -114,9 +115,9 @@ public abstract class YmerConverterTestBase {
 			}
 		}
 
-    	assertTrue("Test subject of class " + spaceObject.getClass().getCanonicalName() + " has empty collections/map, "
-    			+ "add at least one element to ensure proper test coverage.: " + emptyFields, emptyFields.isEmpty());
-    }
+		assertTrue("Test subject of class " + spaceObject.getClass().getCanonicalName() + " has empty collections/map, "
+				+ "add at least one element to ensure proper test coverage.: " + emptyFields, emptyFields.isEmpty());
+	}
 
 	@Test
 	public void shouldRequireAnnotationsOnCustomConverters() {
@@ -148,8 +149,8 @@ public abstract class YmerConverterTestBase {
 	private MongoConverter createMongoConverter() {
 		return YmerFactory.createMongoConverter(
 				NoOpDbRefResolver.INSTANCE,
-				getCustomConversions()
-		);
+				getCustomConversions(),
+				Optional.empty());
 	}
 
 	protected static List<Object[]> buildTestCases(ConverterTest<?>... list) {

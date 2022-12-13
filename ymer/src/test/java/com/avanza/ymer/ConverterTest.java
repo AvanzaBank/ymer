@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isA;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -29,11 +30,15 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Currency;
+import java.util.Map;
+import java.util.Optional;
 
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
@@ -84,10 +89,14 @@ class ConverterTest {
 	}
 
 	private void setupConverters(Converter<?, ?>... converters) {
+		setupConverters(Optional.empty(), converters);
+	}
+
+	private void setupConverters(Optional<String> mapKeyReplacement, Converter<?, ?>... converters) {
 		MongoCustomConversions conversions = new MongoCustomConversions(Arrays.asList(
 				converters
 		));
-		this.converter = YmerFactory.createMongoConverter(NoOpDbRefResolver.INSTANCE, conversions);
+		this.converter = YmerFactory.createMongoConverter(NoOpDbRefResolver.INSTANCE, conversions, mapKeyReplacement);
 	}
 
 	private ExampleSpaceObj writeAndRead(ExampleSpaceObj obj) {
@@ -251,7 +260,6 @@ class ConverterTest {
 		);
 	}
 
-
 	@Test
 	void shouldHandleWrite_withJavaTimeLocalDateTimeWriteConverter() {
 		// Arrange
@@ -293,6 +301,32 @@ class ConverterTest {
 		);
 	}
 
+	@Test
+	public void shouldHandleMapKeyDotReplacement() {
+		setupConverters(Optional.of("#"));
+		obj.setMap(Map.of("key.with.dot", "value.with.dot", "key_no_dot", "value_no_dot"));
+
+		// Act
+		BasicDBObject doc = new BasicDBObject();
+		converter.write(obj, doc);
+
+		// Assert
+		Document mapDoc = (Document) doc.get("map");
+		assertAll(
+				() -> assertThat(mapDoc.size(), is(2)),
+				() -> assertThat(mapDoc.get("key#with#dot"), is("value.with.dot")),
+				() -> assertThat(mapDoc.get("key_no_dot"), is("value_no_dot")));
+	}
+
+	@Test
+	public void shouldThrowExceptionOnMissingMapKeyDotReplacement() {
+		setupConverters();
+		obj.setMap(Map.of("key.with.dot", "value.with.dot", "key_no_dot", "value_no_dot"));
+
+		BasicDBObject doc = new BasicDBObject();
+		assertThrows(MappingException.class, () -> converter.write(obj, doc));
+	}
+
 	@SpaceClass
 	public static class ExampleSpaceObj {
 
@@ -305,6 +339,7 @@ class ConverterTest {
 		private Currency currency;
 		private YearMonth yearMonth;
 		private LocalDateTime localDateTimeMillis;
+		private Map<String, String> map;
 
 		@SpaceId(autoGenerate = true)
 		public String getId() {
@@ -347,6 +382,7 @@ class ConverterTest {
 		public void setLocalDate(LocalDate localDate) {
 			this.localDate = localDate;
 		}
+
 		@Override
 		public String toString() {
 			return "SpaceFilePublicationEvent{" +
@@ -383,6 +419,14 @@ class ConverterTest {
 
 		public void setLocalDateTimeMillis(LocalDateTime localDateTimeMillis) {
 			this.localDateTimeMillis = localDateTimeMillis;
+		}
+
+		public Map<String, String> getMap() {
+			return map;
+		}
+
+		public void setMap(Map<String, String> map) {
+			this.map = map;
 		}
 	}
 }

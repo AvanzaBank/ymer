@@ -15,6 +15,8 @@
  */
 package com.avanza.ymer;
 
+import java.util.Optional;
+
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -27,6 +29,6 @@ public class YmerFactoryTestHelper {
 			DbRefResolver dbRef,
 			CustomConversions customConversions
 	) {
-		return YmerFactory.createMongoConverter(dbRef, customConversions);
+		return YmerFactory.createMongoConverter(dbRef, customConversions, Optional.empty());
 	}
 }

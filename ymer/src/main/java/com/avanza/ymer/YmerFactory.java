@@ -19,6 +19,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -62,7 +63,7 @@ public final class YmerFactory implements ApplicationContextAware {
 	private boolean exportOperationStatisticsMBean = true;
 	private Set<Plugin> plugins = Collections.emptySet();
 	private int numParallelCollections = 1;
-	private ReloadableYmerProperties.ReloadablePropertiesBuilder ymerPropertiesBuilder = ReloadableYmerProperties.builder();
+	private final ReloadableYmerProperties.ReloadablePropertiesBuilder ymerPropertiesBuilder = ReloadableYmerProperties.builder();
 
 	private final MirroredObjects mirroredObjects;
 	private final MongoConverter mongoConverter;
@@ -220,18 +221,20 @@ public final class YmerFactory implements ApplicationContextAware {
 	) {
 		return createMongoConverter(
 				new DefaultDbRefResolver(mongoDbFactory),
-				new MongoCustomConversions(mirroredObjectsConfiguration.getCustomConverters())
+				new MongoCustomConversions(mirroredObjectsConfiguration.getCustomConverters()),
+				mirroredObjectsConfiguration.getMapKeyDotReplacement()
 		);
 	}
 
 	static MongoConverter createMongoConverter(
 			DbRefResolver dbRef,
-			CustomConversions customConversions
-	) {
+			CustomConversions customConversions,
+			Optional<String> mapKeyDotReplacement) {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
 		MappingMongoConverter converter = new MappingMongoConverter(dbRef, mappingContext);
 		converter.setCustomConversions(customConversions);
+		mapKeyDotReplacement.ifPresent(converter::setMapKeyDotReplacement);
 		converter.afterPropertiesSet();
 		return converter;
 	}
