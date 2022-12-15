@@ -37,11 +37,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 
 /**
@@ -78,26 +76,26 @@ public abstract class YmerConverterTestBase {
 		assertTrue("Mirroring of " + testCase.getClass(), mirroredDocument.isMirroredType());
 	}
 
-    @Test
-    public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() {
-        Object spaceObject = testCase.spaceObject;
+	@Test
+	public void testFailsIfSpringDataIdAnnotationNotDefinedForSpaceObject() {
+		Object spaceObject = testCase.spaceObject;
 		MirroredObjectTestHelper mirroredDocument = getMirroredObjectHelper(spaceObject.getClass());
 		TestDocumentConverter documentConverter = TestDocumentConverter.create(createMongoConverter());
 		ensureSpaceId(spaceObject);
 
-        Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
-        Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
-        Document recreatedBasicDbObject = documentConverter.convertToBsonDocument(reCreated);
+		Document basicDBObject = documentConverter.convertToBsonDocument(spaceObject);
+		Object reCreated = documentConverter.convert(mirroredDocument.getMirroredType(), basicDBObject);
+		Document recreatedBasicDbObject = documentConverter.convertToBsonDocument(reCreated);
 
-        assertNotNull("No id field defined. @SpaceId annotations are ignored by persistence framework, use @Id for id field (Typically the same as is annotated with @SpaceId)", recreatedBasicDbObject.get("_id"));
-        assertEquals(basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
-    }
+		assertNotNull("No id field defined. @SpaceId annotations are ignored by persistence framework, use @Id for id field (Typically the same as is annotated with @SpaceId)", recreatedBasicDbObject.get("_id"));
+		assertEquals(basicDBObject.get("_id"), recreatedBasicDbObject.get("_id"));
+	}
 
-    @Test
-    public void testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty() throws Exception {
-    	Object spaceObject = testCase.spaceObject;
-    	Field[] fields = spaceObject.getClass().getDeclaredFields();
-    	List<String> emptyFields = new LinkedList<>();
+	@Test
+	public void testFailsIfCollectionOrMapPropertyOfTestSubjectIsEmpty() throws Exception {
+		Object spaceObject = testCase.spaceObject;
+		Field[] fields = spaceObject.getClass().getDeclaredFields();
+		List<String> emptyFields = new LinkedList<>();
 
 		for (Field field : fields) {
 			field.setAccessible(true);
@@ -114,9 +112,9 @@ public abstract class YmerConverterTestBase {
 			}
 		}
 
-    	assertTrue("Test subject of class " + spaceObject.getClass().getCanonicalName() + " has empty collections/map, "
-    			+ "add at least one element to ensure proper test coverage.: " + emptyFields, emptyFields.isEmpty());
-    }
+		assertTrue("Test subject of class " + spaceObject.getClass().getCanonicalName() + " has empty collections/map, "
+				+ "add at least one element to ensure proper test coverage.: " + emptyFields, emptyFields.isEmpty());
+	}
 
 	@Test
 	public void shouldRequireAnnotationsOnCustomConverters() {
@@ -130,26 +128,15 @@ public abstract class YmerConverterTestBase {
 	}
 
 	private MirroredObjectTestHelper getMirroredObjectHelper(Class<?> objectClass) {
-		return MirroredObjectTestHelper.fromDefinitions(getMirroredObjectDefinitions(), objectClass);
-	}
-
-	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
-		return getMirroredObjectsConfiguration().getMirroredObjectDefinitions();
-	}
-
-	protected CustomConversions getCustomConversions() {
-		return new MongoCustomConversions(
-				getMirroredObjectsConfiguration().getCustomConverters()
-		);
+		return MirroredObjectTestHelper.fromDefinitions(getMirroredObjectsConfiguration().getMirroredObjectDefinitions(), objectClass);
 	}
 
 	protected abstract MirroredObjectsConfiguration getMirroredObjectsConfiguration();
 
 	private MongoConverter createMongoConverter() {
-		return YmerFactory.createMongoConverter(
-				NoOpDbRefResolver.INSTANCE,
-				getCustomConversions()
-		);
+		return YmerConverterFactory.createMongoConverter(
+				getMirroredObjectsConfiguration(),
+				NoOpDbRefResolver.INSTANCE);
 	}
 
 	protected static List<Object[]> buildTestCases(ConverterTest<?>... list) {

@@ -29,13 +29,18 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Currency;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.bson.Document;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 
 import com.avanza.ymer.support.JavaInstantReadConverter;
@@ -48,9 +53,6 @@ import com.avanza.ymer.support.JavaTimeLocalDateTimeReadConverter;
 import com.avanza.ymer.support.JavaTimeLocalDateTimeWriteConverter;
 import com.avanza.ymer.support.JavaYearMonthReadConverter;
 import com.avanza.ymer.support.JavaYearMonthWriteConverter;
-import com.gigaspaces.annotation.pojo.SpaceClass;
-import com.gigaspaces.annotation.pojo.SpaceId;
-import com.gigaspaces.annotation.pojo.SpaceRouting;
 import com.mongodb.BasicDBObject;
 
 class ConverterTest {
@@ -84,10 +86,22 @@ class ConverterTest {
 	}
 
 	private void setupConverters(Converter<?, ?>... converters) {
-		MongoCustomConversions conversions = new MongoCustomConversions(Arrays.asList(
-				converters
-		));
-		this.converter = YmerFactory.createMongoConverter(NoOpDbRefResolver.INSTANCE, conversions);
+		setupConverters(Optional.empty(), converters);
+	}
+
+	private void setupConverters(Optional<String> mapKeyReplacement, Converter<?, ?>... converters) {
+		YmerConverterConfiguration conf = new YmerConverterConfiguration() {
+			@Override
+			public List<Converter<?, ?>> getCustomConverters() {
+				return Arrays.asList(converters);
+			}
+
+			@Override
+			public Optional<String> getMapKeyDotReplacement() {
+				return mapKeyReplacement;
+			}
+		};
+		this.converter = YmerConverterFactory.createMongoConverter(conf, NoOpDbRefResolver.INSTANCE);
 	}
 
 	private ExampleSpaceObj writeAndRead(ExampleSpaceObj obj) {
@@ -251,7 +265,6 @@ class ConverterTest {
 		);
 	}
 
-
 	@Test
 	void shouldHandleWrite_withJavaTimeLocalDateTimeWriteConverter() {
 		// Arrange
@@ -293,7 +306,32 @@ class ConverterTest {
 		);
 	}
 
-	@SpaceClass
+	@Test
+	public void shouldHandleMapKeyDotReplacement() {
+		setupConverters(Optional.of("#"));
+		obj.setMap(Map.of("key.with.dot", "value.with.dot", "key_no_dot", "value_no_dot"));
+
+		// Act
+		BasicDBObject doc = new BasicDBObject();
+		converter.write(obj, doc);
+
+		// Assert
+		Document mapDoc = (Document) doc.get("map");
+		assertAll(
+				() -> assertThat(mapDoc.size(), is(2)),
+				() -> assertThat(mapDoc.get("key#with#dot"), is("value.with.dot")),
+				() -> assertThat(mapDoc.get("key_no_dot"), is("value_no_dot")));
+	}
+
+	@Test
+	public void shouldThrowExceptionOnMissingMapKeyDotReplacement() {
+		setupConverters();
+		obj.setMap(Map.of("key.with.dot", "value.with.dot", "key_no_dot", "value_no_dot"));
+
+		BasicDBObject doc = new BasicDBObject();
+		Assertions.assertThrows(MappingException.class, () -> converter.write(obj, doc));
+	}
+
 	public static class ExampleSpaceObj {
 
 		@Id
@@ -305,8 +343,8 @@ class ConverterTest {
 		private Currency currency;
 		private YearMonth yearMonth;
 		private LocalDateTime localDateTimeMillis;
+		private Map<String, String> map;
 
-		@SpaceId(autoGenerate = true)
 		public String getId() {
 			return id;
 		}
@@ -315,7 +353,6 @@ class ConverterTest {
 			this.id = id;
 		}
 
-		@SpaceRouting
 		public String getFile() {
 			return file;
 		}
@@ -347,6 +384,7 @@ class ConverterTest {
 		public void setLocalDate(LocalDate localDate) {
 			this.localDate = localDate;
 		}
+
 		@Override
 		public String toString() {
 			return "SpaceFilePublicationEvent{" +
@@ -383,6 +421,14 @@ class ConverterTest {
 
 		public void setLocalDateTimeMillis(LocalDateTime localDateTimeMillis) {
 			this.localDateTimeMillis = localDateTimeMillis;
+		}
+
+		public Map<String, String> getMap() {
+			return map;
+		}
+
+		public void setMap(Map<String, String> map) {
+			this.map = map;
 		}
 	}
 }

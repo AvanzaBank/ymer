@@ -38,18 +38,15 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 
-import com.avanza.ymer.MirroredObjectDefinition;
 import com.avanza.ymer.MirroredObjectTestHelper;
 import com.avanza.ymer.MirroredObjectsConfiguration;
 import com.avanza.ymer.TestDocumentConverter;
-import com.avanza.ymer.YmerFactoryTestHelper;
+import com.avanza.ymer.YmerConverterFactory;
 
 /**
  * Base class for testing that objects may be marshalled to a mongo document and
@@ -132,26 +129,16 @@ public abstract class YmerConverterTestBase {
 	}
 
 	private MirroredObjectTestHelper getMirroredObjectHelper(Class<?> objectClass) {
-		return MirroredObjectTestHelper.fromDefinitions(getMirroredObjectDefinitions(), objectClass);
-	}
-
-	protected Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions() {
-		return getMirroredObjectsConfiguration().getMirroredObjectDefinitions();
-	}
-
-	protected CustomConversions getCustomConversions() {
-		return new MongoCustomConversions(
-				getMirroredObjectsConfiguration().getCustomConverters()
-		);
+		return MirroredObjectTestHelper.fromDefinitions(
+				getMirroredObjectsConfiguration().getMirroredObjectDefinitions(), objectClass);
 	}
 
 	protected abstract MirroredObjectsConfiguration getMirroredObjectsConfiguration();
 
 	private MongoConverter createMongoConverter() {
-		return YmerFactoryTestHelper.createMongoConverter(
-				NoOpDbRefResolver.INSTANCE,
-				getCustomConversions()
-		);
+		return YmerConverterFactory.createMongoConverter(
+				getMirroredObjectsConfiguration(),
+				NoOpDbRefResolver.INSTANCE);
 	}
 
 	protected abstract Collection<ConverterTest<?>> testCases();

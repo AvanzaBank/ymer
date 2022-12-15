@@ -16,15 +16,8 @@
 package com.avanza.ymer;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
-import org.springframework.core.convert.converter.Converter;
-
-public interface MirroredObjectsConfiguration {
+public interface MirroredObjectsConfiguration extends YmerConverterConfiguration {
 	Collection<MirroredObjectDefinition<?>> getMirroredObjectDefinitions();
 
-	default List<Converter<?, ?>> getCustomConverters() {
-		return Collections.emptyList();
-	}
 }

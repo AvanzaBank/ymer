@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.avanza.ymer</groupId>
 	<artifactId>ymer-parent</artifactId>
@@ -21,11 +21,11 @@
 			<organization>Avanza</organization>
 			<organizationUrl>https://github.com/AvanzaBank</organizationUrl>
 		</developer>
-  	</developers>
+	</developers>
 	<scm>
-	  <connection>scm:git:git@github.com:AvanzaBank/ymer.git</connection>
-	  <developerConnection>scm:git:git@github.com:AvanzaBank/ymer.git</developerConnection>
-	  <url>git@github.com:AvanzaBank/ymer.git</url>
+		<connection>scm:git:git@github.com:AvanzaBank/ymer.git</connection>
+		<developerConnection>scm:git:git@github.com:AvanzaBank/ymer.git</developerConnection>
+		<url>git@github.com:AvanzaBank/ymer.git</url>
 	</scm>
 	<repositories>
 		<repository>
@@ -52,17 +52,19 @@
 			</activation>
 			<modules>
 				<module>ymer</module>
+				<module>ymer-conversion</module>
 				<module>ymer-bom</module>
 				<module>ymer-test-common</module>
 				<module>ymer-test-junit4</module>
 				<module>ymer-test-junit5</module>
 				<module>examples</module>
 			</modules>
-   		</profile>
+		</profile>
 		<profile>
 			<id>release</id>
 			<modules>
 				<module>ymer</module>
+				<module>ymer-conversion</module>
 				<module>ymer-bom</module>
 				<module>ymer-test-common</module>
 				<module>ymer-test-junit4</module>
@@ -146,7 +148,7 @@
 		<nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
 		<maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
 	</properties>
-	
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
